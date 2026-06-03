@@ -3,11 +3,15 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 1,
             "patches": [
                 {
                     "date": 1777294834403,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1780226105599,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -99,16 +99,41 @@\n     const newAppointment = { \r\n       ...formData, \r\n       date: selectedDate.toISOString(),\r\n       appointmentID: `APT-${Date.now()}`,\r\n-      consultationCharges: 300\r\n+      consultationCharges: 300,\r\n+      patientName: `${formData.firstName} ${formData.lastName}`,\r\n+      time: formData.time\r\n     };\r\n \r\n-    // ✅ Save to localStorage\r\n+    // ✅ Save to global appointments list\r\n     const storedAppointments = JSON.parse(localStorage.getItem(\"appointments\")) || [];\r\n     storedAppointments.push(newAppointment);\r\n     localStorage.setItem(\"appointments\", JSON.stringify(storedAppointments));\r\n \r\n+    // ✅ ALSO add appointment to the specific doctor's record\r\n+    const storedDoctors = JSON.parse(localStorage.getItem(\"doctors\")) || [];\r\n+    const updatedDoctors = storedDoctors.map((doctor) => {\r\n+      const docFullName = `${doctor.firstName || \"\"} ${doctor.lastName || \"\"}`.trim();\r\n+      if (docFullName === formData.doctor) {\r\n+        return {\r\n+          ...doctor,\r\n+          appointments: [\r\n+            ...(doctor.appointments || []),\r\n+            {\r\n+              patientName: `${formData.firstName} ${formData.lastName}`,\r\n+              date: selectedDate.toISOString().split('T')[0],\r\n+              time: formData.time,\r\n+              status: \"Pending\",\r\n+              appointmentID: newAppointment.appointmentID\r\n+            }\r\n+          ]\r\n+        };\r\n+      }\r\n+      return doctor;\r\n+    });\r\n+    localStorage.setItem(\"doctors\", JSON.stringify(updatedDoctors));\r\n+\r\n     // ✅ Reset form\r\n     setFormData(initialFormData);\r\n     setSelectedDate(null);\r\n \r\n"
                 }
             ],
             "date": 1777294834403,

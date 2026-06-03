@@ -1,0 +1,18 @@
+{
+    "sourceFile": "src/Header.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1780472367325,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1780472367325,
+            "name": "Commit-0",
+            "content": "import React from 'react';\r\nimport emblem from '../assets/emblem.png'; // Adjust path if needed\r\nimport { useAuth } from './context/AuthContext';\r\n\r\nconst Header = () => {\r\n  const { user } = useAuth();\r\n  const display = user && user.mobile ? user.mobile : 'Guest';\r\n\r\n  return (\r\n    <div className=\"flex items-center justify-between px-6 py-4 shadow-md bg-white fixed top-0 left-0 right-0 z-50\">\r\n      <a href=\"/HomePage\">\r\n        <img src={emblem} alt=\"App Logo\" style={{ height: '40px', width: 'auto' }} />\r\n      </a>\r\n      <div className=\"text-sm text-gray-700\">Signed in as <strong>{display}</strong></div>\r\n    </div>\r\n  );\r\n};\r\n\r\nexport default Header;\r\n"
+        }
+    ]
+}

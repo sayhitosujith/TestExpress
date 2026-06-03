@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 2,
+            "activePatchIndex": 3,
             "patches": [
                 {
                     "date": 1777294834404,
@@ -16,6 +16,10 @@
                 {
                     "date": 1777295145955,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -468,9 +468,10 @@\n                       <FaEdit />\r\n                     </button>\r\n                   </td>\r\n                 </tr>\r\n-              ))}\r\n+                );\r\n+              })}\r\n             </tbody>\r\n             <tfoot>\r\n               <tr>\r\n                 <td colSpan=\"9\" style={{ textAlign: \"right\", fontWeight: \"bold\" }}>\r\n"
+                },
+                {
+                    "date": 1780393258791,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -309,27 +309,27 @@\n       <h1 className=\"book-appointment-header\">Appointment History</h1>\r\n \r\n       <div className=\"action-buttons\">\r\n         <Breadcrumbs>\r\n-          <a href=\"#\" className=\"opacity-60\">\r\n+          <button type=\"button\" className=\"opacity-60\">\r\n             <svg\r\n               xmlns=\"http://www.w3.org/2000/svg\"\r\n               className=\"h-4 w-4\"\r\n               viewBox=\"0 0 20 20\"\r\n               fill=\"currentColor\"\r\n             >\r\n               <path d=\"M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z\" />\r\n             </svg>\r\n-          </a>\r\n+          </button>\r\n \r\n           <a href=\"/HomePage\" className=\"opacity-60\">\r\n             Home\r\n           </a>\r\n \r\n           <a href=\"/Welcome\" className=\"opacity-60\">\r\n             Welcome\r\n           </a>\r\n-          <a href=\"#\">Appointment History</a>\r\n+          <span>Appointment History</span>\r\n         </Breadcrumbs>\r\n \r\n         <button\r\n           className=\"flex items-center gap-2 px-4 py-2 rounded-lg text-white \r\n"
                 }
             ],
             "date": 1777294834404,

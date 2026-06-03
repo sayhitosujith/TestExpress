@@ -3,11 +3,19 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 2,
             "patches": [
                 {
                     "date": 1776092115976,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1780472092361,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -59,8 +59,9 @@\n       setError(\"\");\r\n       setSuccess(\"OTP Verified Successfully ✅\");\r\n \r\n       setTimeout(() => {\r\n+        localStorage.setItem(\"isLoggedIn\", \"true\");\r\n         navigate(\"/Customer_home\");\r\n       }, 2000);\r\n     } else {\r\n       setSuccess(\"\");\r\n"
+                },
+                {
+                    "date": 1780472367336,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,15 +1,18 @@\n import \"./App.css\";\r\n import React, { useState, useRef, useEffect } from \"react\";\r\n import OtpInput from \"react-otp-input\";\r\n-import { useNavigate } from \"react-router-dom\";\r\n+import { useNavigate, useLocation } from \"react-router-dom\";\r\n+import { useAuth } from \"./context/AuthContext\";\r\n import logo from \"./assets/Toothx_Logo.png\";\r\n \r\n function OTP() {\r\n   const [otp, setOtp] = useState(\"\");\r\n   const [error, setError] = useState(\"\");\r\n   const [success, setSuccess] = useState(\"\");\r\n   const navigate = useNavigate();\r\n+  const location = useLocation();\r\n+  const { login } = useAuth();\r\n \r\n   // Draggable Card\r\n   const cardRef = useRef(null);\r\n   const drag = useRef({\r\n@@ -59,9 +62,11 @@\n       setError(\"\");\r\n       setSuccess(\"OTP Verified Successfully ✅\");\r\n \r\n       setTimeout(() => {\r\n-        localStorage.setItem(\"isLoggedIn\", \"true\");\r\n+        const mobileFromState = location?.state?.mobile || localStorage.getItem('lastMobile') || '';\r\n+        const userObj = { mobile: mobileFromState };\r\n+        login(userObj);\r\n         navigate(\"/Customer_home\");\r\n       }, 2000);\r\n     } else {\r\n       setSuccess(\"\");\r\n"
                 }
             ],
             "date": 1776092115976,

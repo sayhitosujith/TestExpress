@@ -1,0 +1,18 @@
+{
+    "sourceFile": "src/Contact_us.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1780400198850,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1780400198850,
+            "name": "Commit-0",
+            "content": "import './App.css';\r\n\r\n\r\nimport {\r\n  Card,\r\n  CardHeader,\r\n  CardBody,\r\n  CardFooter,\r\n  Typography,\r\n  Input,\r\n  Checkbox,\r\n  Button,\r\n  Textarea,\r\n} from \"@material-tailwind/react\";\r\n\r\n\r\n\r\n\r\nfunction Contact_us() {\r\n  return (\r\n    <div className=\"flex flex-row gap-5\">\r\n      \r\n      <div className='w-1/2 h-screen flex items-center justify-center'>\r\n        <Card className=\"w-98\">\r\n          <CardHeader\r\n            variant=\"gradient\"\r\n            color=\"gray\"\r\n            background= \"red\"\r\n\r\n            className=\"mb-4 grid h-28 place-items-center\">\r\n            <Typography variant=\"h3\" color=\"white\">\r\n            Contact Us\r\n            </Typography>\r\n          </CardHeader>\r\n          <CardBody className=\"flex flex-col gap-4\">\r\n            <Input label=\"First Name\" size=\"lg\" />\r\n            <Input label=\"Last Name\" size=\"lg\" />\r\n            <Input label=\"Email\" size=\"lg\" />\r\n            <Input label=\"Subject\" size=\"lg\" />\r\n            <Textarea label=\"Comments\" />\r\n\r\n            \r\n            \r\n          </CardBody>\r\n            <Button variant=\"gradient\" fullWidth>\r\n             Send message\r\n            </Button>\r\n            &nbsp;\r\n            <Typography\r\n          variant=\"p\"\r\n          sx={{ letterSpacing: '1.5px', marginLeft: '4px'  }}>\r\n        </Typography>\r\n          \r\n          \r\n        <Typography variant=\"small\" className=\"mt-6 flex justify-center\">\r\n           <h1 style={{ color: 'orange' }}><b><div>Registered Address : #290, Medahalli, Banglore - 560049 , info@mumbaidabbawala.in</div></b></h1>\r\n\r\n           <Typography\r\n                as=\"a\"\r\n                href=\"#signup\"\r\n                variant=\"small\"\r\n                color=\"orange-gray\"\r\n                className=\"ml-1 font-bold\">\r\n              </Typography>\r\n           </Typography>\r\n\r\n        </Card>\r\n      </div>\r\n      <img style={{width: '60%', height: '100vh'}} alt=\"Dabbawalas animation\" src=\"https://mocomi.com/wp-content/uploads/2016/09/MOC_GIFO_DABBAWALAS.gif\" />\r\n    </div>\r\n   \r\n\r\n   \r\n  );\r\n\r\n  \r\n}\r\n\r\nexport default Contact_us;\r\n\r\n"
+        }
+    ]
+}
