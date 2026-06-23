@@ -39,7 +39,7 @@ const CardItem = ({ item, onRestart, onLogs }) => (
   <Card className="w-full md:w-96 h-full flex flex-col shadow-md">
     <CardHeader className="mb-2 flex items-center justify-between px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800">
       <Typography variant="h6" color="white">{item.name}</Typography>
-      <Badge color={item.status === 'Healthy' ? 'green' : (item.status === 'Degraded' ? 'amber' : 'red')} className="!text-white">{item.status}</Badge>
+      <Badge color={item.status === 'Healthy' ? 'orange' : (item.status === 'Degraded' ? 'amber' : 'red')} className="!text-white">{item.status}</Badge>
     </CardHeader>
 
     <div className="w-full h-44 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-md p-3">
@@ -91,7 +91,7 @@ const CardItem = ({ item, onRestart, onLogs }) => (
     </CardBody>
 
     <CardFooter className="pt-0 flex gap-2 mt-auto px-4 pb-4">
-      <button onClick={() => onRestart && onRestart()} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">Restart</button>
+      <button onClick={() => onRestart && onRestart()} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm">Restart</button>
       <button onClick={() => onLogs && onLogs()} className="bg-gray-800 hover:bg-gray-900 text-white px-3 py-2 rounded-md text-sm">Logs</button>
     </CardFooter>
   </Card>
@@ -392,7 +392,7 @@ function BillingDetails() {
       {/* Toast */}
       {toast.show && (
         <div className="fixed right-4 top-4 z-50">
-          <div className="bg-green-600 text-white px-4 py-2 rounded shadow">{toast.message}</div>
+          <div className="bg-orange-600 text-white px-4 py-2 rounded shadow">{toast.message}</div>
         </div>
       )}
 

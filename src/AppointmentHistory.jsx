@@ -80,7 +80,7 @@ const AppointmentHistory = () => {
             grid-template-columns:1fr 1fr; 
             gap:8px 20px; 
             margin-bottom:15px; 
-            background-color:#f0f8ff; /* ✅ Light blue background */
+            background-color:#f0f8ff; /* ✅ Light orange background */
             padding:10px; 
             border-radius:5px;
           }

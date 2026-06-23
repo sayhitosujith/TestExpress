@@ -67,7 +67,7 @@ const WhatWeTreatPage = () => {
     href="https://facebook.com"
     target="_blank"
     rel="noopener noreferrer"
-    className="p-3 rounded-full bg-white/10 text-white hover:bg-blue-600 hover:scale-110 transition duration-300"
+    className="p-3 rounded-full bg-white/10 text-white hover:bg-orange-600 hover:scale-110 transition duration-300"
   >
     <FaFacebookF />
   </a>
@@ -94,7 +94,7 @@ const WhatWeTreatPage = () => {
     href="https://linkedin.com"
     target="_blank"
     rel="noopener noreferrer"
-    className="p-3 rounded-full bg-white/10 text-white hover:bg-blue-700 hover:scale-110 transition duration-300"
+    className="p-3 rounded-full bg-white/10 text-white hover:bg-orange-700 hover:scale-110 transition duration-300"
   >
     <FaLinkedinIn />
   </a>
@@ -274,7 +274,7 @@ const WhatWeTreatPage = () => {
     href="https://facebook.com"
     target="_blank"
     rel="noopener noreferrer"
-    className="p-3 rounded-full bg-white/10 hover:bg-blue-600 text-white transition duration-300 hover:scale-110"
+    className="p-3 rounded-full bg-white/10 hover:bg-orange-600 text-white transition duration-300 hover:scale-110"
   >
     <FaFacebookF />
   </a>
@@ -301,7 +301,7 @@ const WhatWeTreatPage = () => {
     href="https://linkedin.com"
     target="_blank"
     rel="noopener noreferrer"
-    className="p-3 rounded-full bg-white/10 hover:bg-blue-700 text-white transition duration-300 hover:scale-110"
+    className="p-3 rounded-full bg-white/10 hover:bg-orange-700 text-white transition duration-300 hover:scale-110"
   >
     <FaLinkedinIn />
   </a>

@@ -217,12 +217,12 @@ function MyCart() {
     {
       label: "PAID (UPI Scanner)",
       code: "UPI",
-      color: "bg-green-500 text-white",
+      color: "bg-orange-500 text-white",
     },
     {
       label: "PAID (Cash)",
       code: "CASH",
-      color: "bg-green-500 text-white",
+      color: "bg-orange-500 text-white",
     },
     { label: "Pending", code: "P", color: "bg-orange-100 text-orange-700" },
     { label: "Cancelled", code: "X", color: "bg-red-100 text-red-700" },
@@ -1505,7 +1505,7 @@ const grandTotal = baseAmount + gstAmount;
                       <span
                         className={`px-3 py-1 rounded-full font-semibold shadow transition-all duration-500 animate-pulse 
                           ${item.consultationType === "ONLINE"
-                            ? "bg-blue-100 text-blue-700 border border-blue-300"
+                            ? "bg-orange-100 text-orange-700 border border-orange-300"
                             : item.consultationType === "OFFLINE"
                               ? "bg-orange-100 text-orange-700 border border-orange-300"
                               : "bg-gray-100 text-gray-500 border border-gray-300"}
@@ -1516,7 +1516,7 @@ const grandTotal = baseAmount + gstAmount;
                     </p>
 
                     {item.consultationType === "ONLINE" && item.meetingUrl && (
-                      <p className="text-blue-600 text-sm break-all">
+                      <p className="text-orange-600 text-sm break-all">
                         <b>Meeting Link:</b>{" "}
                         <a
                           href={item.meetingUrl}
@@ -1543,7 +1543,7 @@ const grandTotal = baseAmount + gstAmount;
                     <Button
                       size="sm"
                       variant="text"
-                      className="py-1 px-2 text-xs text-blue-900"
+                      className="py-1 px-2 text-xs text-orange-900"
                       onClick={() => toggleExpand(item.id)}
                     >
                       {expandedId === item.id
@@ -1590,7 +1590,7 @@ const grandTotal = baseAmount + gstAmount;
                                     }
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className={`bg-green-400 text-white px-2 py-1.5 rounded-lg transition ${item.status === "Completed" ? "opacity-60 cursor-not-allowed pointer-events-none" : "hover:bg-green-700"}`}
+                                    className={`bg-orange-400 text-white px-2 py-1.5 rounded-lg transition ${item.status === "Completed" ? "opacity-60 cursor-not-allowed pointer-events-none" : "hover:bg-orange-700"}`}
                                     tabIndex={item.status === "Completed" ? -1 : 0}
                                     aria-disabled={item.status === "Completed"}
                                   >
@@ -1607,7 +1607,7 @@ const grandTotal = baseAmount + gstAmount;
   className={`${
     item.status === "Completed"
       ? "bg-gray-400"
-      : "bg-blue-600 text-white"
+      : "bg-orange-600 text-white"
   }`}
 >
   {item.status === "Completed" ? "COMPLETED ✅" : "MARK COMPLETED"}
@@ -1629,7 +1629,7 @@ const grandTotal = baseAmount + gstAmount;
                                         /* If Cancelled → show Reschedule */
                                         <button
                                           onClick={() => handleReschedule(item)}
-                                          className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition"
+                                          className="bg-orange-600 text-white px-4 py-1.5 rounded-lg hover:bg-orange-700 transition"
                                         >
                                           Reschedule Appointment
                                         </button>
@@ -1685,7 +1685,7 @@ const grandTotal = baseAmount + gstAmount;
                       className={`${
                         paidAppointments[item.id] || item.status === "Cancelled"
                           ? "bg-gray-400"
-                          : "bg-green-600 text-white"
+                          : "bg-orange-600 text-white"
                       }`}
                     >
                       {paidAppointments[item.id] ? "PAID ✅" : "PAY NOW"}
@@ -1704,7 +1704,7 @@ const grandTotal = baseAmount + gstAmount;
                     {paidAppointments[item.id] === "UPI Scanner" && (
                       <Button
                         size="sm"
-                        className="bg-green-500 text-white shadow-md hover:bg-green-600 transition"
+                        className="bg-orange-500 text-white shadow-md hover:bg-orange-600 transition"
                         onClick={() => handleDischargeSummary(item)}
                       >
                         📄 DISCHARGE SUMMARY
@@ -1808,7 +1808,7 @@ const grandTotal = baseAmount + gstAmount;
 
             <div className="flex flex-col gap-4">
               <Button
-                className="bg-green-600 text-white"
+                className="bg-orange-600 text-white"
                 onClick={() => confirmPayment("Cash")}
               >
                 💵 Pay by Cash

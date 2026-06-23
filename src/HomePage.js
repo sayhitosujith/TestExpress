@@ -315,24 +315,26 @@ function Welcome() {
 
         {/* Text + Book Now */}
         <div className="absolute inset-0 flex flex-col justify-center items-center text-center px-4 md:px-20 z-10">
-          <i><h1 className="text-white text-2xl md:text-4xl font-bold mb-4 drop-shadow-lg">
-            Your personal online Dentist
-          </h1></i>
+          <i>
+            <h1 className="text-white text-2xl md:text-4xl font-bold mb-4 drop-shadow-lg">
+              Your personal online Dentist
+            </h1>
+          </i>
           <p className="text-white text-sm md:text-lg font-medium drop-shadow-md leading-relaxed">
             Struggling to get a dentist appointment? Fed up with long queues?
             Frustrated waiting? <br />
             Don’t worry – ToothX is here to help <br />
-            Book a same day or next day online consultation, with a
-            experienced Dentist, in just a few clicks.
+            Book a same day or next day online consultation, with a experienced
+            Dentist, in just a few clicks.
           </p>
 
           <div className="relative inline-block mt-6">
-  {/* Glow */}
-  <div className="absolute inset-0 rounded-xl blur-md bg-gradient-to-r from-orange-400 via-orange-600 to-orange-900 opacity-60"></div>
+            {/* Glow */}
+            <div className="absolute inset-0 rounded-xl blur-md bg-gradient-to-r from-orange-400 via-orange-600 to-orange-900 opacity-60"></div>
 
-  <Button
-    size="lg"
-    className="relative flex items-center gap-3 px-6 py-3 
+            <Button
+              size="lg"
+              className="relative flex items-center gap-3 px-6 py-3 
     rounded-xl 
     text-white 
     bg-gradient-to-r from-orange-500 via-orange-700 to-orange-900 
@@ -341,12 +343,14 @@ function Welcome() {
     backdrop-blur-md
     hover:scale-105 hover:shadow-orange-500/40
     transition duration-300"
-    onClick={() => navigate("/Customer_home")}
-  >
-    <BsPlus size={22} />
-    <span className="tracking-wide font-semibold">BOOK ONLINE NOW</span>
-  </Button>
-</div>
+              onClick={() => navigate("/Customer_home")}
+            >
+              <BsPlus size={22} />
+              <span className="tracking-wide font-semibold">
+                BOOK ONLINE NOW
+              </span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -391,18 +395,18 @@ function Welcome() {
       </div>
 
       {/* App Banner */}
-    <div className="relative w-full aspect-[3/1] rounded-lg overflow-hidden shadow-md">
-  <img
-    src={appbanner}
-    alt="App banner scanner"
-    className="w-full h-full object-cover"
-  />
+      <div className="relative w-full aspect-[3/1] rounded-lg overflow-hidden shadow-md">
+        <img
+          src={appbanner}
+          alt="App banner scanner"
+          className="w-full h-full object-cover"
+        />
 
-  {/* Light overlay */}
-  <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/10 to-transparent"></div>
-</div>
+        {/* Light overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/10 to-transparent"></div>
+      </div>
       {/* Doctors */}
-      <div className="flex items-center justify-center my-10">
+      <div className="flex items-center justify-center my-">
         <div className="flex-grow h-[1px] bg-orange-100"></div>
 
         <Typography
@@ -597,125 +601,124 @@ function Welcome() {
 
       {/* Footer */}
       <footer className="mt-10 w-full bg-gradient-to-r from-orange-700 via-purple-800 to-purple-800 text-gray-300 shadow-lg">
-              {" "}
-              <div className="max-w-7xl mx-auto px-8 py-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-                {/* Logo + Description */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-lg font-semibold">
-                      <img src={logo} alt="logo" className="w-28 mb-2" />
-                    </h3>
-                  </div>
-                  <p className="text-sm">
-                    Providing trusted dental treatments with modern technology and
-                    expert dentists. Your smile is our priority.
-                  </p>
-                </div>
-      
-                <div className="justify-self-start text-left">
-                  <h3 className="text-white font-semibold mb-3">Company</h3>
-                  <ul className="space-y-2 text-sm">
-                    <li>
-                      <a href="/HomePage" className="hover:text-white">
-                        Home
-                      </a>
-                    </li>
-                    <li>
-                      <a href="/about" className="hover:text-white">
-                        About Us
-                      </a>
-                    </li>
-                    <li>
-                      <a href="/careers" className="hover:text-white">
-                        Careers
-                      </a>
-                    </li>
-                    <li>
-                      <a href="/blog" className="hover:text-white">
-                        Blog
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-      
-                {/* Treatments */}
-                <div>
-                  <h3 className="text-white font-semibold mb-3">Treatments</h3>
-                  <ul className="space-y-2 text-sm">
-                    <li>Dental Implants</li>
-                    <li>Root Canal</li>
-                    <li>Braces</li>
-                    <li>Teeth Whitening</li>
-                  </ul>
-                </div>
-      
-                {/* Contact */}
-                <div>
-                  <h3 className="text-white font-semibold mb-3">Contact</h3>
-                  <ul className="space-y-2 text-sm">
-                    <li>📍Head Office - WTC , Bangalore, India</li>
-                    <li>📞 HR - +91 - 8618860059</li>
-                    <li>
-                      <a href="mailto:supportblr@dutydentist.com">
-                        ✉ supportblr@dutydentist.com
-                      </a>
-                         {/* Social Media */}
-<div className="flex justify-end gap-4 mt-3">
-  <a
-    href="https://facebook.com"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="p-3 rounded-full bg-white/10 hover:bg-blue-600 text-white transition duration-300 hover:scale-110"
-  >
-    <FaFacebookF />
-  </a>
+        {" "}
+        <div className="max-w-7xl mx-auto px-8 py-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+          {/* Logo + Description */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-lg font-semibold">
+                <img src={logo} alt="logo" className="w-28 mb-2" />
+              </h3>
+            </div>
+            <p className="text-sm">
+              Providing trusted dental treatments with modern technology and
+              expert dentists. Your smile is our priority.
+            </p>
+          </div>
 
-  <a
-    href="https://instagram.com"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="p-3 rounded-full bg-white/10 hover:bg-pink-500 text-white transition duration-300 hover:scale-110"
-  >
-    <FaInstagram />
-  </a>
+          <div className="justify-self-start text-left">
+            <h3 className="text-white font-semibold mb-3">Company</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <a href="/HomePage" className="hover:text-white">
+                  Home
+                </a>
+              </li>
+              <li>
+                <a href="/about" className="hover:text-white">
+                  About Us
+                </a>
+              </li>
+              <li>
+                <a href="/careers" className="hover:text-white">
+                  Careers
+                </a>
+              </li>
+              <li>
+                <a href="/blog" className="hover:text-white">
+                  Blog
+                </a>
+              </li>
+            </ul>
+          </div>
 
-  <a
-    href="https://twitter.com"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="p-3 rounded-full bg-white/10 hover:bg-sky-400 text-white transition duration-300 hover:scale-110"
-  >
-    <FaTwitter />
-  </a>
+          {/* Treatments */}
+          <div>
+            <h3 className="text-white font-semibold mb-3">Treatments</h3>
+            <ul className="space-y-2 text-sm">
+              <li>Dental Implants</li>
+              <li>Root Canal</li>
+              <li>Braces</li>
+              <li>Teeth Whitening</li>
+            </ul>
+          </div>
 
-  <a
-    href="https://linkedin.com"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="p-3 rounded-full bg-white/10 hover:bg-blue-700 text-white transition duration-300 hover:scale-110"
-  >
-    <FaLinkedinIn />
-  </a>
+          {/* Contact */}
+          <div>
+            <h3 className="text-white font-semibold mb-3">Contact</h3>
+            <ul className="space-y-2 text-sm">
+              <li>📍Head Office - WTC , Bangalore, India</li>
+              <li>📞 HR - +91 - 8618860059</li>
+              <li>
+                <a href="mailto:supportblr@dutydentist.com">
+                  ✉ supportblr@dutydentist.com
+                </a>
+                {/* Social Media */}
+                <div className="flex justify-end gap-4 mt-3">
+                  <a
+                    href="https://facebook.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-full bg-white/10 hover:bg-orange-600 text-white transition duration-300 hover:scale-110"
+                  >
+                    <FaFacebookF />
+                  </a>
 
-  <a
-    href="https://youtube.com"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="p-3 rounded-full bg-white/10 hover:bg-red-600 text-white transition duration-300 hover:scale-110"
-  >
-    <FaYoutube />
-  </a>
-</div>
-                    </li>{" "}
-                  </ul>
+                  <a
+                    href="https://instagram.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-full bg-white/10 hover:bg-pink-500 text-white transition duration-300 hover:scale-110"
+                  >
+                    <FaInstagram />
+                  </a>
+
+                  <a
+                    href="https://twitter.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-full bg-white/10 hover:bg-sky-400 text-white transition duration-300 hover:scale-110"
+                  >
+                    <FaTwitter />
+                  </a>
+
+                  <a
+                    href="https://linkedin.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-full bg-white/10 hover:bg-orange-700 text-white transition duration-300 hover:scale-110"
+                  >
+                    <FaLinkedinIn />
+                  </a>
+
+                  <a
+                    href="https://youtube.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-full bg-white/10 hover:bg-red-600 text-white transition duration-300 hover:scale-110"
+                  >
+                    <FaYoutube />
+                  </a>
                 </div>
-              </div>
-              {/* Bottom Section */}
-              <div className="border-t border-gray-700 text-center py-4 text-sm">
-                © {new Date().getFullYear()} ToothX. All rights reserved.
-              </div>
-           
-            </footer>
+              </li>{" "}
+            </ul>
+          </div>
+        </div>
+        {/* Bottom Section */}
+        <div className="border-t border-gray-700 text-center py-4 text-sm">
+          © {new Date().getFullYear()} ToothX. All rights reserved.
+        </div>
+      </footer>
     </div>
   );
 }

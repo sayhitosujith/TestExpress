@@ -306,7 +306,7 @@ const CardItem = ({ item, navigate }) => {
           <div className="absolute top-0 right-2 z-10">
             <Chip
               value="BOOKED"
-              color="green"
+              color="orange"
               className="text-white font-bold"
             />
           </div>
@@ -325,7 +325,7 @@ const CardItem = ({ item, navigate }) => {
 
         {/* 🔥 HOVER DETAILS POPUP */}
         {booked && showHover && booking && (
-          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 bg-green-400 shadow-xl border rounded-lg p-3 z-20">
+          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 bg-orange-400 shadow-xl border rounded-lg p-3 z-20">
             <Typography className="font-bold text-sm mb-2 text-purple-700">
               Booking Details
             </Typography>
@@ -548,7 +548,7 @@ function App() {
 
         {/* SHOW CURRENT CITY */}
         {currentCity && (
-          <span className="flex items-center gap-2 text-sm font-semibold text-white whitespace-nowrap border border-green-900 rounded-lg px-3 py-1 bg-green-500">
+          <span className="flex items-center gap-2 text-sm font-semibold text-white whitespace-nowrap border border-orange-900 rounded-lg px-3 py-1 bg-orange-500">
             <MdLocationPin size={30} className="inline" />
             {currentCity}
           </span>

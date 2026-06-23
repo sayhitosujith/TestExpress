@@ -330,7 +330,7 @@ const PatientPortal = () => {
    <div className={`portal-container ${darkMode ? "dark-mode" : ""}`}>
   
   {/* Sidebar */}
-<aside className="sidebar min-h-screen bg-gradient-to-r from-orange-700 via-orange-900 to-orange-900 flex flex-col items-center py-16 px-4">
+<aside className="sidebar min-h-screen bg-gradient-to-r from-orange-700 via-orange-700 to-orange-700 flex flex-col items-center py-16 px-4">
   {/* Logo */}
   <img
     className="sidebar-logo"

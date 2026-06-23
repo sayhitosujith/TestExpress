@@ -209,7 +209,7 @@ export default function Welcome() {
   const handleSubmit = () => navigate("/Logout");
 
   return (
-    <div className="p-6 md:p-10 min-h-screen relative bg-gradient-to-r from-yellow-700 via-orange-900 to-orange-900">
+    <div className="p-6 md:p-10 min-h-screen relative bg-gradient-to-r from-yellow-600 via-orange-700 to-orange-700">
       {" "}
       {/* LOGO */}
       <img src={logo} alt="logo" className="absolute top-4 left-4 w-40" />
