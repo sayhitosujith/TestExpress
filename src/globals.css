@@ -11,4 +11,8 @@
   .animate-blink {
     animation: blink 1s infinite;
   }
+
+  .gap-6 {
+   
+  }
 }
