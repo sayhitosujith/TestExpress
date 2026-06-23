@@ -1,7 +1,4 @@
-import "./App.css";
-import { RiAppleLine } from "react-icons/ri";
-import { GrAndroid } from "react-icons/gr";
-import Flag from "react-world-flags";
+﻿import "./App.css";
 import adritaImage from "./assets/Adrita.png";
 import rajeshImage from "./assets/Rajesh.png";
 import RoyImage from "./assets/Roy.png";
@@ -10,7 +7,6 @@ import appbanner from "./assets/2-1.png";
 import Banner_wallpaper from "./assets/DentalWallpaper.png";
 import { BsPlus } from "react-icons/bs";
 import logo from "./assets/Toothx_Logo-removebg-preview.png";
-import { TbDental } from "react-icons/tb";
 import { IoCallSharp, IoMailOutline } from "react-icons/io5";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -234,7 +230,7 @@ function Welcome() {
       onClick={onClick}
       className="absolute -left-6 top-1/2 -translate-y-1/2 z-20 bg-orange-600 text-white w-10 h-10 rounded-full shadow-lg hover:bg-orange-700 transition text-xl font-bold"
     >
-      ‹
+      â€¹
     </button>
   );
 
@@ -243,7 +239,7 @@ function Welcome() {
       onClick={onClick}
       className="absolute -right-6 top-1/2 -translate-y-1/2 z-20 bg-orange-600 text-white w-10 h-10 rounded-full shadow-lg hover:bg-orange-700 transition text-xl font-bold"
     >
-      ›
+      â€º
     </button>
   );
 
@@ -266,7 +262,7 @@ function Welcome() {
   return (
     <div style={{ background: "#FAFAF9" }} className="min-h-screen">
 
-      {/* ─── Sticky Navigation ─── */}
+      {/* â”€â”€â”€ Sticky Navigation â”€â”€â”€ */}
       <nav
         className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
           scrolled
@@ -341,7 +337,7 @@ function Welcome() {
         </div>
       </nav>
 
-      {/* ─── Mobile Drawer ─── */}
+      {/* â”€â”€â”€ Mobile Drawer â”€â”€â”€ */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-[60] md:hidden">
           {/* Backdrop */}
@@ -396,7 +392,7 @@ function Welcome() {
         </div>
       )}
 
-      {/* ─── Call Popup ─── */}
+      {/* â”€â”€â”€ Call Popup â”€â”€â”€ */}
       {showCallPopup && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-8 w-80 text-center shadow-2xl relative animate-popup">
@@ -405,7 +401,7 @@ function Welcome() {
               aria-label="Close"
               className="absolute top-3 right-4 w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors text-lg"
             >
-              ✕
+              âœ•
             </button>
             <div
               className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
@@ -414,7 +410,7 @@ function Welcome() {
               <MdSupportAgent size={32} style={{ color: "#EA580C" }} />
             </div>
             <h2 className="text-lg font-bold mb-1 text-stone-900">
-              24×7 Support
+              24Ã—7 Support
             </h2>
             <p className="text-stone-500 text-sm mb-3">
               We're always here to help you
@@ -436,14 +432,14 @@ function Welcome() {
         </div>
       )}
 
-      {/* ─── Hero ─── */}
+      {/* â”€â”€â”€ Hero â”€â”€â”€ */}
       <section className="relative w-full h-[500px] md:h-[620px] overflow-hidden">
         <img
           src={Banner_wallpaper}
           alt="Dental clinic"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        {/* Orange→violet gradient overlay — commits to ToothX's brand identity */}
+        {/* Orangeâ†’violet gradient overlay â€” commits to ToothX's brand identity */}
         <div
           className="absolute inset-0"
           style={{
@@ -466,7 +462,7 @@ function Welcome() {
 
           <p className="text-white/75 text-sm md:text-base leading-relaxed mb-8 max-w-md">
             Skip the waiting room. Book a same-day or next-day online
-            consultation with an experienced dentist — in minutes.
+            consultation with an experienced dentist â€” in minutes.
           </p>
 
           <div className="flex flex-wrap items-center gap-4">
@@ -487,23 +483,23 @@ function Welcome() {
                   .fill(0)
                   .map((_, i) => (
                     <span key={i} style={{ color: "#FCD34D" }}>
-                      ★
+                      â˜…
                     </span>
                   ))}
               </div>
-              <span>4.9 · 2,000+ patients</span>
+              <span>4.9 Â· 2,000+ patients</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── Trust Strip ─── */}
-      <div style={{ background: "#ffffff" }} className="py-6 px-4">
+      {/* â”€â”€â”€ Trust Strip â”€â”€â”€ */}
+      <div style={{ background: "#1C1917" }} className="py-6 px-4">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
             { number: "2,000+", label: "Patients Served" },
             { number: "50+", label: "Expert Dentists" },
-            { number: "4.9★", label: "Average Rating" },
+            { number: "4.9â˜…", label: "Average Rating" },
             { number: "24/7", label: "Support Available" },
           ].map(({ number, label }) => (
             <div key={label}>
@@ -521,7 +517,7 @@ function Welcome() {
         </div>
       </div>
 
-      {/* ─── Services ─── */}
+      {/* â”€â”€â”€ Services â”€â”€â”€ */}
       <section className="py-16 px-4" style={{ background: "#FAFAF9" }}>
         <div className="max-w-5xl mx-auto">
           <div className="mb-10">
@@ -563,7 +559,7 @@ function Welcome() {
         </div>
       </section>
 
-      {/* ─── App Banner ─── */}
+      {/* â”€â”€â”€ App Banner â”€â”€â”€ */}
       <div className="px-4 md:px-8 pb-12">
         <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-md">
           <div className="relative w-full aspect-[3/1]">
@@ -583,7 +579,7 @@ function Welcome() {
         </div>
       </div>
 
-      {/* ─── Doctors ─── */}
+      {/* â”€â”€â”€ Doctors â”€â”€â”€ */}
       <section className="py-16 px-4" style={{ background: "#F5F5F4" }}>
         <div className="max-w-5xl mx-auto">
           <div className="mb-10">
@@ -645,7 +641,7 @@ function Welcome() {
         </div>
       </section>
 
-      {/* ─── Reviews ─── */}
+      {/* â”€â”€â”€ Reviews â”€â”€â”€ */}
       <section className="py-16 px-4" style={{ background: "#FAFAF9" }}>
         <div className="max-w-5xl mx-auto">
           <div className="mb-10">
@@ -679,7 +675,7 @@ function Welcome() {
                         key={i}
                         style={{ color: "#F59E0B", fontSize: "0.75rem" }}
                       >
-                        ★
+                        â˜…
                       </span>
                     ))}
                 </div>
@@ -705,7 +701,7 @@ function Welcome() {
         </div>
       </section>
 
-      {/* ─── Partners ─── */}
+      {/* â”€â”€â”€ Partners â”€â”€â”€ */}
       <section className="py-14 px-4" style={{ background: "#F5F5F4" }}>
         <div className="max-w-5xl mx-auto">
           <div className="mb-10">
@@ -749,8 +745,8 @@ function Welcome() {
         </div>
       </section>
 
-      {/* ─── Footer ─── */}
-      <footer style={{ background: "linear-gradient(135deg, #1E0A3C 0%, #3730A3 100%)" }} className="text-purple-200/70">
+      {/* â”€â”€â”€ Footer â”€â”€â”€ */}
+      <footer style={{ background: "linear-gradient(135deg, #1E0A3C 0%, #3730A3 100%)" }} className="text-purple-200/70 pb-24 md:pb-0">
         <div className="max-w-7xl mx-auto px-8 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
@@ -835,15 +831,15 @@ function Welcome() {
             </h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2 text-purple-200/60">
-                <span className="mt-px">📍</span>
-                <span>Head Office – WTC, Bangalore, India</span>
+                <span className="mt-px">ðŸ“</span>
+                <span>Head Office â€“ WTC, Bangalore, India</span>
               </li>
               <li className="flex items-center gap-2 text-purple-200/60">
-                <span>📞</span>
-                <span>HR – +91 86188 60059</span>
+                <span>ðŸ“ž</span>
+                <span>HR â€“ +91 86188 60059</span>
               </li>
               <li className="flex items-center gap-2 text-purple-200/60">
-                <span>✉</span>
+                <span>âœ‰</span>
                 <a
                   href="mailto:supportblr@dutydentist.com"
                   className="hover:text-white transition-colors"
@@ -856,11 +852,11 @@ function Welcome() {
         </div>
 
         <div className="border-t border-purple-700/40 text-center py-4 text-xs text-purple-300/50">
-          © {new Date().getFullYear()} ToothX. All rights reserved.
+          Â© {new Date().getFullYear()} ToothX. All rights reserved.
         </div>
       </footer>
 
-      {/* ─── Floating Booking Bar — mobile only ─── */}
+      {/* â”€â”€â”€ Floating Booking Bar â€” mobile only â”€â”€â”€ */}
       <div
         className={`md:hidden fixed bottom-0 inset-x-0 z-40 transition-all duration-300 ${
           showFloatingCTA ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
@@ -879,13 +875,13 @@ function Welcome() {
             className="flex-[2] py-3 rounded-xl text-white font-bold text-sm hover:opacity-90 transition-opacity"
             style={{ background: "linear-gradient(135deg, #EA580C, #7C3AED)" }}
           >
-            Book Appointment →
+            Book Appointment â†’
           </button>
         </div>
         <div style={{ height: "env(safe-area-inset-bottom, 0px)" }} />
       </div>
 
-      {/* ─── Back to Top ─── */}
+      {/* â”€â”€â”€ Back to Top â”€â”€â”€ */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         aria-label="Back to top"
