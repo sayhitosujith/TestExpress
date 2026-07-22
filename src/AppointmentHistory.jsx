@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FaEye,
-  FaPrint,
-  FaTrash,
-  FaShareAlt,
-  FaSyncAlt,
-  FaClone,
-  FaEdit,
-  FaDownload,
-} from "react-icons/fa";
+  MdVisibility,
+  MdPrint,
+  MdDelete,
+  MdShare,
+  MdRefresh,
+  MdFileCopy,
+  MdEdit,
+  MdDownload,
+} from "react-icons/md";
 import "./Calendar.css";
 import { Breadcrumbs } from "@material-tailwind/react";
 
@@ -343,14 +343,14 @@ const AppointmentHistory = () => {
           className="submit-btn bg-gradient-to-r from-purple-600 via-purple-700 to-purple-900 text-white shadow-lg hover:scale-105 transition duration-300 flex items-center gap-2"
           onClick={() => openPrintPreview(appointments)}
         >
-          <FaPrint /> Print All
+          <MdPrint /> Print All
         </button>
 
         <button
           className="submit-btn bg-gradient-to-r from-orange-600 via-orange-700 to-orange-900 text-white shadow-lg hover:scale-105 transition duration-300 flex items-center gap-2"
           onClick={downloadCSV}
         >
-          <FaDownload /> Download CSV
+          <MdDownload /> Download CSV
         </button>
 
         <button
@@ -364,7 +364,7 @@ const AppointmentHistory = () => {
           className="submit-btn bg-gradient-to-r from-orange-600 via-orange-700 to-orange-900 text-white shadow-lg hover:scale-105 transition duration-300 flex items-center gap-2"
           onClick={handleRefresh}
         >
-          <FaSyncAlt /> Refresh
+          <MdRefresh /> Refresh
         </button>
       </div>
 
@@ -428,28 +428,28 @@ const AppointmentHistory = () => {
                       onClick={() => setSelectedAppointment(apt)}
                       title="View"
                     >
-                      <FaEye />
+                      <MdVisibility />
                     </button>
                     <button
                       className="icon-btn print"
                       onClick={() => openPrintPreview([apt])}
                       title="Print"
                     >
-                      <FaPrint />
+                      <MdPrint />
                     </button>
                     <button
                       className="icon-btn delete"
                       onClick={() => handleDeleteAppointment(apt.appointmentID)}
                       title="Delete"
                     >
-                      <FaTrash />
+                      <MdDelete />
                     </button>
                     <button
                       className="icon-btn share"
                       onClick={() => handleShare(apt)}
                       title="Share"
                     >
-                      <FaShareAlt />
+                      <MdShare />
                     </button>
                     <button
                       className="icon-btn"
@@ -457,7 +457,7 @@ const AppointmentHistory = () => {
                       onClick={() => handleClone(apt)}
                       title="Clone"
                     >
-                      <FaClone />
+                      <MdFileCopy />
                     </button>
                     <button
                       className="icon-btn"
@@ -465,7 +465,7 @@ const AppointmentHistory = () => {
                       onClick={() => handleEdit(apt)}
                       title="Edit"
                     >
-                      <FaEdit />
+                      <MdEdit />
                     </button>
                   </td>
                 </tr>
@@ -552,13 +552,13 @@ const AppointmentHistory = () => {
                 className="submit-btn"
                 onClick={() => openPrintPreview([selectedAppointment])}
               >
-                <FaPrint /> Print
+                <MdPrint /> Print
               </button>
               <button
                 className="submit-btn"
                 onClick={() => handleShare(selectedAppointment)}
               >
-                <FaShareAlt /> Share
+                <MdShare /> Share
               </button>
             </div>
           </div>

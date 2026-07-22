@@ -149,7 +149,7 @@ function BuyNow() {
               <ul key={title}>
                 <Typography
                   variant="small"
-                  color="orange-gray"
+                  color="blue-gray"
                   className="mb-3 font-medium opacity-40"
                 >
                   {title}
@@ -178,6 +178,20 @@ function BuyNow() {
             &copy; {currentYear} <a href="https://material-tailwind.com/">Food Maven</a>. All
             Rights Reserved.
           </Typography>
+          <div className="mt-2 mb-2 flex items-center justify-center gap-2 text-gray-600">
+            <span className="text-sm">Made in India</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="32" height="21" role="img" aria-label="Indian flag" style={{ borderRadius: 2, border: "1px solid #ddd" }}>
+              <rect width="900" height="200" fill="#FF9933"/>
+              <rect y="200" width="900" height="200" fill="#FFFFFF"/>
+              <rect y="400" width="900" height="200" fill="#138808"/>
+              <circle cx="450" cy="300" r="90" fill="none" stroke="#000080" strokeWidth="8"/>
+              <circle cx="450" cy="300" r="10" fill="#000080"/>
+              {Array.from({ length: 24 }).map((_, i) => {
+                const angle = (i * 15 * Math.PI) / 180;
+                return (<line key={i} x1={450 + 10 * Math.cos(angle)} y1={300 + 10 * Math.sin(angle)} x2={450 + 90 * Math.cos(angle)} y2={300 + 90 * Math.sin(angle)} stroke="#000080" strokeWidth="4"/>);
+              })}
+            </svg>
+          </div>
           <div className="flex gap-4 text-orange-gray-900 sm:justify-center">
             <Typography as="button" type="button" className="opacity-80 transition-opacity hover:opacity-100">
               <svg className="h-5 w-5" fill="orange" viewBox="0 0 24 24" aria-hidden="true">
@@ -232,7 +246,7 @@ function BuyNow() {
                 as="a"
                 href="#signup"
                 variant="small"
-                color="orange-gray"
+                color="blue-gray"
                 className="ml-1 font-bold">
               </Typography>
            </Typography>

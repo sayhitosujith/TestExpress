@@ -27,24 +27,12 @@ const LINKS = [
  
 const currentYear = new Date().getFullYear();
 
-interface PricingCardPropsType {
-  title: string;
-  desc: string;
-  price: string[];
-  options: {
-    icon: React.ReactNode;
-    info: string;
-  }[];
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}
-
 function PricingCard({
   title,
   desc,
   price,
   options,
-}: PricingCardPropsType) {
+}) {
   return (
     <Card
       variant="gradient"
@@ -58,7 +46,7 @@ function PricingCard({
       >
         <Typography
           variant="h6"
-          color="orange-gray"
+          color="blue-gray"
           className="mt-4 flex gap-1 text-4xl font-bold"
         >
           {title}
@@ -71,14 +59,14 @@ function PricingCard({
         </Typography>
         <Typography
           variant="h3"
-          color="orange-gray"
+          color="blue-gray"
           className="mt-4 flex gap-1 text-4xl font-bold"
         >
           {price[0]}
           {price[1]}
           <Typography
             as="span"
-            color="orange-gray"
+            color="blue-gray"
             className="-translate-y-0.5 self-end opacity-70 text-lg font-bold"
           >
             /{price[2]}
@@ -272,10 +260,10 @@ export function PricingSection11() {
   return (
     <section className="py-24 px-6 lg:px-12">
       <div className="container mx-auto">
-        <Typography color="orange-gray" className="mb-4 font-bold text-lg">
+        <Typography color="blue-gray" className="mb-4 font-bold text-lg">
         Food Maven -Pricing Plans
         </Typography>
-        <Typography variant="h1" color="orange-gray" className="mb-4 !leading-snug lg:!text-4xl !text-2xl max-w-2xl">
+        <Typography variant="h1" color="blue-gray" className="mb-4 !leading-snug lg:!text-4xl !text-2xl max-w-2xl">
         Invest in a plan that&apos;s as ambitious as your corporate goals.
         </Typography>
         <Typography variant="lead" className="mb-10 font-normal !text-gray-500 max-w-xl">
@@ -311,7 +299,7 @@ export function PricingSection11() {
               <ul key={title}>
                 <Typography
                   variant="small"
-                  color="orange-gray"
+                  color="blue-gray"
                   className="mb-3 font-medium opacity-40"
                 >
                   {title}
@@ -340,6 +328,20 @@ export function PricingSection11() {
             &copy; {currentYear} <a href="https://material-tailwind.com/">Food Maven</a>. All
             Rights Reserved.
           </Typography>
+          <div className="mt-2 mb-2 flex items-center justify-center gap-2 text-gray-600">
+            <span className="text-sm">Made in India</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="32" height="21" role="img" aria-label="Indian flag" style={{ borderRadius: 2, border: "1px solid #ddd" }}>
+              <rect width="900" height="200" fill="#FF9933"/>
+              <rect y="200" width="900" height="200" fill="#FFFFFF"/>
+              <rect y="400" width="900" height="200" fill="#138808"/>
+              <circle cx="450" cy="300" r="90" fill="none" stroke="#000080" strokeWidth="8"/>
+              <circle cx="450" cy="300" r="10" fill="#000080"/>
+              {Array.from({ length: 24 }).map((_, i) => {
+                const angle = (i * 15 * Math.PI) / 180;
+                return (<line key={i} x1={450 + 10 * Math.cos(angle)} y1={300 + 10 * Math.sin(angle)} x2={450 + 90 * Math.cos(angle)} y2={300 + 90 * Math.sin(angle)} stroke="#000080" strokeWidth="4"/>);
+              })}
+            </svg>
+          </div>
           <div className="flex gap-4 text-orange-gray-900 sm:justify-center">
             <Typography as="button" type="button" className="opacity-80 transition-opacity hover:opacity-100">
               <svg className="h-5 w-5" fill="orange" viewBox="0 0 24 24" aria-hidden="true">

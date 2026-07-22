@@ -1,5 +1,5 @@
 import React from "react";
-import { FaCrown } from "react-icons/fa";
+import { MdOutlineWorkspacePremium } from "react-icons/md";
 
 const plans = [
   {
@@ -75,7 +75,7 @@ export default function Subscriptions() {
         >
           {plan.popular && (
             <span className="text-sm bg-gradient-to-r from-orange-600 to-orange-800 text-white px-3 py-1 rounded-full mb-4 flex items-center gap-1">
-              <FaCrown /> Most Popular
+              <MdOutlineWorkspacePremium /> Most Popular
             </span>
           )}
 
@@ -93,7 +93,7 @@ export default function Subscriptions() {
             onClick={() => handleSubscribe(plan)}
             className="w-full bg-gradient-to-r from-orange-600 via-orange-700 to-orange-900 text-white shadow-lg hover:scale-105 transition duration-300 px-6 py-3 rounded-xl flex items-center justify-center gap-2"
           >
-            <FaCrown size={20} />
+            <MdOutlineWorkspacePremium size={20} />
             Subscribe
           </button>
         </div>

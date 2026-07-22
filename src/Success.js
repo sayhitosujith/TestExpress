@@ -26,7 +26,7 @@ function Success() {
             </div>
             <div className="text-center px-6">
               <Typography
-                color="orange-gray"
+                color="blue-gray"
                 className="mb-6 mt-10"
                 variant="h4"
               >

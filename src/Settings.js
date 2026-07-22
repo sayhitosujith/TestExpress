@@ -9,7 +9,7 @@ import {
   Switch,
 } from "@material-tailwind/react";
 import logo from "./assets/Toothx_Logo.png";
-import { IoIosAdd } from "react-icons/io";
+import { MdAdd } from "react-icons/md";
 
 const users = [
   { id: 1, name: "Sujith", email: "sayhitosujith@gmail.com" },
@@ -80,7 +80,7 @@ function Settings() {
               href="/SuperAdmin"
               className="flex items-center gap-2 text-white no-underline text-lg"
             >
-              <IoIosAdd size={34} />
+              <MdAdd size={34} />
               SUPER ADMIN
             </a>
           </Button>

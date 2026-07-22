@@ -22,12 +22,20 @@ import {
   DocumentDuplicateIcon,
 } from "@heroicons/react/24/solid";
 // removed unused FaUserMd
-import { AiOutlineDelete } from "react-icons/ai";
-import { MdOutlineFestival } from "react-icons/md";
-import { FaFlag, FaSun, FaMoon, FaStar, FaChurch } from "react-icons/fa";
-import { MdOutlinePhoneIphone, MdOutlineEmail } from "react-icons/md";
-import { GiPartyPopper, GiRam } from "react-icons/gi";
-import { MdOutlinePowerSettingsNew } from "react-icons/md";
+import {
+  MdOutlineFestival,
+  MdOutlinePhoneIphone,
+  MdOutlineEmail,
+  MdOutlinePowerSettingsNew,
+  MdDeleteOutline,
+  MdFlag,
+  MdWbSunny,
+  MdNightlight,
+  MdStar,
+  MdChurch,
+  MdCelebration,
+  MdPets,
+} from "react-icons/md";
 // Components
 import AppLogo from "./AppLogo";
 
@@ -251,21 +259,21 @@ function DoctorList() {
       day: "Thursday",
       name: "New Year's Day",
       type: "NH",
-      icon: <FaSun className="inline mr-1 text-yellow-500" />,
+      icon: <MdWbSunny className="inline mr-1 text-yellow-500" />,
     },
     {
       date: "3 Jan 2026",
       day: "Saturday",
       name: "Hazrat Ali's Birthday",
       type: "RH",
-      icon: <FaMoon className="inline mr-1 text-orange-500" />,
+      icon: <MdNightlight className="inline mr-1 text-orange-500" />,
     },
     {
       date: "14 Jan 2026",
       day: "Wednesday",
       name: "Makar Sankranti / Pongal",
       type: "RH",
-      icon: <FaStar className="inline mr-1 text-orange-500" />,
+      icon: <MdStar className="inline mr-1 text-orange-500" />,
     },
     {
       date: "23 Jan 2026",
@@ -279,98 +287,98 @@ function DoctorList() {
       day: "Monday",
       name: "Republic Day",
       type: "NH",
-      icon: <FaFlag className="inline mr-1 text-red-500" />,
+      icon: <MdFlag className="inline mr-1 text-red-500" />,
     },
     {
       date: "15 Feb 2026",
       day: "Sunday",
       name: "Maha Shivaratri",
       type: "RH",
-      icon: <FaMoon className="inline mr-1 text-gray-700" />,
+      icon: <MdNightlight className="inline mr-1 text-gray-700" />,
     },
     {
       date: "4 Mar 2026",
       day: "Wednesday",
       name: "Holi",
       type: "NH",
-      icon: <GiPartyPopper className="inline mr-1 text-pink-500" />,
+      icon: <MdCelebration className="inline mr-1 text-pink-500" />,
     },
     {
       date: "21 Mar 2026",
       day: "Saturday",
       name: "Eid-ul-Fitr (Tentative)",
       type: "RH",
-      icon: <FaMoon className="inline mr-1 text-orange-600" />,
+      icon: <MdNightlight className="inline mr-1 text-orange-600" />,
     },
     {
       date: "26 Mar 2026",
       day: "Thursday",
       name: "Ram Navami",
       type: "RH",
-      icon: <GiRam className="inline mr-1 text-orange-400" />,
+      icon: <MdPets className="inline mr-1 text-orange-400" />,
     },
     {
       date: "31 Mar 2026",
       day: "Tuesday",
       name: "Mahavir Jayanti",
       type: "RH",
-      icon: <FaStar className="inline mr-1 text-orange-400" />,
+      icon: <MdStar className="inline mr-1 text-orange-400" />,
     },
     {
       date: "3 Apr 2026",
       day: "Friday",
       name: "Good Friday",
       type: "NH",
-      icon: <FaChurch className="inline mr-1 text-red-600" />,
+      icon: <MdChurch className="inline mr-1 text-red-600" />,
     },
     {
       date: "1 May 2026",
       day: "Friday",
       name: "Labour Day / Buddha Purnima",
       type: "NH",
-      icon: <FaFlag className="inline mr-1 text-orange-500" />,
+      icon: <MdFlag className="inline mr-1 text-orange-500" />,
     },
     {
       date: "27 May 2026",
       day: "Wednesday",
       name: "Eid-ul-Zuha (Bakrid) (Tentative)",
       type: "RH",
-      icon: <FaMoon className="inline mr-1 text-orange-700" />,
+      icon: <MdNightlight className="inline mr-1 text-orange-700" />,
     },
     {
       date: "26 Jun 2026",
       day: "Friday",
       name: "Muharram (Tentative)",
       type: "RH",
-      icon: <FaMoon className="inline mr-1 text-gray-800" />,
+      icon: <MdNightlight className="inline mr-1 text-gray-800" />,
     },
     {
       date: "15 Aug 2026",
       day: "Saturday",
       name: "Independence Day",
       type: "NH",
-      icon: <FaFlag className="inline mr-1 text-red-600" />,
+      icon: <MdFlag className="inline mr-1 text-red-600" />,
     },
     {
       date: "26 Aug 2026",
       day: "Wednesday",
       name: "Milad-un-Nabi (Tentative)",
       type: "RH",
-      icon: <FaMoon className="inline mr-1 text-orange-600" />,
+      icon: <MdNightlight className="inline mr-1 text-orange-600" />,
     },
     {
       date: "4 Sep 2026",
       day: "Friday",
       name: "Janmashtami",
       type: "RH",
-      icon: <GiRam className="inline mr-1 text-purple-500" />,
+      icon: <MdPets className="inline mr-1 text-purple-500" />,
     },
     {
       date: "2 Oct 2026",
       day: "Friday",
       name: "Gandhi Jayanti",
       type: "NH",
-      icon: <FaFlag className="inline mr-1 text-orange-600" />,
+      icon: <MdFlag className="inline mr-1 text-orange-600" />,
     },
     {
       date: "20 Oct 2026",
@@ -384,21 +392,21 @@ function DoctorList() {
       day: "Sunday",
       name: "Diwali",
       type: "NH",
-      icon: <GiPartyPopper className="inline mr-1 text-yellow-500" />,
+      icon: <MdCelebration className="inline mr-1 text-yellow-500" />,
     },
     {
       date: "24 Nov 2026",
       day: "Tuesday",
       name: "Guru Nanak Jayanti",
       type: "RH",
-      icon: <FaStar className="inline mr-1 text-orange-500" />,
+      icon: <MdStar className="inline mr-1 text-orange-500" />,
     },
     {
       date: "25 Dec 2026",
       day: "Friday",
       name: "Christmas",
       type: "NH",
-      icon: <FaChurch className="inline mr-1 text-red-500" />,
+      icon: <MdChurch className="inline mr-1 text-red-500" />,
     },
   ];
 
@@ -685,7 +693,7 @@ function DoctorList() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Left Navigation Bar */}
-      <div className="w-64 bg-orange-600 text-white shadow-lg fixed left-0 top-0 h-full border-r border-orange-700 flex flex-col">
+      <div className="w-64 bg-white text-gray-800 shadow-lg fixed left-0 top-0 h-full border-r border-gray-200 flex flex-col">
         {/* Logo and Navigation */}
         <div className="p-6 flex-1 overflow-y-auto">
           <div className="mb-8">
@@ -695,7 +703,7 @@ function DoctorList() {
           <nav className="space-y-2">
             <button
               onClick={() => navigate("/Welcome")}
-              className="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-orange-500 hover:text-white transition duration-200 flex items-center gap-3"
+              className="w-full text-left px-4 py-2 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition duration-200 flex items-center gap-3"
             >
               <span className="text-xl">🏠</span>
               <span className="font-medium">Dashboard</span>
@@ -703,15 +711,23 @@ function DoctorList() {
 
             <button
               onClick={() => navigate("/DoctorList")}
-              className="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-orange-500 hover:text-white transition duration-200 flex items-center gap-3"
+              className="w-full text-left px-4 py-2 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition duration-200 flex items-center gap-3"
             >
               <span className="text-xl">👨‍⚕️</span>
               <span className="font-medium">Doctors</span>
             </button>
 
             <button
+              onClick={() => navigate("/Receptionist")}
+              className="w-full text-left px-4 py-2 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition duration-200 flex items-center gap-3"
+            >
+              <span className="text-xl">📋</span>
+              <span className="font-medium">Receptionist</span>
+            </button>
+
+            <button
               onClick={() => navigate("/PatientPortal")}
-              className="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-orange-500 hover:text-white transition duration-200 flex items-center gap-3"
+              className="w-full text-left px-4 py-2 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition duration-200 flex items-center gap-3"
             >
               <span className="text-xl">👤</span>
               <span className="font-medium">Patients</span>
@@ -719,7 +735,7 @@ function DoctorList() {
 
             <button
               onClick={() => navigate("/BookAppointment")}
-              className="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-orange-500 hover:text-white transition duration-200 flex items-center gap-3"
+              className="w-full text-left px-4 py-2 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition duration-200 flex items-center gap-3"
             >
               <span className="text-xl">📅</span>
               <span className="font-medium">Appointments</span>
@@ -727,7 +743,7 @@ function DoctorList() {
 
             <button
               onClick={() => navigate("/BillingDetails")}
-              className="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-orange-500 hover:text-white transition duration-200 flex items-center gap-3"
+              className="w-full text-left px-4 py-2 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition duration-200 flex items-center gap-3"
             >
               <span className="text-xl">💳</span>
               <span className="font-medium">Billing</span>
@@ -735,18 +751,18 @@ function DoctorList() {
 
             <button
               onClick={() => navigate("/Settings")}
-              className="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-orange-500 hover:text-white transition duration-200 flex items-center gap-3"
+              className="w-full text-left px-4 py-2 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition duration-200 flex items-center gap-3"
             >
               <span className="text-xl">⚙️</span>
               <span className="font-medium">Settings</span>
             </button>
 
             <button
-              onClick={() => navigate("/Contact_us")}
-              className="w-full text-left px-4 py-2 rounded-lg text-white hover:bg-orange-500 hover:text-white transition duration-200 flex items-center gap-3"
+              onClick={() => navigate("/ContactCenter")}
+              className="w-full text-left px-4 py-2 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition duration-200 flex items-center gap-3"
             >
               <span className="text-xl">📞</span>
-              <span className="font-medium">Contact Us</span>
+              <span className="font-medium">Contact Center</span>
             </button>
           </nav>
         </div>
@@ -754,7 +770,7 @@ function DoctorList() {
         {/* Sign Out Button */}
         <button
           onClick={() => navigate("/Logout")}
-          className="flex items-center gap-2 w-full px-4 py-3 text-red-600"
+          className="flex items-center gap-2 w-full px-4 py-3 text-red-500"
         >
           <MdOutlinePowerSettingsNew /> Logout
         </button>
@@ -765,8 +781,8 @@ function DoctorList() {
         </div>
 
         {/* User Profile Section */}
-        <div className="p-4 border-t border-orange-700 bg-orange-600">
-          <div className="flex items-center gap-3 px-2 py-3 rounded-lg bg-orange-600 hover:bg-orange-500 transition duration-200 cursor-pointer shadow-sm">
+        <div className="p-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center gap-3 px-2 py-3 rounded-lg bg-gray-50 hover:bg-orange-50 transition duration-200 cursor-pointer shadow-sm">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
               {user.initials}
             </div>
@@ -774,11 +790,9 @@ function DoctorList() {
               <p className="text-sm font-semibold text-gray-800 truncate">
                 {user.name}
               </p>
-              <p className="text-xs text-gray-600 truncate">{user.email && (
-  <p className="text-xs text-gray-600 truncate">
-    {user.email}
-  </p>
-)}</p>
+              {user.email && (
+                <span className="text-xs text-gray-600 truncate block">{user.email}</span>
+              )}
             </div>
           </div>
         </div>
@@ -821,7 +835,7 @@ function DoctorList() {
               Time & Shift
             </Typography>
             <div className="bg-gradient-to-r from-orange-100 to-orange-100 p-3 rounded-lg mb-2 border border-orange-200">
-              <p className="text-white-900 font-semibold text-center text-sm">
+              <p className="text-gray-900 font-semibold text-center text-sm">
                 {`Monday-Friday | ${shiftObj.type}`}
               </p>
               <p className="text-orange-700 text-center text-xs font-bold mt-1">
@@ -914,6 +928,7 @@ function DoctorList() {
             <div className="flex gap-2">
               <Button
                 variant={!gridView ? "filled" : "outlined"}
+                color="orange"
                 onClick={() => setGridView(false)}
                 className="flex items-center gap-2"
               >
@@ -922,6 +937,7 @@ function DoctorList() {
 
               <Button
                 variant={gridView ? "filled" : "outlined"}
+                color="orange"
                 onClick={() => setGridView(true)}
                 className="flex items-center gap-2"
               >
@@ -1111,15 +1127,58 @@ function DoctorList() {
                                     start + APPTS_PER_PAGE,
                                   );
 
+                                  const parseApptDateTime = (a) => {
+                                    if (!a?.date) return null;
+                                    const dt = new Date(a.date);
+                                    if (a.time) {
+                                      const startTime = String(a.time).split("-")[0].trim();
+                                      const match = startTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                                      if (match) {
+                                        let h = parseInt(match[1]);
+                                        const m = parseInt(match[2]);
+                                        const p = match[3].toUpperCase();
+                                        if (p === "PM" && h !== 12) h += 12;
+                                        if (p === "AM" && h === 12) h = 0;
+                                        dt.setHours(h, m, 0, 0);
+                                      }
+                                    }
+                                    return dt;
+                                  };
+                                  const now = new Date();
+                                  const upcoming = sorted.filter((a) => {
+                                    const dt = parseApptDateTime(a);
+                                    return dt && dt >= now;
+                                  });
+                                  const nextAppt = upcoming.length > 0
+                                    ? upcoming.reduce((min, a) => {
+                                        const dtA = parseApptDateTime(a);
+                                        const dtMin = parseApptDateTime(min);
+                                        return dtA < dtMin ? a : min;
+                                      })
+                                    : null;
+                                  const makeApptKey = (a) =>
+                                    `${a.date}|${a.patientName || a.name || ""}|${a.time || ""}`;
+                                  const nextKey = nextAppt ? makeApptKey(nextAppt) : null;
+
                                   return (
                                     <>
                                       {paged.map((appt, idx) => {
                                         const badgeClass = getBadgeClass(appt);
+                                        const isNext = nextKey && makeApptKey(appt) === nextKey;
                                         return (
                                           <div
                                             key={idx}
-                                            className="mb-2 p-2 bg-white rounded border border-gray-200"
+                                            className={`mb-2 p-2 rounded border ${
+                                              isNext
+                                                ? "bg-orange-50 border-orange-400 ring-2 ring-orange-400"
+                                                : "bg-white border-gray-200"
+                                            }`}
                                           >
+                                            {isNext && (
+                                              <div className="text-xs font-bold text-orange-600 mb-1">
+                                                Next Appointment
+                                              </div>
+                                            )}
                                             <div className="font-semibold">
                                               Name:{" "}
                                               {appt.patientName ||
@@ -1135,11 +1194,60 @@ function DoctorList() {
                                               Time: {appt.time || ""}
                                             </div>
 
-                                            <span
-                                              className={`inline-block mt-1 px-2 py-1 rounded-full text-xs ${badgeClass}`}
-                                            >
-                                              {getAppointmentDisplay(appt)}
-                                            </span>
+                                            <div className="flex items-center justify-between gap-2 mt-1 flex-wrap">
+                                              <span
+                                                className={`inline-block px-2 py-1 rounded-full text-xs ${badgeClass}`}
+                                              >
+                                                {getAppointmentDisplay(appt)}
+                                              </span>
+                                              <div className="flex gap-1 flex-wrap">
+                                                {getAppointmentStatusKey(appt) !== "COMPLETED" &&
+                                                  getAppointmentStatusKey(appt) !== "CANCELLED" && (
+                                                  <button
+                                                    onClick={() => {
+                                                      const apptKey = `${appt.date}|${appt.patientName || appt.name || ""}|${appt.time || ""}`;
+                                                      const updatedDoctors = doctors.map((d, di) => {
+                                                        if (di !== realIndex) return d;
+                                                        return {
+                                                          ...d,
+                                                          appointments: d.appointments.map((a) =>
+                                                            `${a.date}|${a.patientName || a.name || ""}|${a.time || ""}` === apptKey
+                                                              ? { ...a, status: "COMPLETED" }
+                                                              : a
+                                                          ),
+                                                        };
+                                                      });
+                                                      saveDoctors(updatedDoctors);
+                                                    }}
+                                                    className="px-2 py-1 text-xs bg-orange-500 text-white rounded-full hover:bg-orange-600 transition"
+                                                  >
+                                                    Mark as Attended
+                                                  </button>
+                                                )}
+                                                {getAppointmentStatusKey(appt) === "PENDING" && (
+                                                  <button
+                                                    onClick={() => {
+                                                      const apptKey = `${appt.date}|${appt.patientName || appt.name || ""}|${appt.time || ""}`;
+                                                      const updatedDoctors = doctors.map((d, di) => {
+                                                        if (di !== realIndex) return d;
+                                                        return {
+                                                          ...d,
+                                                          appointments: d.appointments.map((a) =>
+                                                            `${a.date}|${a.patientName || a.name || ""}|${a.time || ""}` === apptKey
+                                                              ? { ...a, status: "CANCELLED" }
+                                                              : a
+                                                          ),
+                                                        };
+                                                      });
+                                                      saveDoctors(updatedDoctors);
+                                                    }}
+                                                    className="px-2 py-1 text-xs bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                                                  >
+                                                    Not Available
+                                                  </button>
+                                                )}
+                                              </div>
+                                            </div>
                                           </div>
                                         );
                                       })}
@@ -1256,13 +1364,18 @@ function DoctorList() {
 
               {/* Pagination */}
               <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-6">
-                <Button onClick={handlePrevPage} disabled={currentPage === 1}>
+                <Button
+                  color="orange"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                >
                   Prev
                 </Button>
                 <Typography className="text-sm sm:text-base">
                   Page {currentPage} of {totalPages}
                 </Typography>
                 <Button
+                  color="orange"
                   onClick={handleNextPage}
                   disabled={currentPage === totalPages}
                 >
@@ -1304,7 +1417,7 @@ function DoctorList() {
                     }}
                     className="absolute top-2 right-2 text-red-600 hover:text-red-800"
                   >
-                    <AiOutlineDelete size={18} />
+                    <MdDeleteOutline size={18} />
                   </button>
 
                   <p>
@@ -1918,3 +2031,4 @@ function DoctorList() {
 }
 
 export default DoctorList;
+

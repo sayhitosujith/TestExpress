@@ -1,6 +1,7 @@
 import "./App.css";
-import React, { useEffect, useState } from "react";
-import { FaLocationDot } from "react-icons/fa6";
+import React, { useEffect, useMemo, useState } from "react";
+import { useTreatments } from "./context/TreatmentsContext";
+import { MdLocationOn, MdExpandMore, MdPrint, MdRocketLaunch } from "react-icons/md";
 import {
   Card,
   CardBody,
@@ -10,15 +11,12 @@ import {
   Alert,
   Breadcrumbs,
 } from "@material-tailwind/react";
-import { VscChevronDown } from "react-icons/vsc";
 import { useNavigate, useLocation } from "react-router-dom";
 import scanner from "./assets/Barcode.jpeg";
-import { FiPrinter } from "react-icons/fi";
 import { MdOutlineWorkHistory } from "react-icons/md";
 import logo from "./assets/Toothx_Logo.png";
 import { Link } from "react-router-dom";
 import QRCode from "qrcode"; // make sure to `npm install qrcode`
-import { IoRocketSharp } from "react-icons/io5";
 
 /* ---------------- CHART IMPORTS ---------------- */
 import {
@@ -33,19 +31,34 @@ import { Bar } from "react-chartjs-2";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
-/* ---------------- PRICING MAP ---------------- */
-const APPOINTMENT_PRICING = {
-  Consultation: 500, // base fee (always applied)
-  Cleaning: 700,
-  Extraction: 1000,
-  Whitening: 800,
-};
+/* ---------------- PRICING ---------------- */
+const CONSULTATION_FEE = 500; // base fee (always applied)
 
 /* ---------------- GST CONFIG ---------------- */
 const GST_RATE = 0.18;
 
 function MyCart() {
   const navigate = useNavigate();
+
+  /* ---------------- TREATMENTS CATALOG ---------------- */
+  // Treatments are managed in the catalog (AddMeal) via TreatmentsContext.
+  // Only published treatments are offered for booking.
+  const { treatments } = useTreatments();
+  const publishedTreatments = useMemo(
+    () => treatments.filter((t) => t.published),
+    [treatments],
+  );
+
+  // Pricing map: base Consultation fee + each published treatment's catalog
+  // price (entered in £). Rebuilt whenever the catalog changes so newly added
+  // treatments (e.g. Wisdom Tooth Removal) show up here automatically.
+  const APPOINTMENT_PRICING = useMemo(() => {
+    const map = { Consultation: CONSULTATION_FEE };
+    publishedTreatments.forEach((t) => {
+      map[t.name] = Number(t.price) || 0;
+    });
+    return map;
+  }, [publishedTreatments]);
 
   const [success, setSuccess] = useState(false);
   const [toast, setToast] = useState("");
@@ -501,7 +514,7 @@ function MyCart() {
 
       // ✅ UPDATED SUCCESS MESSAGE
       setToast(
-        `✅ Payment Successful!\n₹${getTotalPaid(
+        `✅ Payment Successful!\n£${getTotalPaid(
           selectedAppointment.type,
         )} paid via ${method}`,
       );
@@ -671,7 +684,7 @@ const grandTotal = baseAmount + gstAmount;
               <th style="border:1px solid #ccc; padding:8px; background:#ffffff;">Time</th>
               <th style="border:1px solid #ccc; padding:8px; background:#ffffff;">Dentist</th>
               <th style="border:1px solid #ccc; padding:8px; background:#ffffff;">Treatment</th>
-              <th style="border:1px solid #ccc; padding:8px; background:#ffffff;">Amount (₹)</th>
+              <th style="border:1px solid #ccc; padding:8px; background:#ffffff;">Amount (£)</th>
             </tr>
           </thead>
           <tbody>
@@ -686,7 +699,7 @@ const grandTotal = baseAmount + gstAmount;
           <td style="border:1px solid #ccc; padding:8px;">${appointment.dentist || "-"}</td>
           <td style="border:1px solid #ccc; padding:8px;">${t}</td>
           <td style="border:1px solid #ccc; padding:8px; text-align:right;">
-            ₹${APPOINTMENT_PRICING[t] || 0}
+            £${APPOINTMENT_PRICING[t] || 0}
           </td>
         </tr>
       `
@@ -711,10 +724,10 @@ const grandTotal = baseAmount + gstAmount;
                 </thead>
                 <tbody>
                   <tr>
-                    <td style="border:1px solid #ccc; padding:8px; text-align:right;">₹${tax.base}</td>
-                    <td style="border:1px solid #ccc; padding:8px; text-align:right;">₹${tax.gst}</td>
-                    <td style="border:1px solid #ccc; padding:8px; text-align:right;">₹${tax.cgst}</td>
-                    <td style="border:1px solid #ccc; padding:8px; text-align:right;">₹${tax.sgst}</td>
+                    <td style="border:1px solid #ccc; padding:8px; text-align:right;">£${tax.base}</td>
+                    <td style="border:1px solid #ccc; padding:8px; text-align:right;">£${tax.gst}</td>
+                    <td style="border:1px solid #ccc; padding:8px; text-align:right;">£${tax.cgst}</td>
+                    <td style="border:1px solid #ccc; padding:8px; text-align:right;">£${tax.sgst}</td>
                   </tr>
                 </tbody>
               </table>
@@ -724,7 +737,7 @@ const grandTotal = baseAmount + gstAmount;
 
         <!-- GRAND TOTAL -->
         <div style="text-align:right; font-size:1.2rem; font-weight:bold; color:#2F855A; margin-bottom:20px;">
-          ${isPaid ? "GRAND TOTAL" : "TOTAL AMOUNT"} : ₹${grandTotal}
+          ${isPaid ? "GRAND TOTAL" : "TOTAL AMOUNT"} : £${grandTotal}
         </div>
 
         ${appointment.notes ? `<p><b>Notes:</b> ${appointment.notes}</p>` : ""}
@@ -850,7 +863,7 @@ const grandTotal = baseAmount + gstAmount;
               <p><b>Time:</b> ${item.time || "-"}</p>
               <p><b>Dentist:</b> ${item.dentist || "-"}</p>
               <p><b>Type:</b> ${Array.isArray(Array.isArray(item.type) ? item.type.join(", ") : Array.isArray(item.type) ? item.type.join(", ") : item.type) ? item.type.join(", ") : item.type || "-"}</p>
-              <p><b>Amount:</b> ₹${getTotalPaid(Array.isArray(item.type) ? item.type.join(", ") : item.type)}</p>
+              <p><b>Amount:</b> £${getTotalPaid(Array.isArray(item.type) ? item.type.join(", ") : item.type)}</p>
               <p><b>Status:</b> ${
                 item.status || (paidAppointments[item.id] ? "Paid" : "Pending")
               }</p>
@@ -877,7 +890,7 @@ const grandTotal = baseAmount + gstAmount;
     const content = Object.entries(revenueByDate)
       .map(
         ([date, amount]) => `
-          <p><b>${date}:</b> ₹${amount}</p>
+          <p><b>${date}:</b> £${amount}</p>
         `,
       )
       .join("");
@@ -887,7 +900,7 @@ const grandTotal = baseAmount + gstAmount;
         <h2 style="text-align:center; color:#2F855A;">Revenue Report</h2>
         <hr />
         
-        <p style="font-size: 1.1rem;"><b>Total Revenue:</b> ₹${totalRevenue}</p>
+        <p style="font-size: 1.1rem;"><b>Total Revenue:</b> £${totalRevenue}</p>
         <hr />
 
         ${content}
@@ -943,7 +956,7 @@ const grandTotal = baseAmount + gstAmount;
     labels: revenueDates,
     datasets: [
       {
-        label: "Daily Revenue (₹)",
+        label: "Daily Revenue (£)",
         data: revenueValues,
         backgroundColor: "#38A169",
       },
@@ -1043,7 +1056,7 @@ const grandTotal = baseAmount + gstAmount;
             {user.initials}
           </div>
           <span className="hidden sm:block">{user.name}</span>
-          <VscChevronDown
+          <MdExpandMore
             className={`transition-transform ${
               showProfileMenu ? "rotate-180" : ""
             }`}
@@ -1193,9 +1206,15 @@ const grandTotal = baseAmount + gstAmount;
               }}
               className="border p-2 rounded w-full h-32"
             >
-              <option value="Cleaning">Cleaning</option>
-              <option value="Extraction">Extraction</option>
-              <option value="Whitening">Whitening</option>
+              {publishedTreatments.length === 0 ? (
+                <option disabled>No treatments available</option>
+              ) : (
+                publishedTreatments.map((t) => (
+                  <option key={t.id} value={t.name}>
+                    {t.name} — £{Number(t.price) || 0}
+                  </option>
+                ))
+              )}
             </select>
 
             {/* Cost Display */}
@@ -1203,20 +1222,20 @@ const grandTotal = baseAmount + gstAmount;
               <ul className="text-sm text-gray-600 mt-1 space-y-1">
                 {/* ✅ Always show Consultation ONCE */}
                 <li className="bg-orange-100 text-orange-800 font-semibold px-3 py-1 rounded-md border border-orange-300">
-                  🩺 Consultation: ₹{APPOINTMENT_PRICING["Consultation"]}
+                  🩺 Consultation: £{APPOINTMENT_PRICING["Consultation"]}
                 </li>
 
                 {/* ✅ Show selected treatments */}
                 {selectedTreatments.map((type) => (
                   <li key={type}>
-                    {type}: ₹{APPOINTMENT_PRICING[type]}
+                    {type}: £{APPOINTMENT_PRICING[type]}
                   </li>
                 ))}
 
                 <hr className="my-2 border-orange-300" />
 
                 <p className="text-orange-600 font-bold">
-                  Total Cost: ₹{totalCost}
+                  Total Cost: £{totalCost}
                 </p>
                 <hr className="my-2 border-orange-300" />
 
@@ -1347,7 +1366,7 @@ const grandTotal = baseAmount + gstAmount;
             💰 Total Revenue
           </h3>
           <p className="text-3xl font-bold text-purple-900">
-            ₹{" "}
+            £{" "}
             {Object.values(revenueByDate).reduce(
               (sum, amt) => sum + amt,
               0,
@@ -1389,7 +1408,7 @@ const grandTotal = baseAmount + gstAmount;
           <div className="flex justify-between items-center bg-orange-100 px-4 py-3 rounded mb-4">
             <span className="font-semibold text-orange-800">Total Revenue</span>
             <span className="text-xl font-bold text-orange-900">
-              ₹{Object.values(revenueByDate).reduce((sum, amt) => sum + amt, 0)}
+              £{Object.values(revenueByDate).reduce((sum, amt) => sum + amt, 0)}
             </span>
           </div>
 
@@ -1403,7 +1422,7 @@ const grandTotal = baseAmount + gstAmount;
                   className="flex justify-between items-center bg-white px-4 py-2 rounded shadow-sm"
                 >
                   <span className="font-medium">{date}</span>
-                  <span className="font-bold text-orange-700">₹{amount}</span>
+                  <span className="font-bold text-orange-700">£{amount}</span>
                 </div>
               ))}
             </div>
@@ -1413,7 +1432,7 @@ const grandTotal = baseAmount + gstAmount;
       <div className="w-full mt-10">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <IoRocketSharp     size={32} className="text-orange-900" />
+            <MdRocketLaunch size={32} className="text-orange-900" />
             <h2 className="text-xl font-bold text-orange-900">
               APPOINTMENTS HISTORY
             </h2>
@@ -1537,7 +1556,7 @@ const grandTotal = baseAmount + gstAmount;
                     </p>
 
                     <p>
-                      <b>Amount:</b> ₹{getTotalPaid(item.type)}
+                      <b>Amount:</b> £{getTotalPaid(item.type)}
                     </p>
 
                     <Button
@@ -1697,7 +1716,7 @@ const grandTotal = baseAmount + gstAmount;
                       disabled={!paidAppointments[item.id]}
                       onClick={() => handlePrintAppointment(item)}
                     >
-                      <FiPrinter size={18} />
+                      <MdPrint size={18} />
                       PRINT
                     </Button>
 
@@ -1802,7 +1821,7 @@ const grandTotal = baseAmount + gstAmount;
             <b>
               {" "}
               <p className="text-sm text-red-600 text-center mb-4">
-                Amount: ₹{getTotalPaid(selectedAppointment.type)}
+                Amount: £{getTotalPaid(selectedAppointment.type)}
               </p>
             </b>
 

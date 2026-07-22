@@ -9,7 +9,7 @@ import {
 } from "react-router-dom";
 import Home from './Home';
 import NewRegistration from './NewRegistration';
-import Contact_us from './Contact_us'
+import ContactCenter from './ContactCenter'
 import Customer_Home from './Customer_Home';
 import Profile from './Profile';
 import Customer_Login from './Customer_Login';
@@ -42,14 +42,21 @@ import DocumentCenter from './DocumentCenter';
 import SuperAdmin from './SuperAdmin';
 import { SettingsProvider } from "./context/SettingsContext";
 import { AuthProvider } from './context/AuthContext';
+import { TreatmentsProvider } from './context/TreatmentsContext';
 import RevenueChart from './RevenueChart.js';
 import WhatWeTreatPage from './WhatWeTreatPage.js';
 import ServicePage from "./ServicePage";
 import PatientList from "./PatientList";
+import Receptionist from "./Receptionist";
+import ExecutiveLogin from "./Executive_Login";
+import ExecutivePortal from "./Executive_Portal";
 import RootCanalTreatment from "./RootCanalTreatment.js";
+import WisdomTeethRemoval from "./WisdomTeethRemoval.js";
 import Subscriptions from "./Subscriptions.js";
 import ScanProduct from "./ScanProduct.js";
 import Jalavastra from "./Jalavastra.js";
+import Gallery from "./Gallery.js";
+import ChitFund from "./ChitFund.js";
 import AuthRoute from './AuthRoute';
 
 import "slick-carousel/slick/slick.css";
@@ -57,20 +64,27 @@ import "slick-carousel/slick/slick-theme.css";
 
 const publicPaths = [
   "/Customer_Login",
+  "/Executive_Login",
+  "/Executive_Portal",
   "/OTP",
   "/NewRegistration",
   "/my-app",
   "/Welcome",
   "/home",
   "/HomePage",
-  "/Contact_us",
+  "/ContactCenter",
   "/Pricing",
+  "/gallery",
 ];
 
 const wrap = (path, el) => (publicPaths.includes(path) ? el : <AuthRoute>{el}</AuthRoute>);
 
 const router = createBrowserRouter([
   
+  {
+    path: "/gallery",
+    element: wrap("/gallery", <Gallery />),
+  },
   {
     path: "/Jalavastra",
     element: wrap("/Jalavastra", <Jalavastra />),
@@ -88,8 +102,16 @@ const router = createBrowserRouter([
     element: wrap("/PatientList", <PatientList />),
   },
   {
+    path: "/Receptionist",
+    element: wrap("/Receptionist", <Receptionist />),
+  },
+  {
     path: "/RootCanalTreatment",
     element: wrap("/RootCanalTreatment", <RootCanalTreatment />),
+  },
+  {
+    path: "/services/wisdom-tooth",
+    element: wrap("/services/wisdom-tooth", <WisdomTeethRemoval />),
   },
    {
     path: "/ServicePage",
@@ -120,8 +142,8 @@ const router = createBrowserRouter([
     element: wrap("/NewRegistration", <NewRegistration />),
   },
   {
-    path: "/Contact_us",
-    element: wrap("/Contact_us", <Contact_us/>),
+    path: "/ContactCenter",
+    element: wrap("/ContactCenter", <ContactCenter/>),
   },
   {
     path: "/Profile",
@@ -130,6 +152,14 @@ const router = createBrowserRouter([
   {
     path: "/Customer_Login",
     element: wrap("/Customer_Login", <Customer_Login/>),
+  },
+  {
+    path: "/Executive_Login",
+    element: wrap("/Executive_Login", <ExecutiveLogin/>),
+  },
+  {
+    path: "/Executive_Portal",
+    element: wrap("/Executive_Portal", <ExecutivePortal/>),
   },
   {
     path: "/OTP",
@@ -244,6 +274,10 @@ const router = createBrowserRouter([
   {
     path: "/PatientPortal",
     element: wrap("/PatientPortal", <PatientPortal/>),
+  },
+  {
+    path: "/ChitFund",
+    element: wrap("/ChitFund", <ChitFund/>),
   }
 ]);
 
@@ -252,7 +286,9 @@ root.render(
   <React.StrictMode>
     <SettingsProvider>
       <AuthProvider>
-        <RouterProvider router={router} />
+        <TreatmentsProvider>
+          <RouterProvider router={router} />
+        </TreatmentsProvider>
       </AuthProvider>
     </SettingsProvider>
   </React.StrictMode>

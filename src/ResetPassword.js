@@ -1,6 +1,5 @@
 import './App.css';
-import { FaPowerOff } from "react-icons/fa6";
-import { IoIosNotificationsOutline } from "react-icons/io";
+import { MdPowerSettingsNew, MdNotificationsNone } from "react-icons/md";
 import { Badge } from "@material-tailwind/react";
 
 import {
@@ -98,11 +97,11 @@ function ResetPassword() {
         <div className="absolute top-4 right-4 flex items-center space-x-8">
           <a href="">
             <Badge content="6">
-              <IoIosNotificationsOutline color="black" size={30} />
+              <MdNotificationsNone color="black" size={30} />
             </Badge>
           </a>
           <a href="/my-app">
-            <FaPowerOff color="black" size={20} />
+            <MdPowerSettingsNew color="black" size={20} />
           </a>
         </div>
       </div>

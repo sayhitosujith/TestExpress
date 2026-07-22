@@ -1,5 +1,5 @@
 /* ================================
-   MyCart Page Styling (Orange Theme)
+   MyCart Page Styling (orange Theme)
 ================================ */
 
 .mycart-container {
@@ -33,7 +33,7 @@
   text-align: center;
 }
 
-/* Orange Gradient Header */
+/* orange Gradient Header */
 .appointment-card .card-header {
   min-height: 80px;
   background: linear-gradient(to right, #fbbf24, #f97316, #fbbf24);
@@ -119,7 +119,7 @@
   padding: 1rem;
 }
 
-/* Orange Gradient Header for Payment Card */
+/* orange Gradient Header for Payment Card */
 .payment-card .card-header {
   min-height: 80px;
   background: linear-gradient(to right, #fbbf24, #f97316, #fbbf24);

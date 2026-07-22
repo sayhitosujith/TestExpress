@@ -28,7 +28,7 @@ export function OrderDetails() {
               4.0/5 (100 reviews)
             </Typography>
           </div>
-          <Typography color="orange-gray" variant="h6">
+          <Typography color="blue-gray" variant="h6">
             Box Color
           </Typography>
           <div className="my-8 mt-3 flex items-center gap-2">

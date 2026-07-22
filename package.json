@@ -1,7 +1,7 @@
 {
   "name": "my-app",
   "version": "25.6.2",
-  "homepage": "https://sayhitosujith.github.io/my-app",
+  "HomePage": "/",
   "private": true,
   "dependencies": {
     "@docsearch/react": "^3.6.0",
@@ -40,6 +40,7 @@
     "reactjs-popup": "^2.0.6",
     "slick-carousel": "^1.8.1",
     "sort-by": "^1.2.0",
+    "three": "^0.184.0",
     "use-react-countries": "^2.0.1",
     "web-vitals": "^2.1.4"
   },

@@ -22,13 +22,13 @@ function ProfileCard() {
       <img src="https://media.licdn.com/dms/image/D5603AQFxv9b5cCxs2w/profile-displayphoto-shrink_800_800/0/1703428628673?e=1716422400&v=beta&t=VtQDfl43-_TcdxcF25jtqWBH0vbbTkI68tcAAT3W0iU" alt="profile-picture" />
     </CardHeader>
     <CardBody className="text-center">
-      <Typography variant="h4" color="orange-gray" className="mb-2">
+      <Typography variant="h4" color="blue-gray" className="mb-2">
         SUJITH
       </Typography>
-      <Typography color="orange-gray" className="font-medium" textGradient>
+      <Typography color="blue-gray" className="font-medium" textGradient>
         CEO / Founder
       </Typography>
-      <Typography color="orange-gray" className="font-medium" textGradient>
+      <Typography color="blue-gray" className="font-medium" textGradient>
         MAVEN MEAL
       </Typography>
       <Button variant="text" className="flex items-center">

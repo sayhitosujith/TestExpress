@@ -104,7 +104,7 @@ export default function CheckoutForm() {
                 <div>
                   <Typography
                     variant="small"
-                    color="orange-gray"
+                    color="blue-gray"
                     className="mb-2 font-medium"
                   >
                     Your Email
@@ -122,7 +122,7 @@ export default function CheckoutForm() {
                 <div className="my-3">
                   <Typography
                     variant="small"
-                    color="orange-gray"
+                    color="blue-gray"
                     className="mb-2 font-medium "
                   >
                     Card Details
@@ -145,7 +145,7 @@ export default function CheckoutForm() {
                     <div>
                       <Typography
                         variant="small"
-                        color="orange-gray"
+                        color="blue-gray"
                         className="mb-2 font-medium"
                       >
                         Expires
@@ -165,7 +165,7 @@ export default function CheckoutForm() {
                     <div>
                       <Typography
                         variant="small"
-                        color="orange-gray"
+                        color="blue-gray"
                         className="mb-2 font-medium"
                       >
                         CVC
@@ -183,7 +183,7 @@ export default function CheckoutForm() {
                   </div>
                   <Typography
                     variant="small"
-                    color="orange-gray"
+                    color="blue-gray"
                     className="mb-2 font-medium"
                   >
                     Holder Name
@@ -215,14 +215,14 @@ export default function CheckoutForm() {
                 <div>
                   <Typography
                     variant="paragraph"
-                    color="orange-gray"
+                    color="blue-gray"
                     className="mb-4 font-medium"
                   >
                     Personal Details
                   </Typography>
                   <Typography
                     variant="small"
-                    color="orange-gray"
+                    color="blue-gray"
                     className="mb-2 font-medium"
                   >
                     Your Email
@@ -240,14 +240,14 @@ export default function CheckoutForm() {
                 <div className="my-6">
                   <Typography
                     variant="paragraph"
-                    color="orange-gray"
+                    color="blue-gray"
                     className="mb-4 font-medium"
                   >
                     Billing Address
                   </Typography>
                   <Typography
                     variant="small"
-                    color="orange-gray"
+                    color="blue-gray"
                     className="mb-2 font-medium"
                   >
                     Country
@@ -275,7 +275,7 @@ export default function CheckoutForm() {
                   </Select>
                   <Typography
                     variant="small"
-                    color="orange-gray"
+                    color="blue-gray"
                     className="mt-4 -mb-2 font-medium"
                   >
                     Postal Code

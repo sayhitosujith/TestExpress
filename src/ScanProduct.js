@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import "./ScanProduct.css";
-import { CiEdit } from "react-icons/ci";
-import { GiTrashCan } from "react-icons/gi";
-import { MdContentCopy } from "react-icons/md";
-import { GrFormPrevious } from "react-icons/gr";
-import { GrFormNext } from "react-icons/gr";
+import {
+  MdContentCopy,
+  MdEdit,
+  MdDelete,
+  MdChevronLeft,
+  MdChevronRight,
+} from "react-icons/md";
 import logo from "./assets/Jala.jpg";
 
 export default function SareeScanner() {
@@ -309,7 +311,7 @@ const deleteSelected = () => {
   <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
     
     <button className="icon-btn" onClick={() => handleEdit(code)}>
-      <CiEdit size={55} />
+      <MdEdit size={55} />
     </button>
 
     <button className="icon-btn" onClick={() => cloneProduct(code)}>
@@ -320,7 +322,7 @@ const deleteSelected = () => {
       className="icon-btn btn-delete"
       onClick={() => deleteProduct(code)}
     >
-      <GiTrashCan  size={35} />
+      <MdDelete size={35} />
     </button>
 
   </div>
@@ -351,7 +353,7 @@ const deleteSelected = () => {
             onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
             disabled={currentPage === 1}
           >
-            <GrFormPrevious />
+            <MdChevronLeft />
  
           </button>
 
@@ -363,7 +365,7 @@ const deleteSelected = () => {
             onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
             disabled={currentPage === totalPages}
           >
-            <GrFormNext />
+            <MdChevronRight />
           </button>
         </div>
       </div>

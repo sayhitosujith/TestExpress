@@ -1,17 +1,8 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 import { useNavigate } from "react-router-dom";
-import { VscChevronDown } from "react-icons/vsc";
-import { FaClone } from "react-icons/fa";
-import { FaCreditCard } from "react-icons/fa";
-import {
-  FaEdit,
-  FaTrash,
-  FaDownload,
-  FaSearch,
-} from "react-icons/fa";
+import { FaDownload } from "react-icons/fa";
 import { Typography } from "@material-tailwind/react";
-import { LuUserRoundSearch } from "react-icons/lu";
 
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
@@ -19,8 +10,15 @@ import {
   MdOutlineEditNote,
   MdOutlineSettings,
   MdOutlinePowerSettingsNew,
+  MdExpandMore,
+  MdFileCopy,
+  MdCreditCard,
+  MdSearch,
+  MdPersonSearch,
+  MdMemory,
+  MdEdit,
+  MdDelete,
 } from "react-icons/md";
-import { VscChip } from "react-icons/vsc";
 
 import {
   Chart as ChartJS,
@@ -563,7 +561,7 @@ export default function SuperAdmin({
                 {user.initials}
               </div>
               {user.name}
-              <VscChevronDown />
+              <MdExpandMore />
             </button>
 
             {showProfileMenu && (
@@ -605,7 +603,7 @@ export default function SuperAdmin({
           <div className="mt-4">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold">Revenue Last 12 Months</h3>
-              <VscChip size={30} />
+              <MdMemory size={30} />
             </div>
 
             <div className="flex justify-end w-full mb-6">
@@ -613,7 +611,7 @@ export default function SuperAdmin({
                 onClick={() => navigate("/Subscriptions")}
                 className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
               >
-                <FaCreditCard />
+                <MdCreditCard />
                 My Subscriptions
               </button>
             </div>
@@ -639,10 +637,10 @@ export default function SuperAdmin({
           {/* TOP BAR */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <LuUserRoundSearch size={24} className="text-xl" />
+              <MdPersonSearch size={24} className="text-xl" />
 
               <div className="relative">
-                <FaSearch className="absolute left-3 top-3 text-gray-500" />
+                <MdSearch className="absolute left-3 top-3 text-gray-500" />
 
                 <input
                   type="text"
@@ -777,7 +775,7 @@ export default function SuperAdmin({
                       onClick={() => openEditModal(ap)}
                       style={{ color: "orange" }}
                     >
-                      <FaEdit />
+                      <MdEdit />
                     </button>
 
                     <button
@@ -785,14 +783,14 @@ export default function SuperAdmin({
                       onClick={() => handleDelete(ap.id)}
                       style={{ color: "red" }}
                     >
-                      <FaTrash />
+                      <MdDelete />
                     </button>
 
                     <button
                       onClick={() => handleClone(ap)}
                       style={{ color: "orange" }}
                     >
-                      <FaClone />
+                      <MdFileCopy />
                     </button>
                   </td>
                 </tr>

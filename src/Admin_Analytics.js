@@ -6,28 +6,27 @@ import { Card, Typography } from "@material-tailwind/react";
 import { PencilIcon } from "@heroicons/react/24/solid";
 import { Slider } from "@material-tailwind/react";
 import FileDownloader from './FileDownloader';
-import { MdDeleteOutline } from "react-icons/md";
-import { FaRegClone } from "react-icons/fa";
+import {
+  MdDeleteOutline,
+  MdFileCopy,
+  MdPowerSettingsNew,
+  MdNotificationsNone,
+  MdShare,
+  MdPhotoCamera,
+  MdAnalytics,
+  MdInsights,
+  MdAreaChart,
+  MdDashboard,
+  MdSpeed,
+  MdEmail,
+} from "react-icons/md";
 import { useState } from "react";
-import { FaPowerOff } from "react-icons/fa6";
-import { IoIosNotificationsOutline } from "react-icons/io";
-import { FaFacebookF } from "react-icons/fa";
-import { RiTwitterXLine } from "react-icons/ri";
-import { FaInstagram } from "react-icons/fa";
-import { TbDeviceDesktopAnalytics } from "react-icons/tb";
-import { SiSimpleanalytics } from "react-icons/si";
-import { IoAnalytics } from "react-icons/io5";
-import { AiOutlineAreaChart } from "react-icons/ai";
-import { IoIosAnalytics } from "react-icons/io";
-import { AiOutlineDashboard } from "react-icons/ai";
-import { SiPagespeedinsights } from "react-icons/si";
 
 import {
   ArrowDownTrayIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import campaignImage1 from './assets/campaign1.jpg'; // adjust the path as necessary
-import { TfiEmail } from "react-icons/tfi";
 
 import {
   CardHeader,
@@ -110,30 +109,27 @@ const data = [
   {
     id: 1,
     name: 'Registered Users',
-    src: <TbDeviceDesktopAnalytics  />, // replaced image URL with icon component
+    src: <MdAnalytics />, // replaced image URL with icon component
   },
   {
     id: 2,
     name: 'Todays Orders',
-    src: <SiSimpleanalytics />
-,
+    src: <MdInsights />,
   },
   {
     id: 3,
     name: 'Added to Cart',
-    src: <IoAnalytics />
-,
+    src: <MdAnalytics />,
   },
   {
     id: 4,
     name: 'Total Sales',
-    src: <SiPagespeedinsights   />,
+    src: <MdSpeed />,
   },
   {
     id: 5,
     name: 'Active Countries',
-    src: <IoIosAnalytics  />
-,
+    src: <MdAnalytics />,
   },
 ];
 
@@ -232,15 +228,15 @@ function Admin_Analytics() {
 
       <div className="absolute top-4 right-4 flex items-center space-x-3">
         <button type="button" aria-label="Notifications" className="opacity-90">
-          <IoIosNotificationsOutline color="black" size={30} />
+          <MdNotificationsNone color="black" size={30} />
         </button>
         <a href="/Logout" aria-label="Logout">
-          <FaPowerOff color="black" size={20} />
+          <MdPowerSettingsNew color="black" size={20} />
         </a>
       </div>
       <br></br>
       <Typography variant="h3" color="Black">
-      <AiOutlineDashboard />  Dashboard 
+      <MdDashboard />  Dashboard
 
 
         <div style={{ float: 'right' }}>
@@ -320,31 +316,31 @@ function Admin_Analytics() {
         <div className="flex justify-center items-center gap-6 mt-4 flex-wrap">
   {/* Email */}
   <div className="flex items-center gap-2">
-    <TfiEmail size={24} color="orange" />
+    <MdEmail size={24} color="orange" />
     <Typography variant="small" className="font-medium">
       Mail
     </Typography>
   </div>
 
   {/* Facebook */}
-  <div className="flex items-center gap-2">
-    <FaFacebookF size={24} color="red" />
+  <div className="flex items-center gap-2" title="Share on Facebook">
+    <MdShare size={24} color="red" />
     <Typography variant="small" className="font-medium">
       Facebook
     </Typography>
   </div>
 
   {/* Twitter/X */}
-  <div className="flex items-center gap-2">
-    <RiTwitterXLine size={24} color="black" />
+  <div className="flex items-center gap-2" title="Share on Twitter/X">
+    <MdShare size={24} color="black" />
     <Typography variant="small" className="font-medium">
       Twitter
     </Typography>
   </div>
 
   {/* Instagram */}
-  <div className="flex items-center gap-2">
-    <FaInstagram size={24} color="orange" />
+  <div className="flex items-center gap-2" title="Share on Instagram">
+    <MdPhotoCamera size={24} color="orange" />
     <Typography variant="small" className="font-medium">
       Instagram
     </Typography>
@@ -372,7 +368,7 @@ function Admin_Analytics() {
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="mb-4 flex flex-col justify-between gap-8 md:flex-row md:items-center">
             <div>
-              <Typography variant="h5" color="orange-gray">
+              <Typography variant="h5" color="blue-gray">
                 Recent Transactions
               </Typography>
               <Typography color="gray" className="mt-1 font-normal">
@@ -404,7 +400,7 @@ function Admin_Analytics() {
                   >
                     <Typography
                       variant="small"
-                      color="orange-gray"
+                      color="blue-gray"
                       className="font-normal leading-none opacity-70"
                     >
                       {head}
@@ -445,7 +441,7 @@ function Admin_Analytics() {
                           />
                           <Typography
                             variant="small"
-                            color="orange-gray"
+                            color="blue-gray"
                             className="font-bold"
                           >
                             {name}
@@ -455,7 +451,7 @@ function Admin_Analytics() {
                       <td className={classes}>
                         <Typography
                           variant="small"
-                          color="orange-gray"
+                          color="blue-gray"
                           className="font-normal"
                         >
                           {amount}
@@ -464,7 +460,7 @@ function Admin_Analytics() {
                       <td className={classes}>
                         <Typography
                           variant="small"
-                          color="orange-gray"
+                          color="blue-gray"
                           className="font-normal"
                         >
                           {date}
@@ -504,14 +500,14 @@ function Admin_Analytics() {
                           <div className="flex flex-col">
                             <Typography
                               variant="small"
-                              color="orange-gray"
+                              color="blue-gray"
                               className="font-normal capitalize"
                             >
                               {account.split("-").join(" ")} {accountNumber}
                             </Typography>
                             <Typography
                               variant="small"
-                              color="orange-gray"
+                              color="blue-gray"
                               className="font-normal opacity-70"
                             >
                               {expiry}
@@ -550,7 +546,7 @@ function Admin_Analytics() {
 
                         <Tooltip content="Clone User">
                           <IconButton color="orange" variant="text">
-                            <FaRegClone className="h-5 w-5" />
+                            <MdFileCopy className="h-5 w-5" />
                           </IconButton>
                         </Tooltip>
                       </td>

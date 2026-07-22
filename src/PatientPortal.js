@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import "./PatientPortal.css";
 import packageJson from "../package.json";
-import { IoHomeOutline } from "react-icons/io5";
-import { SiGoogleforms } from "react-icons/si";
-import { FaRegUser } from "react-icons/fa6";
-import { TiSpanner } from "react-icons/ti";
-import { MdOutlineDocumentScanner } from "react-icons/md";
-import { BiSupport } from "react-icons/bi";
-import { PiLineVerticalThin } from "react-icons/pi";
-import { FaBell } from "react-icons/fa";
+import {
+  MdOutlineDocumentScanner,
+  MdHome,
+  MdAssignment,
+  MdPersonOutline,
+  MdBuild,
+  MdSupportAgent,
+  MdNotifications,
+} from "react-icons/md";
 import logo from "./assets/Toothx_Logo.png";
 
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -343,12 +344,12 @@ const PatientPortal = () => {
   {/* Navigation */}
   <nav className="sidebar-nav">
     <Link to="/Welcome" className="nav-item">
-      <IoHomeOutline size={20} />
+      <MdHome size={20} />
       <span>Home</span>
     </Link>
 
     <Link to="/PatientPortal" className="nav-item">
-      <SiGoogleforms size={20} />
+      <MdAssignment size={20} />
       <span>Forms</span>
     </Link>
 
@@ -358,17 +359,17 @@ const PatientPortal = () => {
     </Link>
 
     <Link to="/Settings" className="nav-item">
-      <TiSpanner size={22} />
+      <MdBuild size={22} />
       <span>Settings</span>
     </Link>
 
     <Link to="/Profile" state={{ editMode: true }} className="nav-item">
-      <FaRegUser size={20} />
+      <MdPersonOutline size={20} />
       <span>Profile</span>
     </Link>
 
     <div className="nav-item">
-      <BiSupport size={20} />
+      <MdSupportAgent size={20} />
       <span>Help</span>
     </div>
   </nav>
@@ -400,7 +401,7 @@ const PatientPortal = () => {
           </b>
           <div className="header-actions">
             <div className="notification-wrapper">
-              <FaBell
+              <MdNotifications
                 size={22}
                 className="cursor-pointer"
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -419,7 +420,7 @@ const PatientPortal = () => {
                 </div>
               )}
             </div>
-            <PiLineVerticalThin size={24} color="black" />
+            <span style={{borderLeft:"1px solid currentColor", height:"1em", display:"inline-block", margin:"0 4px"}} />
             <div
               className="user-badge"
               onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -467,7 +468,7 @@ const PatientPortal = () => {
   {/* Header */}
   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid #f3f4f6" }}>
     <div style={{ background: "#fef2f2", borderRadius: 10, padding: 8 }}>
-      <SiGoogleforms size={20} color="#e11d48" />
+      <MdAssignment size={20} color="#e11d48" />
     </div>
     <div>
       <div style={{ fontWeight: 700, fontSize: 16, color: "#111827" }}>Patient Onboarding</div>

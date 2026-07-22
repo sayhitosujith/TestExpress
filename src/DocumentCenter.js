@@ -6,14 +6,15 @@ import {
   EnvelopeIcon
 } from "@heroicons/react/24/outline";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./PatientPortal.css";
 import {
   Typography,
   Breadcrumbs,
-  navigate
 } from "@material-tailwind/react";
 
 export default function DocumentCenter() {
+  const navigate = useNavigate();
   const cards = [
     { title: "Documents", icon: <DocumentTextIcon className="h-8 w-8 text-purple-500" />, link: "#" },
     { title: "Payslips", icon: <DocumentDuplicateIcon className="h-8 w-8 text-orange-500" />, link: "#" },
@@ -51,7 +52,7 @@ export default function DocumentCenter() {
         <Typography
           as="a"
           href="/Welcome"
-          color="orange-gray"
+          color="blue-gray"
           className="cursor-pointer hover:underline"
           onClick={() => navigate("/")}
         >
@@ -60,13 +61,13 @@ export default function DocumentCenter() {
         <Typography
           as="a"
           href="/PatientPortal"
-          color="orange-gray"
+          color="blue-gray"
           className="cursor-pointer hover:underline"
           onClick={() => navigate("/PatientPortal")}
         >
           Patient Portal
         </Typography>
-        <Typography color="orange-gray">Doctor List</Typography>
+        <Typography color="blue-gray">Doctor List</Typography>
       </Breadcrumbs>
 
       {/* Top Banner */}

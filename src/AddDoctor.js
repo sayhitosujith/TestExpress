@@ -125,7 +125,7 @@ if (newDoctor.availableDays.length === 0) {
         <Typography
           as="a"
           href="/Welcome"
-          color="orange-gray"
+          color="blue-gray"
           className="cursor-pointer hover:underline"
           onClick={() => navigate("/")}
         >
@@ -134,13 +134,13 @@ if (newDoctor.availableDays.length === 0) {
         <Typography
           as="a"
           href="/DoctorList"
-          color="orange-gray"
+          color="blue-gray"
           className="cursor-pointer hover:underline"
           onClick={() => navigate("/DoctorList")}
         >
           Doctors
         </Typography>
-        <Typography color="orange-gray">Add Dentist</Typography>
+        <Typography color="blue-gray">Add Dentist</Typography>
       </Breadcrumbs>
 
       <Typography variant="h4" className="mb-4 text-center">

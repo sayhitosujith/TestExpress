@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Typography, Input, Button } from "@material-tailwind/react";
 import { Link } from "react-router-dom";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
-import { FaClone } from "react-icons/fa"; // add this to your imports
+import { MdFileCopy } from "react-icons/md";
 import emailjs from "@emailjs/browser";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -536,7 +536,7 @@ function NewRegistration() {
                               onClick={() => handleClone(user)}
                               className="bg-orange-100 p-2 rounded-full hover:bg-orange-200"
                             >
-                              <FaClone className="h-5 w-5 text-orange-600" />
+                              <MdFileCopy className="h-5 w-5 text-orange-600" />
                             </button>
 
                             <button

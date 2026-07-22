@@ -1,6 +1,12 @@
 import "./App.css";
-import { RiAppleLine } from "react-icons/ri";
-import { GrAndroid } from "react-icons/gr";
+import {
+  MdPhoneIphone,
+  MdAndroid,
+  MdAdd,
+  MdMedicalServices,
+  MdCall,
+  MdMailOutline,
+} from "react-icons/md";
 import Flag from "react-world-flags";
 import adritaImage from "./assets/Adrita.png";
 import rajeshImage from "./assets/Rajesh.png";
@@ -8,10 +14,7 @@ import RoyImage from "./assets/Roy.png";
 import ManishImage from "./assets/Manish.png";
 import appbanner from "./assets/2-1.png";
 import Banner_wallpaper from "./assets/Jalavastra.jpeg";
-import { BsPlus } from "react-icons/bs";
 import logo from "./assets/Jala.jpg";
-import { TbDental } from "react-icons/tb";
-import { IoCallSharp, IoMailOutline } from "react-icons/io5";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { FaWhatsapp } from "react-icons/fa6";
@@ -65,7 +68,7 @@ function Welcome() {
   const menuItems = [
     { name: "Home", path: "/HomePage" },
     { name: "Gallery", path: "/gallery" },
-    { name: "Contact Us", path: "/Contact_us" },
+    { name: "Contact Center", path: "/ContactCenter" },
     {
       name: "About Us",
       external: "https://www.myherveybaydental.com.au/about-us/",
@@ -195,7 +198,7 @@ function Welcome() {
             }
             className="flex items-center gap-1 hover:text-orange-900"
           >
-            <IoMailOutline size={26} color="maroon" />
+            <MdMailOutline size={26} color="maroon" />
             <span></span>
           </button>
         </div>
@@ -247,7 +250,7 @@ function Welcome() {
             className="flex items-center gap-3 mt-6 shadow-lg cursor-pointer bg-orange-600 hover:bg-orange-700 text-white"
             onClick={() => navigate("/Customer_home")}
           >
-            <BsPlus size={22} />
+            <MdAdd size={22} />
             <span>Book ONLINE NOW</span>
           </Button>
         </div>
@@ -426,7 +429,7 @@ function Welcome() {
             >
               <span className="text-white">Jala</span>
               <span className="text-orange-300">Vastra</span>
-              <TbDental className="text-orange-300" />
+              <MdMedicalServices className="text-orange-300" />
             </Typography>
 
             <div className="flex items-center gap-3 text-white text-sm md:text-base ml-auto">
@@ -439,8 +442,8 @@ function Welcome() {
                   disabled
                   className="flex items-center gap-3 bg-orange-600 hover:bg-orange-700 opacity-70 cursor-not-allowed"
                 >
-                  <GrAndroid size={28} color="white" />
-                  <RiAppleLine size={28} color="white" />
+                  <MdAndroid size={28} color="white" />
+                  <MdPhoneIphone size={28} color="white" />
                 </Button>
 
                 {/* Animated Coming Soon Tag */}

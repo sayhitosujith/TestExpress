@@ -1,7 +1,7 @@
 import "./App.css";
 import React, { useState, useRef } from "react";
 import { Carousel } from "@material-tailwind/react";
-import { IoMdFingerPrint } from "react-icons/io";
+import { MdFingerprint } from "react-icons/md";
 import logo from "./assets/Toothx_Logo.png";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -263,7 +263,7 @@ function Customer_Login() {
               marginTop: 25,
             }}
           >
-            <IoMdFingerPrint style={{ fontSize: 60, cursor: "pointer" }} />
+            <MdFingerprint style={{ fontSize: 60, cursor: "pointer" }} />
           </div>
 
           <p style={{ textAlign: "center", marginTop: 10, color: "#f77e02" }}>

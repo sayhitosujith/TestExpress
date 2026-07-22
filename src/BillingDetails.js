@@ -1,8 +1,7 @@
 import './App.css';
 import React, { useState, useEffect } from 'react';
 import { Badge } from "@material-tailwind/react";
-import { FaPowerOff } from "react-icons/fa";
-import { IoIosNotificationsOutline } from "react-icons/io";
+import { MdPowerSettingsNew, MdNotificationsNone } from "react-icons/md";
 
 import {
   Card,
@@ -39,7 +38,7 @@ const CardItem = ({ item, onRestart, onLogs }) => (
   <Card className="w-full md:w-96 h-full flex flex-col shadow-md">
     <CardHeader className="mb-2 flex items-center justify-between px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800">
       <Typography variant="h6" color="white">{item.name}</Typography>
-      <Badge color={item.status === 'Healthy' ? 'orange' : (item.status === 'Degraded' ? 'amber' : 'red')} className="!text-white">{item.status}</Badge>
+      <Badge color={item.status === 'Healthy' ? "orange" : (item.status === 'Degraded' ? 'amber' : 'red')} className="!text-white">{item.status}</Badge>
     </CardHeader>
 
     <div className="w-full h-44 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-md p-3">
@@ -249,11 +248,11 @@ function BillingDetails() {
     <div className="absolute top-6 right-8 flex items-center space-x-4">
       <button aria-label="Notifications" className="relative p-1">
         <Badge content="6" className="!bg-red-600">
-          <IoIosNotificationsOutline color="#111827" size={20} />
+          <MdNotificationsNone color="#111827" size={20} />
         </Badge>
       </button>
       <button aria-label="Sign out" className="p-1 rounded hover:bg-gray-100">
-        <FaPowerOff color="#111827" size={18} />
+        <MdPowerSettingsNew color="#111827" size={18} />
       </button>
       <Avatar src="https://docs.material-tailwind.com/img/face-2.jpg" alt="avatar" size="md" />
     </div>

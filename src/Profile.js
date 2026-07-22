@@ -17,10 +17,9 @@ import {
   Switch,
 } from "@material-tailwind/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
-import { IoIosNotificationsOutline } from "react-icons/io";
-import { FaPowerOff, FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp } from "react-icons/fa";
+import { MdNotificationsNone, MdPowerSettingsNew, MdRefresh } from "react-icons/md";
 import { Select, Option } from "@material-tailwind/react";
-import { HiOutlineRefresh } from "react-icons/hi";
 
 // Helper functions
 const validateAadhaar = (aadhaar) => /^[2-9][0-9]{11}$/.test(aadhaar);
@@ -556,9 +555,9 @@ function Profile() {
               onChange={() => setListView(!listView)}
             />
           </b>
-          <IoIosNotificationsOutline color="black" size={28} />
+          <MdNotificationsNone color="black" size={28} />
           <a href="/Logout">
-            <FaPowerOff color="black" size={18} />
+            <MdPowerSettingsNew color="black" size={18} />
           </a>
           <Avatar
             src="https://fellows.ias.ac.in/public/images/stock/avatar.svg?v=105894425"
@@ -981,9 +980,23 @@ function Profile() {
       {/* Fixed Footer */}
       <footer className="fixed bottom-0 left-0 w-full bg-white border-t shadow-md z-50">
         <div className="max-w-screen-xl mx-auto px-4 py-6 flex justify-between items-center text-sm">
-          <span className="text-gray-600">
-            © {new Date().getFullYear()} DentalCare CRM
-          </span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-gray-600">© {new Date().getFullYear()} DentalCare CRM</span>
+            <div className="flex items-center gap-1.5 text-gray-500 text-xs">
+              <span>Made in India</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="26" height="17" role="img" aria-label="Indian flag" style={{ borderRadius: 2, border: "1px solid #ddd" }}>
+                <rect width="900" height="200" fill="#FF9933"/>
+                <rect y="200" width="900" height="200" fill="#FFFFFF"/>
+                <rect y="400" width="900" height="200" fill="#138808"/>
+                <circle cx="450" cy="300" r="90" fill="none" stroke="#000080" strokeWidth="8"/>
+                <circle cx="450" cy="300" r="10" fill="#000080"/>
+                {Array.from({ length: 24 }).map((_, i) => {
+                  const angle = (i * 15 * Math.PI) / 180;
+                  return (<line key={i} x1={450 + 10 * Math.cos(angle)} y1={300 + 10 * Math.sin(angle)} x2={450 + 90 * Math.cos(angle)} y2={300 + 90 * Math.sin(angle)} stroke="#000080" strokeWidth="4"/>);
+                })}
+              </svg>
+            </div>
+          </div>
 
           <div className="flex items-center gap-4">
             <a href="/Help" className="text-orange-600 hover:underline">
@@ -1006,7 +1019,7 @@ function Profile() {
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 rounded bg-gradient-to-r from-orange-600 via-orange-700 to-orange-900 text-white shadow-md hover:scale-105 transition duration-300"
               >
-                <HiOutlineRefresh size={24} />
+                <MdRefresh size={24} />
               </button>
             </div>
           </div>

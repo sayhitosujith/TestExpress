@@ -2,21 +2,28 @@ import "./App.css";
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Typography, Breadcrumbs, Button } from "@material-tailwind/react";
+import clinicBg from "./assets/DentalWallpaper.png";
 
 import {
   MdOutlineEditNote,
   MdOutlineSettings,
   MdOutlinePowerSettingsNew,
+  MdOutlineCalendarMonth,
+  MdOutlineEventNote,
+  MdOutlineManageAccounts,
+  MdOutlineCardMembership,
+  MdOutlineAccountCircle,
+  MdOutlineAssignmentInd,
+  MdSmartToy,
+  MdOutlineAnalytics,
+  MdOutlineMedicalServices,
+  MdOutlineChatBubble,
+  MdExpandMore,
+  MdPersonOutline,
+  MdGroup,
+  MdOutlineSavings,
 } from "react-icons/md";
-import { VscChevronDown } from "react-icons/vsc";
-import { RiAdminFill } from "react-icons/ri";
-import { CiUser } from "react-icons/ci";
-import { TbBrandGoogleAnalytics, TbDental } from "react-icons/tb";
-import { FaUsers, FaFileInvoiceDollar } from "react-icons/fa6";
-import { IoSettingsOutline } from "react-icons/io5";
-import { RiRobot3Line } from "react-icons/ri";
-import logo from "./assets/Toothx_Logo-removebg-preview.png";
-import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
+import logo from "./assets/Toothx_Logo_trimmed.png";
 
 /* ====================== BANNER TIMING ====================== */
 const now = new Date();
@@ -27,59 +34,74 @@ const isBannerActive = now >= startDate && now <= endDate;
 /* ====================== SERVICES ====================== */
 const services = [
   {
+    label: "RECEPTIONIST",
+    icon: <MdOutlineAssignmentInd size={36} />,
+    link: "/Receptionist",
+  },
+  {
+    label: "EXECUTIVE LOGIN",
+    icon: <span style={{ fontSize: 34 }}>🔑</span>,
+    link: "/Executive_Login",
+  },
+  {
     label: "SUPER ADMIN",
-    icon: <IoSettingsOutline size={35} />,
+    icon: <MdOutlineSettings size={36} />,
     link: "/SuperAdmin",
   },
   {
     label: "DENTIST PORTAL",
-    icon: <RiAdminFill size={35} />,
+    icon: <MdOutlineMedicalServices size={36} />,
     link: "/DoctorList",
   },
   {
     label: "PATIENTS ONBOARDING",
-    icon: <CiUser size={35} />,
+    icon: <MdPersonOutline size={36} />,
     link: "/PatientPortal",
   },
   {
-    label: "CUSTOMER PORTAL",
-    icon: <CiUser size={35} />,
-    link: "/Customer_Login",
+    label: "CONTACT CENTER",
+    icon: <MdOutlineAccountCircle size={36} />,
+    link: "/ContactCenter",
   },
   {
     label: "ANALYTICS",
-    icon: <TbBrandGoogleAnalytics size={35} />,
+    icon: <MdOutlineAnalytics size={36} />,
     link: "/Admin_Analytics",
   },
   {
     label: "CUSTOMER SUPPORT",
-    icon: <FaUsers size={35} />,
+    icon: <MdGroup size={36} />,
     link: "/CustomerCare",
   },
   {
     label: "PATIENT PROFILES",
-    icon: <FaFileInvoiceDollar size={35} />,
+    icon: <MdOutlineManageAccounts size={36} />,
     link: "/Profile",
   },
   {
     label: "SETTINGS",
-    icon: <IoSettingsOutline size={35} />,
+    icon: <MdOutlineSettings size={36} />,
     link: "/Settings",
   },
   {
     label: "APPOINTMENT HISTORY",
-    icon: <IoSettingsOutline size={35} />,
+    icon: <MdOutlineCalendarMonth size={36} />,
     link: "/AppointmentHistory",
   },
   {
     label: "BOOK APPOINTMENT",
-    icon: <IoSettingsOutline size={35} />,
+    icon: <MdOutlineEventNote size={36} />,
     link: "/MyCart",
   },
   {
     label: "SUBSCRIPTIONS",
-    icon: <RiAdminFill size={35} />,
+    icon: <MdOutlineCardMembership size={36} />,
     link: "/Subscriptions",
+  },
+  {
+    label: "CHIT FUND",
+    icon: <MdOutlineSavings size={36} />,
+    link: "/ChitFund",
   },
 ];
 
@@ -88,6 +110,15 @@ export default function Welcome() {
   const storedUser = JSON.parse(localStorage.getItem("user"));
 
   /* ====================== STATES ====================== */
+
+  const [ctxMenu, setCtxMenu] = useState(null); // { x, y, tile }
+
+  useEffect(() => {
+    const close = () => setCtxMenu(null);
+    window.addEventListener("click", close);
+    window.addEventListener("scroll", close);
+    return () => { window.removeEventListener("click", close); window.removeEventListener("scroll", close); };
+  }, []);
 
   const [chatOpen, setChatOpen] = useState(false);
   const [messages, setMessages] = useState([
@@ -116,7 +147,7 @@ export default function Welcome() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-  const [typing, setTyping] = useState(true);
+  const [typing, setTyping] = useState(false);
 
   const sendMessage = () => {
     if (!input.trim()) return;
@@ -191,10 +222,16 @@ export default function Welcome() {
       .join(" ");
   };
 
-  const userName =
-    storedUser?.name && !storedUser.name.includes("@")
-      ? storedUser.name
-      : emailToName(storedUser?.email || storedUser?.name);
+  const userName = (() => {
+    if (!storedUser) return "User";
+    const full = `${storedUser.firstName || ""} ${storedUser.lastName || ""}`.trim();
+    if (full) return full;
+    if (storedUser.name && !storedUser.name.includes("@")) return storedUser.name;
+    if (storedUser.email || (storedUser.name && storedUser.name.includes("@")))
+      return emailToName(storedUser.email || storedUser.name);
+    if (storedUser.mobile) return storedUser.mobile;
+    return "User";
+  })();
 
   const user = {
     name: userName.split(" ")[0].toUpperCase(), // first name in uppercase
@@ -209,20 +246,24 @@ export default function Welcome() {
   const handleSubmit = () => navigate("/Logout");
 
   return (
-    <div className="p-6 md:p-10 min-h-screen relative bg-gradient-to-r from-yellow-600 via-orange-700 to-orange-700">
-      {" "}
+    <div className="p-6 md:p-10 min-h-screen relative overflow-hidden">
+      <div
+        className="fixed inset-0"
+        style={{
+          backgroundImage: `url(${clinicBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          zIndex: 0,
+        }}
+      />
+      <div
+        className="fixed inset-0"
+        style={{ background: "linear-gradient(160deg, rgba(255,247,237,0.94) 0%, rgba(254,215,170,0.88) 45%, rgba(255,251,235,0.94) 100%)", zIndex: 0 }}
+      />
+      <div className="flex flex-col min-h-screen" style={{ position: "relative", zIndex: 1 }}>
       {/* LOGO */}
-      <img src={logo} alt="logo" className="absolute top-4 left-4 w-40" />
-      {/* ================= BREADCRUMBS ================= */}
-      <Breadcrumbs className="mt-20 mb-6">
-        <button
-          onClick={() => navigate("/HomePage")}
-          className="text-orange-600"
-        >
-          Home
-        </button>
-        <span>Welcome</span>
-      </Breadcrumbs>
+      <img src={logo} alt="logo" className="w-40 mb-4" />
+ 
       {/* ================= PROFILE ================= */}
       <div className="absolute top-4 right-4">
         <button
@@ -235,7 +276,7 @@ export default function Welcome() {
 
           {user.name}
 
-          <VscChevronDown
+          <MdExpandMore
             className={`${showProfileMenu ? "rotate-180" : ""}`}
           />
         </button>
@@ -267,30 +308,95 @@ export default function Welcome() {
       </div>
       {/* ================= HEADER ================= */}
       <div className="text-center mb-10">
-        <Typography variant="h3" className="text-white font-bold">
+        <Typography variant="h3" className="font-bold" style={{ color: "#ea580c" }}>
           Welcome to {selectedPracticeCity} - {user.name}
         </Typography>
 
-        <Typography className="text-orange-100 text-sm mt-2">
+        <Typography className="text-orange-600 text-sm mt-2">
           Access your provisioned services below.
         </Typography>
       </div>
       <hr className="mb-6" />
       {/* ================= SERVICE GRID ================= */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
         {services.map((tile, i) => (
           <Button
             key={i}
             onClick={() => navigate(tile.link)}
-            className="flex flex-col items-center py-6 bg-white/90 backdrop-blur-md text-black border border-white/20 shadow-lg hover:scale-105 transition duration-300"
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setCtxMenu({ x: e.clientX, y: e.clientY, tile });
+            }}
+            className="flex flex-col items-center justify-center py-6 min-h-[110px] bg-white/90 backdrop-blur-md text-black border-2 border-orange-500 shadow-lg hover:scale-105 transition duration-300"
           >
-            {tile.icon}
-            <span className="pt-2 font-bold text-sm text-center">
+            <span className="text-orange-500">{tile.icon}</span>
+            <span className="pt-2 font-bold text-xs text-center">
               {tile.label}
             </span>
           </Button>
         ))}
       </div>
+
+      {/* ================= RIGHT-CLICK CONTEXT MENU ================= */}
+      {ctxMenu && (
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            position: "fixed",
+            top: Math.min(ctxMenu.y, window.innerHeight - 180),
+            left: Math.min(ctxMenu.x, window.innerWidth - 210),
+            zIndex: 9999,
+            minWidth: 200,
+            background: "white",
+            borderRadius: 12,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+            border: "1px solid #e5e7eb",
+            overflow: "hidden",
+            fontFamily: "'Outfit', sans-serif",
+          }}
+        >
+          {/* Header */}
+          <div style={{ padding: "8px 14px 6px", borderBottom: "1px solid #f3f4f6", background: "#f9fafb" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em", margin: 0 }}>
+              {ctxMenu.tile.label}
+            </p>
+          </div>
+
+          {/* Open */}
+          <button
+            onClick={() => { navigate(ctxMenu.tile.link); setCtxMenu(null); }}
+            style={{ display:"flex", alignItems:"center", gap:10, width:"100%", padding:"9px 14px", background:"none", border:"none", cursor:"pointer", fontSize:13, fontWeight:600, color:"#374151", textAlign:"left" }}
+            onMouseEnter={e => e.currentTarget.style.background="#f0f9ff"}
+            onMouseLeave={e => e.currentTarget.style.background="none"}
+          >
+            <span style={{ width:18, textAlign:"center" }}>↗</span> Open
+          </button>
+
+          {/* Open in New Tab — uses <a> so browser never blocks it */}
+          <a
+            href={ctxMenu.tile.link}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => setCtxMenu(null)}
+            style={{ display:"flex", alignItems:"center", gap:10, width:"100%", padding:"9px 14px", background:"none", border:"none", cursor:"pointer", fontSize:13, fontWeight:600, color:"#374151", textDecoration:"none" }}
+            onMouseEnter={e => e.currentTarget.style.background="#f0f9ff"}
+            onMouseLeave={e => e.currentTarget.style.background="none"}
+          >
+            <span style={{ width:18, textAlign:"center" }}>🪟</span> Open in New Tab
+          </a>
+
+          {/* Copy Link */}
+          <button
+            onClick={() => { navigator.clipboard.writeText(window.location.origin + ctxMenu.tile.link); setCtxMenu(null); }}
+            style={{ display:"flex", alignItems:"center", gap:10, width:"100%", padding:"9px 14px", background:"none", border:"none", cursor:"pointer", fontSize:13, fontWeight:600, color:"#374151", textAlign:"left" }}
+            onMouseEnter={e => e.currentTarget.style.background="#f0f9ff"}
+            onMouseLeave={e => e.currentTarget.style.background="none"}
+          >
+            <span style={{ width:18, textAlign:"center" }}>📋</span> Copy Link
+          </button>
+        </div>
+      )}
+
       {/* ================= CHAT BUTTON ================= */}
       <div className="fixed bottom-4 right-4 flex items-center gap-3">
         <span className="bg-white text-red-500 px-3 py-2 rounded-lg shadow font-semibold text-sm border border-red-500">
@@ -301,21 +407,17 @@ export default function Welcome() {
           onClick={() => setChatOpen(!chatOpen)}
           className="relative bg-gradient-to-r from-orange-600 to-orange-900 text-white p-4 rounded-full shadow-lg hover:scale-110 transition duration-300"
         >
-          <RiRobot3Line size={32} />
-
-          <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs px-1 rounded-full">
-            18
-          </span>
+          <MdSmartToy size={32} />
         </button>
       </div>
       {/* ================= CHAT WINDOW ================= */}
       {chatOpen && (
         <div className="fixed bottom-20 right-4 w-80 bg-white shadow-xl rounded-xl flex flex-col overflow-hidden border border-gray-200">
           {/* Header */}
-          <div className="bg-red-500 text-white p-3 font-semibold flex justify-between items-center">
+          <div className="bg-orange-600 text-white p-3 font-semibold flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <span>ToothX Support</span>
-              <IoChatbubbleEllipsesOutline size={30} />
+              <span>Chat with Mitra</span>
+              <MdOutlineChatBubble size={30} />
             </div>
 
             <button
@@ -338,7 +440,7 @@ export default function Welcome() {
                 <div
                   className={`px-3 py-2 rounded-xl text-sm max-w-[75%] ${
                     msg.sender === "user"
-                      ? "bg-red-500 text-white"
+                      ? "bg-orange-600 text-white"
                       : "bg-gray-100 text-gray-800"
                   }`}
                 >
@@ -412,13 +514,28 @@ export default function Welcome() {
             <button
               type="button"
               onClick={sendMessage}
-              className="bg-red-500 text-white px-4 hover:bg-red-600 transition"
+              className="bg-orange-600 text-white px-4 hover:bg-orange-700 transition"
             >
               Send
             </button>
           </div>
         </div>
       )}
+
+      {/* ================= FOOTER ================= */}
+      <footer className="mt-auto mb-16 pt-6 border-t border-orange-200 text-center text-lg text-gray-600">
+        <a
+          href="/HomePage"
+          onClick={(e) => { e.preventDefault(); navigate("/HomePage"); }}
+          className="text-orange-600 font-semibold text-xl hover:underline"
+        >
+          www.toothx.com
+        </a>
+        <p className="mt-2 text-sm text-gray-500">
+          © {new Date().getFullYear()} ToothX. All rights reserved.
+        </p>
+      </footer>
+      </div>
     </div>
   );
 }

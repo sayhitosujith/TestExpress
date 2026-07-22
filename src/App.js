@@ -102,12 +102,13 @@ function App() {
     localStorage.setItem(
       "user",
       JSON.stringify({
-        name: existingUser.name || email,
+        name: `${existingUser.firstName || ""} ${existingUser.lastName || ""}`.trim() || existingUser.name || email,
         email: existingUser.email,
         role: existingUser.role || "CUSTOMER",
         practiceName: practice,
       }),
     );
+    localStorage.setItem("isLoggedIn", "true");
 
     setTimeout(() => navigate("/Welcome"), 2000);
   };

@@ -85,13 +85,13 @@ function EditDoctor() {
   return (
     <div className="p-6 max-w-md mx-auto">
       <Breadcrumbs className="mb-4">
-        <Typography as="a" color="orange-gray" className="cursor-pointer" onClick={() => navigate("/")}>
+        <Typography as="a" color="blue-gray" className="cursor-pointer" onClick={() => navigate("/")}>
           Home
         </Typography>
-        <Typography as="a" color="orange-gray" className="cursor-pointer" onClick={() => navigate("/DoctorList")}>
+        <Typography as="a" color="blue-gray" className="cursor-pointer" onClick={() => navigate("/DoctorList")}>
           Doctors
         </Typography>
-        <Typography color="orange-gray">Edit Doctor</Typography>
+        <Typography color="blue-gray">Edit Doctor</Typography>
       </Breadcrumbs>
 
       <Button color="orange" className="mb-4" onClick={() => navigate("/DoctorList")}>

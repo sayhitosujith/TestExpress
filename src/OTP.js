@@ -66,7 +66,9 @@ function OTP() {
         const mobileFromState = location?.state?.mobile || localStorage.getItem('lastMobile') || '';
         const userObj = { mobile: mobileFromState };
         login(userObj);
-        navigate("/Customer_home");
+        localStorage.setItem("customerSession", JSON.stringify({ mobile: mobileFromState, loginAt: new Date().toISOString() }));
+        const returnTo = location?.state?.returnTo || "/Customer_home";
+        navigate(returnTo);
       }, 2000);
     } else {
       setSuccess("");

@@ -1,25 +1,34 @@
 {
   "files": {
-    "main.css": "/my-app/static/css/main.f787b827.css",
-    "main.js": "/my-app/static/js/main.7d503141.js",
-    "static/js/787.d4aba7ab.chunk.js": "/my-app/static/js/787.d4aba7ab.chunk.js",
-    "static/media/Vidhya.jpg": "/my-app/static/media/Vidhya.bcf287013ea19838c9b6.jpg",
-    "static/media/2-1.png": "/my-app/static/media/2-1.aa404c680c71060b48a5.png",
-    "static/media/sujith.jpg": "/my-app/static/media/sujith.6b04e0dec1a0d6f5c682.jpg",
-    "static/media/campaign1.jpg": "/my-app/static/media/campaign1.c09825044bc8b448f99e.jpg",
-    "static/media/logo-dd.jpg": "/my-app/static/media/logo-dd.40749df3dc5d0a200797.jpg",
-    "static/media/DentalWorld.png": "/my-app/static/media/DentalWorld.662e555387eb6cfd2fe3.png",
-    "static/media/D-logo.jpg": "/my-app/static/media/D-logo.3109c71df0a5ed674329.jpg",
-    "static/media/RCB.png": "/my-app/static/media/RCB.b976216da393c7c03c4e.png",
-    "static/media/emblem.png": "/my-app/static/media/emblem.6c6874ed797e3ed6c422.png",
-    "static/media/case3.png": "/my-app/static/media/case3.72e8299975a95464d008.png",
-    "index.html": "/my-app/index.html",
-    "main.f787b827.css.map": "/my-app/static/css/main.f787b827.css.map",
-    "main.7d503141.js.map": "/my-app/static/js/main.7d503141.js.map",
-    "787.d4aba7ab.chunk.js.map": "/my-app/static/js/787.d4aba7ab.chunk.js.map"
+    "main.css": "/static/css/main.234314c5.css",
+    "main.js": "/static/js/main.35fe3408.js",
+    "static/js/787.d4aba7ab.chunk.js": "/static/js/787.d4aba7ab.chunk.js",
+    "static/media/Toothx_Logo.png": "/static/media/Toothx_Logo.b7294c722fab17bda2f5.png",
+    "static/media/2-1.png": "/static/media/2-1.35fe1019b1e63c6ff8e4.png",
+    "static/media/RCB.png": "/static/media/RCB.b76bd3f6f6ae448bf5bb.png",
+    "static/media/Jala.jpg": "/static/media/Jala.35f0c8cf234891715540.jpg",
+    "static/media/Barcode.jpeg": "/static/media/Barcode.080be4bf7da0cca1a9fb.jpeg",
+    "static/media/xray.jpg": "/static/media/xray.e666190012b9e6422d53.jpg",
+    "static/media/campaign1.jpg": "/static/media/campaign1.c09825044bc8b448f99e.jpg",
+    "static/media/DentalWallpaper.png": "/static/media/DentalWallpaper.8b768eb152362b4662e9.png",
+    "static/media/Jalavastra.jpeg": "/static/media/Jalavastra.fb5f09f7c51564745ad7.jpeg",
+    "static/media/Roy.png": "/static/media/Roy.3db6260126ec2768bade.png",
+    "static/media/Rajesh.png": "/static/media/Rajesh.082f3e9af1ee866ad014.png",
+    "static/media/Toothx_Logo_trimmed.png": "/static/media/Toothx_Logo_trimmed.240bbce5d3a49d8d06a4.png",
+    "static/media/Adrita.png": "/static/media/Adrita.56db26065aca640ffdb5.png",
+    "static/media/Manish.png": "/static/media/Manish.809176631d94fb5c753d.png",
+    "static/media/D-logo.jpg": "/static/media/D-logo.04c87db240addad3f4e2.jpg",
+    "static/media/slick.svg": "/static/media/slick.2630a3e3eab21c607e21.svg",
+    "static/media/slick.eot": "/static/media/slick.a4e97f5a2a64f0ab1323.eot",
+    "static/media/slick.ttf": "/static/media/slick.c94f7671dcc99dce43e2.ttf",
+    "static/media/slick.woff": "/static/media/slick.295183786cd8a1389865.woff",
+    "index.html": "/index.html",
+    "main.234314c5.css.map": "/static/css/main.234314c5.css.map",
+    "main.35fe3408.js.map": "/static/js/main.35fe3408.js.map",
+    "787.d4aba7ab.chunk.js.map": "/static/js/787.d4aba7ab.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.f787b827.css",
-    "static/js/main.7d503141.js"
+    "static/css/main.234314c5.css",
+    "static/js/main.35fe3408.js"
   ]
 }
