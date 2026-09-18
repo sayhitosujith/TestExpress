@@ -1,0 +1,114 @@
+/* Profile.css */
+
+/* Smooth card hover & transition */
+.card-hover {
+  transition: all 0.3s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Card spacing in list view */
+.list-card {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  padding: 0.75rem;
+  align-items: center;
+}
+
+/* Card spacing in grid view */
+.grid-card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Avatar adjustments */
+.card-avatar {
+  border: 2px solid #e5e7eb; /* Tailwind gray-200 */
+  flex-shrink: 0;
+}
+
+/* Card body adjustments */
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Card footer adjustments */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.5rem;
+}
+
+/* Highlight search term */
+.highlight {
+  background-color: #facc15; /* Tailwind yellow-400 */
+  padding: 0 0.25rem;
+  border-radius: 0.125rem;
+}
+
+/* Toast notifications */
+.toast {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background-color: #22c55e; /* Tailwind green-500 */
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  z-index: 50;
+  animation: slideDown 0.3s ease-out;
+}
+
+/* Slide down animation */
+@keyframes slideDown {
+  0% { transform: translateY(-50px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Breadcrumb spacing */
+.breadcrumb a {
+  opacity: 0.6;
+  text-decoration: none;
+}
+
+/* Search input width */
+.profile-search {
+  width: 11rem; /* Tailwind w-44 */
+}
+
+/* Switch styling */
+.profile-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Grid spacing */
+.grid-layout {
+  display: grid;
+  gap: 0.5rem;
+}
+.grid-layout-cols-1 { grid-template-columns: repeat(1, 1fr); }
+.grid-layout-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-layout-cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+/* List spacing */
+.list-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+/* Switch label orange */
+.profile-switch .mt-2 .material-tailwind-switch .switch-thumb {
+  background-color: #22c55e; /* Tailwind green-500 */
+}
+.profile-switch .mt-2 .material-tailwind-switch .switch-track {
+  background-color: #bbf7d0; /* Tailwind green-200 */
+}

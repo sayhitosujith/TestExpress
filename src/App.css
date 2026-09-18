@@ -1,0 +1,421 @@
+/* ============================================================
+   GLOBAL STYLES & RESETS
+============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background: linear-gradient(135deg, #e0f7fa, #ffffff);
+}
+/*------- Banner --------*/
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  display: inline-block;
+  min-width: 100%;
+  animation: marquee 70s linear infinite;
+}
+
+
+/* Color Variables */
+:root {
+  --primary-orange: #16a34a;
+  --primary-orange: #3b82f6;
+  --primary-purple: #523b84;
+  --primary-red: #ef4444;
+  --transition: 0.3s ease-in-out;
+}
+
+
+/*----BANNER SCROLLING TEXT----*/
+@keyframes moveLeft {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.banner-scroll {
+  display: inline-block;
+  white-space: nowrap;
+  animation: moveLeft 12s linear infinite;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+
+/* Utility */
+.separator {
+  border-top: 2px solid #cbd5e1;
+  margin: 20px 0;
+}
+
+/* ============================================================
+   ANNOUNCEMENT BANNER
+============================================================ */
+.announcement-banner {
+  background: linear-gradient(90deg, #523b84, #2e236d);
+  color: #fff;
+  font-size: 1rem;
+  padding: 12px 24px;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.announcement-banner::before,
+.announcement-banner::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 80px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.announcement-banner::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(82,59,132,1), transparent);
+}
+
+.announcement-banner::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(82,59,132,1), transparent);
+}
+
+/* --------- Scrolling Text --------- */
+@keyframes scrollLeft {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-scroll {
+  display: inline-block;
+  animation: scrollLeft 28s linear infinite;
+  white-space: nowrap;
+  padding-right: 50px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: color 0.3s ease;
+}
+
+.animate-scroll:hover {
+  animation-play-state: paused;
+  color: #ffd700;
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.6);
+}
+
+@media (max-width: 768px) {
+  .animate-scroll {
+    animation-duration: 38s;
+    font-size: 0.9rem;
+  }
+}
+
+/* ============================================================
+   ADD DOCTOR PAGE LAYOUT
+============================================================ */
+.add-doctor-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.form-section,
+.image-section {
+  flex: 1 1 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.doctor-card {
+  width: 100%;
+  max-width: 650px;
+  padding: 25px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.doctor-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(55, 65, 81, 0.25);
+}
+
+.doctor-image {
+  width: 100%;
+  max-height: 80vh;
+  object-fit: cover;
+  border-radius: 0 0 0 60px;
+}
+
+@media (max-width: 1024px) {
+  .doctor-image {
+    border-radius: 0 0 0 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .add-doctor-container {
+    flex-direction: column;
+  }
+}
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+.add-doctor-btn,
+.cancel-btn {
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+}
+
+/* Add Doctor Button */
+.add-doctor-btn {
+  background: #000000;
+}
+.add-doctor-btn:hover {
+  background: #1f2937;
+  transform: scale(1.05);
+}
+
+/* Cancel Button */
+.cancel-btn {
+  background: #000000;
+}
+.cancel-btn:hover {
+  background: #1f2937;
+  transform: scale(1.05);
+}
+
+/* ============================================================
+   FILE INPUTS & AVATAR
+============================================================ */
+.file-input,
+#file_input {
+  padding: 0.4rem;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #f9fafb;
+  transition: border-color 0.2s;
+}
+
+.file-input:hover,
+#file_input:hover {
+  border-color: var(--primary-orange);
+}
+
+.avatar-style {
+  border: 3px solid var(--primary-orange);
+  border-radius: 50%;
+  padding: 5px;
+  background-color: #f0f9ff;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   CONTACT CLINIC CARD
+============================================================ */
+.contact-clinic-card {
+  background: linear-gradient(135deg, #ffffff, #f8f9ff);
+  border: 2px solid #c3d4f7;
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 300px;
+  width: 100%;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  transition: var(--transition);
+}
+
+.contact-clinic-card:hover {
+  transform: translateY(-6px);
+  border-color: #4338ca;
+  box-shadow: 0 10px 25px rgba(55, 65, 81, 0.25);
+}
+
+.contact-clinic-icons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.contact-clinic-icons button {
+  background: #f3f4f6;
+  padding: 12px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.contact-clinic-icons button:hover {
+  background: #1f2937;
+  transform: scale(1.1);
+}
+
+.contact-clinic-icons button svg {
+  color: hsl(221, 100%, 35%);
+  transition: var(--transition);
+}
+
+.contact-clinic-icons button:hover svg {
+  color: #fff;
+}
+
+/* ============================================================
+   ANIMATIONS
+============================================================ */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slideDown { animation: slideDown 0.4s ease-out; }
+
+@keyframes popup {
+  0% { transform: scale(0.6); opacity: 0; }
+  80% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.animate-popup { animation: popup 0.3s ease-out; }
+
+@keyframes pulseSlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.08); }
+}
+.animate-pulseSlow { animation: pulseSlow 1.8s infinite; }
+
+/* ---- Highlighted service tile (glow + shimmer + icon float) ---- */
+@keyframes tileGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.5), 0 8px 20px rgba(0, 0, 0, 0.12); border-color: #000; }
+  50%      { box-shadow: 0 0 0 10px rgba(5, 150, 105, 0), 0 8px 20px rgba(0, 0, 0, 0.12); border-color: #059669; }
+}
+
+@keyframes tileShimmer {
+  0%        { transform: translateX(-140%) skewX(-20deg); }
+  55%, 100% { transform: translateX(260%) skewX(-20deg); }
+}
+
+@keyframes tileIconFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  30%      { transform: translateY(-4px) rotate(-7deg); }
+  65%      { transform: translateY(-4px) rotate(7deg); }
+}
+
+.tile-animated {
+  position: relative;
+  overflow: hidden;
+  animation: tileGlow 2s ease-in-out infinite;
+  animation-delay: var(--tile-delay, 0s);
+}
+
+.tile-animated::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: tileShimmer 2.8s ease-in-out infinite;
+  animation-delay: var(--tile-delay, 0s);
+  pointer-events: none;
+}
+
+.tile-animated .tile-icon {
+  display: inline-block;
+  animation: tileIconFloat 2s ease-in-out infinite;
+  animation-delay: var(--tile-delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile-animated,
+  .tile-animated::after,
+  .tile-animated .tile-icon { animation: none; }
+}
+
+/* ============================================================
+   WHATSAPP BUTTON
+============================================================ */
+.whatsapp-btn {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 999;
+  background: white;
+  padding: 12px;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease-in-out;
+}
+
+.whatsapp-btn:hover {
+  transform: scale(1.1);
+}
+
+/* ============================================================
+   MISC
+============================================================ */
+.bg-white-800 { background-color: #ffffff; }
+.bg-white-1000 { background-color: #f8fafc; }
+
+.bottom-92 { bottom: 92px; }
+.mt-neg-19 { margin-top: -19px; }
+
+.download-card {
+  background-color: var(--primary-orange);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+/* DISCHARGED seal: one-time "stamp slam" with a quick shake on impact */
+@keyframes stampSlam {
+  0% {
+    transform: rotate(-16deg) scale(3);
+    opacity: 0;
+  }
+  50% {
+    transform: rotate(-16deg) scale(0.82);
+    opacity: 0.55;
+  }
+  /* impact shake */
+  62% {
+    transform: rotate(-20deg) scale(1.04);
+    opacity: 0.45;
+  }
+  74% {
+    transform: rotate(-12deg) scale(0.99);
+    opacity: 0.42;
+  }
+  86% {
+    transform: rotate(-18deg) scale(1.01);
+    opacity: 0.41;
+  }
+  100% {
+    transform: rotate(-16deg) scale(1);
+    opacity: 0.4;
+  }
+}
+.discharge-seal,
+.cancelled-seal {
+  animation: stampSlam 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}

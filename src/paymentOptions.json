@@ -1,0 +1,62 @@
+[
+  {
+    "value": "Free",
+    "label": "Free",
+    "blurb": "Record, replay and export, in the browser you are already in.",
+    "adds": [
+      "record",
+      "organise",
+      "export",
+      "reports"
+    ],
+    "price": 0,
+    "currency": "INR",
+    "interval": null,
+    "kind": "individual"
+  },
+  {
+    "value": "Pro",
+    "label": "Pro",
+    "blurb": "The engines, the data and the automation around a suite.",
+    "adds": [
+      "browsers",
+      "heal",
+      "data",
+      "schedule",
+      "cicd",
+      "extent"
+    ],
+    "price": 2499,
+    "currency": "INR",
+    "interval": "month",
+    "kind": "individual"
+  },
+  {
+    "value": "Enterprise",
+    "label": "Enterprise",
+    "blurb": "Everything in Pro, plus native mobile and API testing.",
+    "adds": [
+      "android",
+      "apitokens",
+      "apitesting"
+    ],
+    "price": 4999,
+    "currency": "INR",
+    "interval": "month",
+    "kind": "individual"
+  },
+  {
+    "value": "Corporate",
+    "label": "Corporate",
+    "blurb": "Everything in Enterprise, for a team rather than a person.",
+    "adds": [
+      "team",
+      "audit",
+      "support"
+    ],
+    "price": 14999,
+    "currency": "INR",
+    "interval": "month",
+    "kind": "corporate"
+  }
+]
