@@ -2,57 +2,21 @@ import "./App.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Fragment, useState, useEffect, useRef } from "react";
-import { FaChevronUp, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaChevronUp, FaChevronLeft, FaChevronRight, FaLinkedin } from "react-icons/fa";
 import { MdMenu, MdClose } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import Slider from "react-slick";
 import TestExpressMark from "./TestExpressMark";
 import { useBranding } from "./appBranding";
 import PageLoader from "./PageLoader";
-// What this page reports about itself, read back in Super Admin. Every call is
-// fire-and-forget by construction — see the note at the top of that module — so
-// none of the handlers below have to think about failure.
 import {
   trackHomePageCta,
   trackHomePageSection,
   trackHomePageView,
 } from "./homePageTracking";
-// The plan catalogue, live from the database. Read through ./plans like every
-// other screen, so a plan renamed or repriced in Super Admin changes here too —
-// a marketing page with its own hand-written copy of the prices is how a site
-// ends up advertising last quarter's.
 import { PLANS, addedBy, capabilitiesOf, planKind, priceLabel } from "./plans";
 import { VscArrowRight } from "react-icons/vsc";
 
-// The public landing page for TestExpress.
-//
-// Everything here describes what the recorder in ./TestRunner.jsx actually does.
-// That is a deliberate constraint rather than a style: a landing page for a
-// developer tool is read by people who will open the product thirty seconds
-// later, and a claim they cannot find in the UI costs more trust than a modest
-// claim keeps. So there are no invented user counts, no testimonials nobody
-// gave, and no roadmap items dressed up as features -- every capability below
-// maps to something in the recorder today.
-//
-// Two consequences worth knowing about, since both were live before:
-//
-//   * Every link points at a route that exists. The router only serves
-//     /my-app, /NewRegistration, /HomePage, /Profile and /TestRunner; anything
-//     else falls through the catch-all to the login page. The previous version
-//     linked to /gallery, /CustomerCare, /WhatWeTreatPage, eighteen /services/*
-//     paths, /about, /careers and /blog -- so clicking almost anything, a
-//     feature tile included, silently logged you out.
-//
-//   * There is no phone number on the page. The one that used to be here, in a
-//     "24x7 support" popup, is the personal mobile stored against an account in
-//     the registrations table. A public marketing page is not the place for it.
-
-// Icons are drawn, not typed.
-//
-// Same reasoning as the icon set in TestRunner.jsx: emoji are a lottery across
-// platforms, and several of the ones this page used -- the doctor, the clock --
-// render as an empty tofu box in the default Windows font stack. A path inherits
-// currentColor, stays sharp at any size and cannot be missing.
 const Icon = ({ size = 22, children, ...rest }) => (
   <svg
     width={size}
@@ -257,9 +221,7 @@ function Welcome() {
 
   // Only routes the router actually serves. See the note at the top of the file.
   const menuItems = [
-//    { name: "Home", path: "/HomePage" },
-  //  { name: "Recorder", path: "/TestRunner" },
-//    { name: "Sign in", path: "/my-app" },
+    { name: "Contact", path: "/Contact" },
   ];
 
   // What the recorder can do today. Each of these is a real capability — the
@@ -532,26 +494,21 @@ function Welcome() {
             </span>
           </button>
 
-          <div className="hidden md:flex items-center gap-6">
-            {menuItems.map((item) => (
-              <button
-                key={item.name}
-                onClick={() => {
-                  trackHomePageCta("nav_menu", { label: item.name });
-                  navigate(item.path);
-                }}
-                className="text-sm font-medium text-[#cbd5e1] hover:text-[#6ee7b7] transition-colors duration-200"
-              >
-                {item.name}
-              </button>
-            ))}
-          </div>
-
           {/* No "Open Recorder" here any more. The hero's own call to action
               is the way in, and a header button that sent a first-time visitor
               to the sign-in page was offering the product to the one person who
               cannot use it yet. */}
           <div className="flex items-center gap-3">
+            <a
+              href="https://www.linkedin.com/in/test-express-b365b2438"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackHomePageCta("nav_linkedin")}
+              aria-label={`${branding.name} on LinkedIn`}
+              className="p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+            >
+              <FaLinkedin size={20} />
+            </a>
             <button
               onClick={() => {
                 trackHomePageCta("mobile_menu");
@@ -685,11 +642,11 @@ function Welcome() {
                 <button
                   onClick={() => {
                     trackHomePageCta("hero_register");
-                    navigate("/NewRegistration");
+                    navigate("/Contact");
                   }}
                   className="flex items-center gap-2 font-bold px-7 py-3.5 rounded-2xl text-sm border-2 border-[#34d399] text-[#0b1120] bg-[#34d399] hover:bg-[#10b981] hover:border-[#10b981] hover:shadow-md transition-all duration-200"
                 >
-                  Get started Today 
+                  Contact us Today 
                   <VscArrowRight />
                 </button>
               </div>

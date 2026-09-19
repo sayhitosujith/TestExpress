@@ -1,0 +1,30 @@
+# Nginx site config for TestExpress on a single VPS.
+#
+# Serves the CRA production build as static files and reverse-proxies /api to
+# the Express backend (started via ../src/Backend/ecosystem.config.js on
+# 127.0.0.1:5000, or whatever PORT is set to in src/Backend/.env).
+#
+# Copy to /etc/nginx/sites-available/testexpress, edit server_name and root,
+# symlink into sites-enabled, then `certbot --nginx -d your-domain.com`.
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    root /path/to/TestExpress/build;
+    index index.html;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # react-router uses client-side routes (e.g. /HomePage, /TestRunner) that
+    # do not exist as files, so anything not matched above falls back to
+    # index.html and the router takes it from there.
+    location / {
+        try_files $uri /index.html;
+    }
+}
