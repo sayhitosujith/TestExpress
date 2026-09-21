@@ -44,7 +44,9 @@ services:
       - key: AUTH_SECRET
         generateValue: true
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: testexpress-db
+          property: connectionString
       - key: DATABASE_SSL_NO_VERIFY
         sync: false
       - key: ANTHROPIC_API_KEY
@@ -63,3 +65,7 @@ services:
         sync: false
       - key: GOOGLE_SERVICE_ACCOUNT_KEY
         sync: false
+
+databases:
+  - name: testexpress-db
+    plan: free
