@@ -3,7 +3,7 @@ services:
     name: testexpress-backend
     runtime: docker
     dockerfilePath: src/Backend/Dockerfile
-    dockerContext: src/Backend
+    dockerContext: .
     plan: free
     healthCheckPath: /health
     envVars:
