@@ -1,13 +1,16 @@
 FROM mcr.microsoft.com/playwright:v1.62.0-jammy
 
-# The image's CA bundle is stale enough that Node reports a perfectly valid
-# Neon certificate as self-signed (confirmed: the same cert verifies fine
-# under strict TLS from outside this image). Refreshing it here fixes real
-# TLS verification instead of papering over it with DATABASE_SSL_NO_VERIFY.
+# Node bundles its own CA list at compile time and does not read the OS trust
+# store on its own -- refreshing the OS certificates alone (a prior version of
+# this file) changes nothing for Node. NODE_EXTRA_CA_CERTS is what actually
+# makes Node trust the OS bundle too, which is what Neon's (perfectly valid --
+# confirmed working under strict TLS from outside this image) certificate
+# needs to verify here.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates \
   && update-ca-certificates \
   && rm -rf /var/lib/apt/lists/*
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
 WORKDIR /app
 
