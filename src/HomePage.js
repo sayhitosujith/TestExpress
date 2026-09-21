@@ -604,7 +604,7 @@ function Welcome() {
 
               <h1 className="ha2 font-black text-white leading-[1.08] tracking-tight mb-5"
                 style={{ fontSize: "clamp(2.1rem, 5vw, 3.6rem)" }}>
-                <span className="whitespace-nowrap">Less Code</span>
+                <span className="whitespace-nowrap">Less Code.</span>
                 <br />
                 <span className="relative inline-block text-[#34d399]">
                   Better Automation
