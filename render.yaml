@@ -1,17 +1,12 @@
 services:
   - type: web
     name: testexpress-backend
-    runtime: node
-    rootDir: src/Backend
+    runtime: docker
+    dockerfilePath: src/Backend/Dockerfile
+    dockerContext: src/Backend
     plan: free
-    buildCommand: npm install && npx playwright install --with-deps chromium
-    startCommand: npm start
     healthCheckPath: /health
     envVars:
-      # Overrides the repo root's .nvmrc (pinned to 18 for the Netlify
-      # frontend build) — Playwright 1.62+ requires Node 20.
-      - key: NODE_VERSION
-        value: 20
       - key: MONGO_URI
         sync: false
       - key: GMAIL_USER
