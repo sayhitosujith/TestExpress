@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
 import {
+  getPatients,
+  savePatient,
+  savePatients,
+  deletePatient,
+} from "./api/patients";
+import {
   Card,
   CardBody,
   CardFooter,
@@ -34,14 +40,6 @@ const isProfileValid = (profile) => {
     ? profile.policyNumber.length <= 10
     : true;
   return phoneValid && aadhaarValid && policyValid;
-};
-
-const AlertBadge = ({ color, text }) => {
-  return (
-    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${color}`}>
-      {text}
-    </span>
-  );
 };
 
 const CardItem = ({
@@ -83,13 +81,13 @@ const CardItem = ({
 
   ${
     listView
-      ? "w-full flex flex-row gap-4 items-start p-4"
-      : "w-full flex flex-col p-4 min-h-[420px]"
+      ? "w-full flex flex-row gap-3 items-start p-3"
+      : "w-full flex flex-col p-3 min-h-[300px]"
   }`}
     >
       {/* Avatar */}
       <div
-        className={`${listView ? "w-20 flex-shrink-0 flex justify-center" : "flex justify-center mt-4"}`}
+        className={`${listView ? "w-16 flex-shrink-0 flex justify-center" : "flex justify-center mt-2"}`}
       >
         {" "}
         <Avatar
@@ -99,8 +97,8 @@ const CardItem = ({
           }
           alt="Profile"
           variant={listView ? "circular" : "square"}
-          className={`border-4 border-gray-300 shadow-md object-cover
-  ${listView ? "w-20 h-20 rounded-full" : "w-36 h-36 md:w-52 md:h-52 rounded-lg"}          `}
+          className={`border-2 border-gray-300 shadow-md object-cover
+  ${listView ? "w-16 h-16 rounded-full" : "w-24 h-24 md:w-28 md:h-28 rounded-lg"}          `}
         />
       </div>
 
@@ -122,6 +120,16 @@ const CardItem = ({
           </div>
 
           {/* Medical Badges
+
+      Restoring these needs the badge back with them, which is why it lives in
+      here rather than above as an unused component:
+
+        const AlertBadge = ({ color, text }) => (
+          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${color}`}>
+            {text}
+          </span>
+        );
+
       <div className="flex flex-wrap gap-2 mt-2">
         {item?.pregnancyStatus === "Pregnant" && (
           <AlertBadge color="bg-pink-100 text-pink-700" text="🤰 Pregnant" />
@@ -150,7 +158,7 @@ const CardItem = ({
           {item?.email ? (
             <a
               href={`mailto:${item.email}`}
-              className="text-orange-600 underline hover:text-orange-800"
+              className="text-green-600 underline hover:text-green-800"
             >
               {item.email}
             </a>
@@ -161,7 +169,7 @@ const CardItem = ({
 
         <Typography>
           <span className="font-bold underline">Phone:</span>{" "}
-          <a href={`tel:${item?.phone}`} className="text-orange-600">
+          <a href={`tel:${item?.phone}`} className="text-green-600">
             {highlightPhone(item?.phone || "", searchTerm)}
           </a>
         </Typography>
@@ -193,11 +201,11 @@ const CardItem = ({
           <Badge
             color={
               item?.appointmentStatus === "Scheduled - Confirmed"
-                ? "orange"
+                ? "green"
                 : item?.appointmentStatus === "Scheduled - Pending"
                   ? "amber"
                   : item?.appointmentStatus === "Scheduled -Completed"
-                    ? "orange"
+                    ? "green"
                     : item?.appointmentStatus === "Cancelled"
                       ? "red"
                       : "gray"
@@ -284,7 +292,7 @@ const CardItem = ({
         <Button
           size="sm"
           variant="text"
-          color="orange"
+          color="black"
           className="mt-2 w-fit p-0"
           onClick={() => setExpanded(!expanded)}
         >
@@ -297,7 +305,7 @@ const CardItem = ({
           <div className="flex flex-wrap gap-2 justify-between items-center mt-4">
             <Button
               size="sm"
-              className="bg-gradient-to-r from-orange-600 via-orange-700 to-orange-900 text-white shadow-md hover:scale-105 transition duration-300"
+              className="bg-black hover:bg-gray-800 text-white shadow-md hover:scale-105 transition duration-300"
               onClick={() => onBook(item.phone, item.pregnancyStatus)}
             >
               Book Appointment
@@ -306,7 +314,7 @@ const CardItem = ({
             <Button
               size="xs"
               variant="outlined"
-              color="orange"
+              color="black"
               onClick={() => onEdit(item)}
             >
               Edit
@@ -315,7 +323,7 @@ const CardItem = ({
             <Button
               size="xs"
               variant="outlined"
-              color="red"
+              color="black"
               onClick={() => item?.patientId && onDelete(item.patientId)}
             >
               Delete
@@ -334,7 +342,7 @@ function Profile() {
   const [deleteId, setDeleteId] = useState(null);
   const [editProfile, setEditProfile] = useState(null);
   const [showToast, setShowToast] = useState("");
-  const [listView, setListView] = useState(false);
+  const [listView, setListView] = useState(true);
 
   const handleBookAppointment = (phone, pregnancyStatus) => {
     if (pregnancyStatus === "Pregnant") {
@@ -418,7 +426,34 @@ function Profile() {
       setProfiles(updatedProfiles);
     };
 
-    loadProfiles();
+    // Pull the durable copy from the backend before rendering the list.
+    // - Server has data  -> refresh the local cache from it (source of truth).
+    // - Server empty but local has profiles -> migrate the existing local data up.
+    // - Server unreachable -> fall back to whatever is in localStorage.
+    const hydrate = async () => {
+      try {
+        const serverProfiles = await getPatients();
+        const localProfiles =
+          JSON.parse(localStorage.getItem("allProfiles")) || [];
+
+        if (Array.isArray(serverProfiles) && serverProfiles.length > 0) {
+          localStorage.setItem("allProfiles", JSON.stringify(serverProfiles));
+        } else if (localProfiles.length > 0) {
+          savePatients(localProfiles).catch((err) =>
+            console.warn("savePatients (migration) failed:", err.message),
+          );
+        }
+      } catch (err) {
+        console.warn(
+          "Patient hydrate failed, using local cache:",
+          err.message,
+        );
+      } finally {
+        loadProfiles();
+      }
+    };
+
+    hydrate();
 
     const handleStorage = (e) => {
       if (
@@ -443,6 +478,9 @@ function Profile() {
     );
     setProfiles(filteredProfiles);
     localStorage.setItem("allProfiles", JSON.stringify(filteredProfiles));
+    deletePatient(deleteId).catch((err) =>
+      console.warn("deletePatient failed:", err.message),
+    );
     setDeleteId(null);
     showSuccessToast("Profile Deleted Successfully!");
   };
@@ -455,6 +493,9 @@ function Profile() {
     setProfiles(updatedProfiles);
 
     localStorage.setItem("allProfiles", JSON.stringify(updatedProfiles));
+    savePatient(editProfile).catch((err) =>
+      console.warn("savePatient failed:", err.message),
+    );
 
     setEditProfile(null);
 
@@ -508,20 +549,18 @@ function Profile() {
   );
 
   return (
-    <div className="p-4 sm:p-6 relative">
+    <div className="p-4 sm:p-6 relative pb-32">
       <Breadcrumbs className="mb-4 flex-wrap">
-        <a href="/Welcome" className="opacity-60">
-          Welcome
+        <a href="/HomePage" className="opacity-60">
+          Home
         </a>
         <span>Profiles</span>
       </Breadcrumbs>
 
       <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
         <div className="flex items-center gap-3 flex-wrap">
-          <Button className="whitespace-nowrap bg-gradient-to-r from-orange-600 via-orange-700 to-orange-900 text-white shadow-lg hover:scale-105 transition duration-300">
-            <a href="/Addprofile" className="font-semibold">
-              + Add Patient
-            </a>
+          <Button className="whitespace-nowrap bg-black hover:bg-gray-800 text-white shadow-lg hover:scale-105 transition duration-300">
+            <span className="font-semibold">+ Add Patient</span>
           </Button>
 
           <div className="relative w-44">
@@ -544,21 +583,27 @@ function Profile() {
         </div>
 
         <div className="flex items-center gap-4 flex-wrap justify-end">
-          <Button className="text-xs px-3 bg-gradient-to-r from-orange-600 via-orange-700 to-orange-900 text-white shadow-md hover:scale-105 transition duration-300">
-            <a href="/AppointmentHistory">Appointment History</a>
-          </Button>{" "}
           <b>
             <Switch
               label="List View"
-              color="orange"
+              color="green"
               checked={listView}
               onChange={() => setListView(!listView)}
             />
           </b>
           <MdNotificationsNone color="black" size={28} />
-          <a href="/Logout">
+          <button
+            type="button"
+            aria-label="Sign out"
+            onClick={() => {
+              localStorage.removeItem("isLoggedIn");
+              localStorage.removeItem("user");
+              localStorage.removeItem("loggedInUser");
+              window.location.href = "/my-app";
+            }}
+          >
             <MdPowerSettingsNew color="black" size={18} />
-          </a>
+          </button>
           <Avatar
             src="https://fellows.ias.ac.in/public/images/stock/avatar.svg?v=105894425"
             alt="User"
@@ -600,20 +645,21 @@ function Profile() {
         open={deleteId !== null}
         handler={() => setDeleteId(null)}
         size="xs"
+        className="max-h-[90vh] flex flex-col"
       >
-        <DialogHeader>Confirm Deletion</DialogHeader>
-        <DialogBody divider>
+        <DialogHeader className="shrink-0">Confirm Deletion</DialogHeader>
+        <DialogBody divider className="flex-1 min-h-0 overflow-y-auto">
           Are you sure you want to delete this profile?
         </DialogBody>
-        <DialogFooter>
+        <DialogFooter className="shrink-0">
           <Button
             variant="text"
-            color="orange"
+            color="black"
             onClick={() => setDeleteId(null)}
           >
             Cancel
           </Button>
-          <Button variant="gradient" color="red" onClick={handleDelete}>
+          <Button variant="gradient" color="black" onClick={handleDelete}>
             Delete
           </Button>
         </DialogFooter>
@@ -624,11 +670,12 @@ function Profile() {
         handler={() => setEditProfile(null)}
         open={Boolean(editProfile)}
         size="md"
+        className="max-h-[90vh] flex flex-col"
       >
-        <DialogHeader>Edit Profile</DialogHeader>
+        <DialogHeader className="shrink-0">Edit Profile</DialogHeader>
         <DialogBody
           divider
-          className="flex-1 overflow-y-auto max-h-[70vh] px-4"
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4"
         >
           {" "}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -900,7 +947,7 @@ function Profile() {
                       {/* Delete Button */}
                       <button
                         type="button"
-                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs z-10"
+                        className="absolute top-0 right-0 bg-black text-white rounded-full w-5 h-5 flex items-center justify-center text-xs z-10"
                         onClick={() => {
                           const updatedXrays = editProfile.xrayReports.filter(
                             (_, i) => i !== idx,
@@ -955,14 +1002,14 @@ function Profile() {
           {" "}
           <Button
             variant="text"
-            color="orange"
+            color="black"
             onClick={() => setEditProfile(null)}
           >
             Cancel
           </Button>
           <Button
             variant="gradient"
-            color="orange"
+            color="black"
             onClick={handleEditSave}
             disabled={!isProfileValid(editProfile)}
           >
@@ -972,7 +1019,7 @@ function Profile() {
       </Dialog>
 
       {showToast && (
-        <div className="fixed bottom-5 right-5 bg-orange-500 text-white px-4 py-2 rounded shadow-lg">
+        <div className="fixed bottom-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg">
           {showToast}
         </div>
       )}
@@ -999,7 +1046,7 @@ function Profile() {
           </div>
 
           <div className="flex items-center gap-4">
-            <a href="/Help" className="text-orange-600 hover:underline">
+            <a href="/Help" className="text-green-600 hover:underline">
               Help
             </a>
 
@@ -1007,7 +1054,7 @@ function Profile() {
               href="https://wa.me/"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1 text-orange-600 hover:underline"
+              className="flex items-center gap-1 text-green-600 hover:underline"
             >
               <FaWhatsapp />
               Support
@@ -1017,7 +1064,7 @@ function Profile() {
             <div className="absolute top-4 right-4">
               <button
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 rounded bg-gradient-to-r from-orange-600 via-orange-700 to-orange-900 text-white shadow-md hover:scale-105 transition duration-300"
+                className="px-4 py-2 rounded bg-black hover:bg-gray-800 text-white shadow-md hover:scale-105 transition duration-300"
               >
                 <MdRefresh size={24} />
               </button>

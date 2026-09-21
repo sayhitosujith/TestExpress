@@ -1,18 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import teethWhiteningImg from "../assets/Teeth-whitening.jpg";
 
 const DEFAULT_TREATMENTS = [
-  { id: 1, name: "Root Canal Treatment", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/RCT.gif", price: "250", description: "", published: true, isNew: false },
-  { id: 2, name: "Dental Crowns", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Crowns.gif", price: "300", description: "", published: true, isNew: false },
-  { id: 3, name: "Laser Dentistry", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2022/09/Laser-Treatment-1.gif", price: "150", description: "", published: true, isNew: false },
+  { id: 1, name: "Root Canal Treatment", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/RCT.gif", price: "550", description: "", published: true, isNew: false },
+  { id: 2, name: "Dental Crowns", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Crowns.gif", price: "600", description: "", published: true, isNew: false, link: "https://clovedental.in/specialties/dental-crowns" },
+  { id: 3, name: "Laser Dentistry", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2022/09/Laser-Treatment-1.gif", price: "550", description: "", published: true, isNew: false },
   { id: 4, name: "Invisible Braces", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2025/06/Invisible-Braces-1.gif", price: "2000", description: "", published: true, isNew: false },
-  { id: 5, name: "Dental Fillings", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Dental-Fillings-1-1.gif", price: "90", description: "", published: true, isNew: false },
+  { id: 5, name: "Dental Fillings", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Dental-Fillings-1-1.gif", price: "520", description: "", published: true, isNew: false },
   { id: 6, name: "Wisdom Tooth Removal", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Wisdom-Tooth-1.gif", price: "8000", description: "", published: true, isNew: false },
   { id: 7, name: "Dental Braces", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2017/05/Braces-2.gif", price: "1500", description: "", published: true, isNew: false },
   { id: 8, name: "Dental Implants", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Dental-Implants.gif", price: "1200", description: "", published: true, isNew: false },
-  { id: 9, name: "Dentures", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Dentures.gif", price: "500", description: "", published: true, isNew: false },
-  { id: 10, name: "Kids Dentistry", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Kids-Dentistery.gif", price: "60", description: "", published: true, isNew: false },
-  { id: 11, name: "Mouth Ulcers", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Mouth-ulcers-1-2.gif", price: "40", description: "", published: true, isNew: false },
-  { id: 12, name: "Gum Treatment", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2017/05/Gum-Treatment.gif", price: "120", description: "", published: true, isNew: false },
+  { id: 9, name: "Dentures", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Dentures.gif", price: "700", description: "", published: true, isNew: false },
+  { id: 10, name: "Kids Dentistry", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Kids-Dentistery.gif", price: "550", description: "", published: true, isNew: false },
+  { id: 11, name: "Mouth Ulcers", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Mouth-ulcers-1-2.gif", price: "510", description: "", published: true, isNew: false },
+  { id: 12, name: "Gum Treatment", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2017/05/Gum-Treatment.gif", price: "540", description: "", published: true, isNew: false },
+  { id: 13, name: "Teeth Whitening", src: teethWhiteningImg, price: "600", description: "", published: true, isNew: false },
+  { id: 14, name: "Dental Veneers", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Veneers.gif", price: "650", description: "", published: true, isNew: false },
+  { id: 15, name: "Smile Makeover", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Smile-Designing.gif", price: "1800", description: "", published: true, isNew: false },
+  { id: 16, name: "Tooth Extraction", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Tooth-Extraction.gif", price: "520", description: "", published: true, isNew: false },
+  { id: 17, name: "Dental Checkup", src: "https://clovecontent.s3.ap-south-1.amazonaws.com/All/2019/02/Dental-Checkup.gif", price: "510", description: "", published: true, isNew: false },
+
 ];
 
 const STORAGE_KEY = "treatments";
@@ -29,6 +36,13 @@ export const TREATMENT_IMAGE_BY_NAME = DEFAULT_TREATMENTS.reduce((map, t) => {
 // were saved before treatments carried a price (older data had price: "").
 export const TREATMENT_PRICE_BY_NAME = DEFAULT_TREATMENTS.reduce((map, t) => {
   map[t.name.trim().toLowerCase()] = t.price;
+  return map;
+}, {});
+
+// Known treatment name -> external info link, used to backfill entries saved
+// before treatments carried a link.
+export const TREATMENT_LINK_BY_NAME = DEFAULT_TREATMENTS.reduce((map, t) => {
+  if (t.link) map[t.name.trim().toLowerCase()] = t.link;
   return map;
 }, {});
 
@@ -65,6 +79,9 @@ const repairTreatments = (list) =>
     if (hasNoPrice(next.price) && TREATMENT_PRICE_BY_NAME[key]) {
       next = { ...next, price: TREATMENT_PRICE_BY_NAME[key] };
     }
+    if (!next.link && TREATMENT_LINK_BY_NAME[key]) {
+      next = { ...next, link: TREATMENT_LINK_BY_NAME[key] };
+    }
     return next;
   });
 
@@ -73,8 +90,27 @@ const repairTreatments = (list) =>
 // the next load. It runs a single time per browser, so any price the user
 // later edits in the catalog is preserved and not overwritten again.
 const PRICE_MIGRATION_KEY = "treatmentsPriceMigration";
-const PRICE_MIGRATION_VERSION = "2026-07-17-wisdom-8000";
-const FORCED_PRICES = { "wisdom tooth removal": "8000" };
+const PRICE_MIGRATION_VERSION = "2026-07-22-all-above-500";
+const FORCED_PRICES = {
+  "root canal treatment": "550",
+  "dental crowns": "600",
+  "laser dentistry": "550",
+  "invisible braces": "2000",
+  "dental fillings": "520",
+  "wisdom tooth removal": "8000",
+  "dental braces": "1500",
+  "dental implants": "1200",
+  "dentures": "700",
+  "kids dentistry": "550",
+  "mouth ulcers": "510",
+  "gum treatment": "540",
+  "teeth whitening": "600",
+  "dental veneers": "650",
+  "smile makeover": "1800",
+  "tooth extraction": "520",
+  "dental checkup": "510",
+  "scaling & polishing": "530",
+};
 
 const applyPriceMigration = (list) => {
   try {
@@ -85,7 +121,61 @@ const applyPriceMigration = (list) => {
       const key = (t.name || "").trim().toLowerCase();
       return FORCED_PRICES[key] ? { ...t, price: FORCED_PRICES[key] } : t;
     });
+    // Seed any default treatments missing from an already-saved catalog, so
+    // existing browsers pick up newly added defaults (matched by name).
+    const present = new Set(migrated.map((t) => (t.name || "").trim().toLowerCase()));
+    const seeded = [
+      ...migrated,
+      ...DEFAULT_TREATMENTS.filter(
+        (t) => !present.has((t.name || "").trim().toLowerCase())
+      ),
+    ];
     localStorage.setItem(PRICE_MIGRATION_KEY, PRICE_MIGRATION_VERSION);
+    return seeded;
+  } catch {
+    return list;
+  }
+};
+
+// One-time ratings migration. Bump the version to force every stored treatment
+// back to a 5-star rating on the next load. Runs a single time per browser, so
+// any rating an admin later edits in the catalog is preserved.
+const RATING_MIGRATION_KEY = "treatmentsRatingMigration";
+const RATING_MIGRATION_VERSION = "2026-07-24-all-5-stars-v2";
+
+const applyRatingMigration = (list) => {
+  try {
+    if (localStorage.getItem(RATING_MIGRATION_KEY) === RATING_MIGRATION_VERSION) {
+      return list;
+    }
+    const migrated = list.map((t) => ({ ...t, rating: 5 }));
+    localStorage.setItem(RATING_MIGRATION_KEY, RATING_MIGRATION_VERSION);
+    return migrated;
+  } catch {
+    return list;
+  }
+};
+
+// One-time image migration. Bump the version and list the (name -> image)
+// pairs to force whenever a treatment gets a new picture, so stored catalogs
+// pick it up on the next load instead of keeping the old URL. Runs a single
+// time per browser, so an image an admin later uploads is preserved.
+const IMAGE_MIGRATION_KEY = "treatmentsImageMigration";
+const IMAGE_MIGRATION_VERSION = "2026-07-30-teeth-whitening";
+const FORCED_IMAGES = {
+  "teeth whitening": teethWhiteningImg,
+};
+
+const applyImageMigration = (list) => {
+  try {
+    if (localStorage.getItem(IMAGE_MIGRATION_KEY) === IMAGE_MIGRATION_VERSION) {
+      return list;
+    }
+    const migrated = list.map((t) => {
+      const key = (t.name || "").trim().toLowerCase();
+      return FORCED_IMAGES[key] ? { ...t, src: FORCED_IMAGES[key] } : t;
+    });
+    localStorage.setItem(IMAGE_MIGRATION_KEY, IMAGE_MIGRATION_VERSION);
     return migrated;
   } catch {
     return list;
@@ -97,17 +187,47 @@ const TreatmentsContext = createContext();
 export const TreatmentsProvider = ({ children }) => {
   const [treatments, setTreatments] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return applyPriceMigration(DEFAULT_TREATMENTS);
+    if (!saved) {
+      return applyImageMigration(
+        applyRatingMigration(applyPriceMigration(DEFAULT_TREATMENTS))
+      );
+    }
     const repaired = repairTreatments(JSON.parse(saved));
     // Fall back to defaults if the stored catalog is empty/corrupt, so the
     // booking dropdown always has treatments to offer.
     const base = repaired.length ? repaired : DEFAULT_TREATMENTS;
-    return applyPriceMigration(base);
+    return applyImageMigration(applyRatingMigration(applyPriceMigration(base)));
   });
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(treatments));
   }, [treatments]);
+
+  // Safety net: run the ratings migration on mount too, so it applies even when
+  // the dev server's hot reload preserves state and the useState initializer
+  // above didn't re-run. No-ops once the migration has been recorded.
+  useEffect(() => {
+    if (localStorage.getItem(RATING_MIGRATION_KEY) === RATING_MIGRATION_VERSION) {
+      return;
+    }
+    setTreatments((prev) => prev.map((t) => ({ ...t, rating: 5 })));
+    localStorage.setItem(RATING_MIGRATION_KEY, RATING_MIGRATION_VERSION);
+  }, []);
+
+  // Same safety net for the image migration, so a new treatment picture lands
+  // even when hot reload kept the old state. No-ops once recorded.
+  useEffect(() => {
+    if (localStorage.getItem(IMAGE_MIGRATION_KEY) === IMAGE_MIGRATION_VERSION) {
+      return;
+    }
+    setTreatments((prev) =>
+      prev.map((t) => {
+        const forced = FORCED_IMAGES[(t.name || "").trim().toLowerCase()];
+        return forced ? { ...t, src: forced } : t;
+      })
+    );
+    localStorage.setItem(IMAGE_MIGRATION_KEY, IMAGE_MIGRATION_VERSION);
+  }, []);
 
   const addTreatment = (treatment) => {
     setTreatments((prev) => {
@@ -127,6 +247,13 @@ export const TreatmentsProvider = ({ children }) => {
     setTreatments((prev) => prev.map((t) => (t.id === id ? { ...t, published } : t)));
   };
 
+  // Update editable fields (price, description, duration, …) of a treatment.
+  // Works regardless of publish state, so admins can revise an already-published
+  // treatment; the change persists to storage and flows to the customer catalog.
+  const updateTreatment = (id, patch) => {
+    setTreatments((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  };
+
   // Re-read the latest treatments from storage (e.g. changed in another tab / admin page)
   const refreshTreatments = () => {
     try {
@@ -139,8 +266,19 @@ export const TreatmentsProvider = ({ children }) => {
     } catch {}
   };
 
+  // Keep every open tab in sync: when the catalog is changed in another tab
+  // (e.g. an admin edits a rating/price), the `storage` event fires here and we
+  // re-read it, so Admin and Customer always show identical data.
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === STORAGE_KEY) refreshTreatments();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   return (
-    <TreatmentsContext.Provider value={{ treatments, addTreatment, deleteTreatment, setPublished, refreshTreatments }}>
+    <TreatmentsContext.Provider value={{ treatments, addTreatment, deleteTreatment, setPublished, updateTreatment, refreshTreatments }}>
       {children}
     </TreatmentsContext.Provider>
   );

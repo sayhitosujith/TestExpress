@@ -191,19 +191,19 @@ body {
 
 /* Add Doctor Button */
 .add-doctor-btn {
-  background: linear-gradient(to right, #06b6d4, #3b82f6);
+  background: #000000;
 }
 .add-doctor-btn:hover {
-  background: linear-gradient(to right, #0284c7, #2563eb);
+  background: #1f2937;
   transform: scale(1.05);
 }
 
 /* Cancel Button */
 .cancel-btn {
-  background: linear-gradient(to right, #ef4444, #dc2626);
+  background: #000000;
 }
 .cancel-btn:hover {
-  background: linear-gradient(to right, #b91c1c, #7f1d1d);
+  background: #1f2937;
   transform: scale(1.05);
 }
 
@@ -269,7 +269,7 @@ body {
 }
 
 .contact-clinic-icons button:hover {
-  background: #1103b5;
+  background: #1f2937;
   transform: scale(1.1);
 }
 
@@ -304,6 +304,55 @@ body {
 }
 .animate-pulseSlow { animation: pulseSlow 1.8s infinite; }
 
+/* ---- Highlighted service tile (glow + shimmer + icon float) ---- */
+@keyframes tileGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.5), 0 8px 20px rgba(0, 0, 0, 0.12); border-color: #000; }
+  50%      { box-shadow: 0 0 0 10px rgba(5, 150, 105, 0), 0 8px 20px rgba(0, 0, 0, 0.12); border-color: #059669; }
+}
+
+@keyframes tileShimmer {
+  0%        { transform: translateX(-140%) skewX(-20deg); }
+  55%, 100% { transform: translateX(260%) skewX(-20deg); }
+}
+
+@keyframes tileIconFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  30%      { transform: translateY(-4px) rotate(-7deg); }
+  65%      { transform: translateY(-4px) rotate(7deg); }
+}
+
+.tile-animated {
+  position: relative;
+  overflow: hidden;
+  animation: tileGlow 2s ease-in-out infinite;
+  animation-delay: var(--tile-delay, 0s);
+}
+
+.tile-animated::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: tileShimmer 2.8s ease-in-out infinite;
+  animation-delay: var(--tile-delay, 0s);
+  pointer-events: none;
+}
+
+.tile-animated .tile-icon {
+  display: inline-block;
+  animation: tileIconFloat 2s ease-in-out infinite;
+  animation-delay: var(--tile-delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile-animated,
+  .tile-animated::after,
+  .tile-animated .tile-icon { animation: none; }
+}
+
 /* ============================================================
    WHATSAPP BUTTON
 ============================================================ */
@@ -336,4 +385,37 @@ body {
   background-color: var(--primary-orange);
   border-radius: 12px;
   padding: 10px;
+}
+
+/* DISCHARGED seal: one-time "stamp slam" with a quick shake on impact */
+@keyframes stampSlam {
+  0% {
+    transform: rotate(-16deg) scale(3);
+    opacity: 0;
+  }
+  50% {
+    transform: rotate(-16deg) scale(0.82);
+    opacity: 0.55;
+  }
+  /* impact shake */
+  62% {
+    transform: rotate(-20deg) scale(1.04);
+    opacity: 0.45;
+  }
+  74% {
+    transform: rotate(-12deg) scale(0.99);
+    opacity: 0.42;
+  }
+  86% {
+    transform: rotate(-18deg) scale(1.01);
+    opacity: 0.41;
+  }
+  100% {
+    transform: rotate(-16deg) scale(1);
+    opacity: 0.4;
+  }
+}
+.discharge-seal,
+.cancelled-seal {
+  animation: stampSlam 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
 }

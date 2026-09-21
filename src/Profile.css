@@ -57,7 +57,7 @@
   position: fixed;
   top: 1rem;
   right: 1rem;
-  background-color: #22c55e; /* Tailwind orange-500 */
+  background-color: #22c55e; /* Tailwind green-500 */
   color: white;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
@@ -107,8 +107,8 @@
 }
 /* Switch label orange */
 .profile-switch .mt-2 .material-tailwind-switch .switch-thumb {
-  background-color: #22c55e; /* Tailwind orange-500 */
+  background-color: #22c55e; /* Tailwind green-500 */
 }
 .profile-switch .mt-2 .material-tailwind-switch .switch-track {
-  background-color: #bbf7d0; /* Tailwind orange-200 */
+  background-color: #bbf7d0; /* Tailwind green-200 */
 }

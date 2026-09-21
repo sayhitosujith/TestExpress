@@ -3,16 +3,28 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "dev": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:check": "node scripts/db-check.js",
+    "db:migrate": "node scripts/db-migrate.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
-    "pg": "^8.16.3"
+    "googleapis": "^174.0.1",
+    "multer": "^2.2.0",
+    "nodemailer": "^10.0.10",
+    "pg": "^8.16.3",
+    "playwright": "^1.62.0",
+    "twilio": "^6.0.2",
+    "webdriverio": "^9.30.1"
   }
 }

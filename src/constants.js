@@ -1,3 +1,15 @@
+/**
+ * The payment options offered on the registration form.
+ *
+ * The list itself lives in paymentOptions.json, not here, because the server
+ * validates against it too and cannot import an ES module. JSON is the one
+ * format both halves read, and a second copy of these strings would be the
+ * drift that lets the API store an option the form never offered.
+ *
+ * `value` is what is stored; `label` is what is shown.
+ */
+export { default as PAYMENT_OPTIONS } from "./paymentOptions.json";
+
 export const practiceNames = {
   HerveyBay: "Duty Dentist",
   SunshineCoast: "Duty Dentist",
