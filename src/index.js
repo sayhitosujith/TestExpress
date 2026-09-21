@@ -120,20 +120,6 @@ const router = createBrowserRouter([
     element: wrap("/Profile", <Profile />),
   },
   {
-    // Unwrapped on purpose, and it is not an omission: this page guards itself.
-    //
-    // The two guards that used to sit here could only redirect -- an anonymous
-    // visitor to the main login screen, a signed-in Receptionist to /HomePage.
-    // The first meant the interrupted destination had to be carried across a
-    // navigation and handed back, and the second dropped someone on a page that
-    // never said why. SuperAdmin now renders its own sign-in form instead, so
-    // the credentials are asked for where they are needed and the answer is
-    // immediate. Wrapping it again would put a redirect in front of that form
-    // and nobody would ever see it.
-    //
-    // What makes this safe is not either arrangement: /api/admin establishes the
-    // caller's role from a signed token before it answers, so the page decides
-    // what to draw and the server decides what may be done.
     path: "/SuperAdmin",
     element: <SuperAdmin />,
   },
@@ -148,7 +134,6 @@ const router = createBrowserRouter([
     element: <Navigate to="/my-app" replace />,
   },
 ]);
-
 // One subscription covers every route: the router's own history changes are
 // the one place a client-side navigation is visible, so this is what makes an
 // in-app page change show up in Google Analytics at all -- gtag.js's built-in
