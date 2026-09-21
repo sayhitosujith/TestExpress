@@ -1,5 +1,14 @@
 FROM mcr.microsoft.com/playwright:v1.62.0-jammy
 
+# The image's CA bundle is stale enough that Node reports a perfectly valid
+# Neon certificate as self-signed (confirmed: the same cert verifies fine
+# under strict TLS from outside this image). Refreshing it here fixes real
+# TLS verification instead of papering over it with DATABASE_SSL_NO_VERIFY.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && update-ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY src/Backend/package*.json ./src/Backend/
