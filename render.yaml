@@ -1,0 +1,66 @@
+services:
+  - type: web
+    name: testexpress-backend
+    runtime: node
+    rootDir: src/Backend
+    plan: free
+    buildCommand: npm install && npx playwright install --with-deps chromium
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+      - key: CONTACT_NOTIFY_EMAIL
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_VERIFY_SERVICE_SID
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: NOTIFY_CHANNEL
+        value: sms
+      - key: TWILIO_WHATSAPP_FROM
+        sync: false
+      - key: SMS_PROVIDER
+        value: msg91
+      - key: MSG91_AUTHKEY
+        sync: false
+      - key: MSG91_TEMPLATE_ID
+        sync: false
+      - key: MSG91_TEMPLATE_ID_RESCHEDULED
+        sync: false
+      - key: MSG91_TEMPLATE_ID_CANCELLED
+        sync: false
+      - key: MSG91_SENDER_ID
+        sync: false
+      - key: OTP_DEFAULT_COUNTRY_CODE
+        value: "+91"
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL_NO_VERIFY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: QASE_API_TOKEN
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_SHEET_ID
+        sync: false
+      - key: GOOGLE_SERVICE_ACCOUNT_KEY
+        sync: false
