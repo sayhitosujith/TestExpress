@@ -4,27 +4,31 @@
 // why this is a batch-job runner rather than a session, unlike testrunner.js
 // and mobile.js).
 //
-// Super Admin only, unlike the other two engines' routers. Playwright and
-// Appium can only ever do what a recorded step already does — click, fill,
-// navigate. This is the first engine that originates real, sustained network
-// load against a target the caller names, which makes an open version of it a
-// DDoS-as-a-service endpoint. Restricting who may start a run is the cheapest
-// real control available today; a target allow-list and per-account rate
-// limiting are the next ones, and are a product decision rather than a coding
-// one — see the comment on `normalisePlan` in testrunner/jmeter.js for the
-// baseline guard already in place.
+// Open to any signed-in account, by product decision — not Super Admin only.
+// Playwright and Appium can only ever do what a recorded step already does —
+// click, fill, navigate. This is the first engine that originates real,
+// sustained network load against a target the caller names, which makes an
+// open version of it a DDoS-as-a-service endpoint; `authenticate` below is
+// the remaining control (an anonymous caller still cannot start a run), and
+// the thread/loop/duration caps and concurrency limit further down are what
+// keep one account from doing real damage. A target allow-list and
+// per-account rate limiting are the next real controls if this needs
+// tightening later — see the comment on `normalisePlan` in
+// testrunner/jmeter.js for the baseline guard already in place.
 
 const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const express = require('express');
-const { authenticate, requireRole } = require('../requireRole');
-const { PRIVILEGED_ROLES } = require('../accounts');
+const { authenticate } = require('../requireRole');
 const jmeter = require('../testrunner/jmeter');
 
 const router = express.Router();
-router.use(authenticate, requireRole(...PRIVILEGED_ROLES));
+
+// `authenticate` is applied per-route below rather than with a blanket
+// `router.use`, because the report route at the bottom deliberately has none
+// — see the comment there for why.
 
 // Wall-clock cap on a single run, independent of thread/loop counts: a plan
 // that validated fine can still misbehave against a slow or hanging target,
@@ -57,13 +61,26 @@ function pushLog(run, line) {
   if (run.log.length > MAX_LOG_LINES * 2) run.log = run.log.slice(-MAX_LOG_LINES);
 }
 
+// Reassembles the URL a target's normalised {protocol, domain, port, path}
+// came from, omitting the port when it is just the protocol's default —
+// normaliseTarget always fills one in, but showing ":443" on every https
+// target back to the person who typed a plain URL would read as if this
+// module had changed what they asked for.
+function targetUrlOf(r) {
+  const defaultPort = r.protocol === 'https' ? '443' : '80';
+  const port = r.port && r.port !== defaultPort ? `:${r.port}` : '';
+  return `${r.protocol}://${r.domain}${port}${r.path}`;
+}
+
 function publicRun(run) {
   return {
     id: run.id,
     name: run.plan.name,
     status: run.status,
-    targetUrl: run.targetUrl,
-    method: run.plan.method,
+    // One row per target, in the order they were given — the client shows
+    // "3 targets" or the full list from this rather than a single
+    // targetUrl/method the way a one-target run used to report.
+    targets: run.plan.requests.map((r) => ({ url: targetUrlOf(r), method: r.method })),
     threads: run.plan.threads,
     rampUpSeconds: run.plan.rampUpSeconds,
     loops: run.plan.loops,
@@ -141,7 +158,7 @@ async function execute(run, pre) {
 
 // ---- routes ----------------------------------------------------------
 
-router.get('/capabilities', (req, res) => {
+router.get('/capabilities', authenticate, (req, res) => {
   const pre = jmeter.preflight();
   res.json({
     available: pre.canRun,
@@ -151,6 +168,7 @@ router.get('/capabilities', (req, res) => {
       maxThreads: jmeter.MAX_THREADS,
       maxLoops: jmeter.MAX_LOOPS,
       maxRampUpSeconds: jmeter.MAX_RAMP_UP_SECONDS,
+      maxTargets: jmeter.MAX_TARGETS,
       runTimeoutSeconds: RUN_TIMEOUT_MS / 1000,
       maxConcurrentRuns: MAX_CONCURRENT_RUNS,
     },
@@ -158,7 +176,7 @@ router.get('/capabilities', (req, res) => {
   });
 });
 
-router.get('/runs', (req, res) => {
+router.get('/runs', authenticate, (req, res) => {
   const list = [...runs.values()]
     .sort((a, b) => b.startedAt - a.startedAt)
     .slice(0, 50)
@@ -166,7 +184,7 @@ router.get('/runs', (req, res) => {
   res.json({ runs: list });
 });
 
-router.post('/runs', (req, res) => {
+router.post('/runs', authenticate, (req, res) => {
   const pre = jmeter.preflight();
   if (!pre.canRun) {
     res.status(501).json({ error: pre.missing.join(' ') });
@@ -189,7 +207,6 @@ router.post('/runs', (req, res) => {
   const run = {
     id,
     plan,
-    targetUrl: String(req.body?.targetUrl || '').trim(),
     status: 'running',
     startedAt: Date.now(),
     finishedAt: null,
@@ -207,7 +224,7 @@ router.post('/runs', (req, res) => {
   res.json(publicRun(run));
 });
 
-router.get('/runs/:id', (req, res) => {
+router.get('/runs/:id', authenticate, (req, res) => {
   const run = runs.get(req.params.id);
   if (!run) {
     res.status(404).json({ error: 'No such run.' });
@@ -216,7 +233,7 @@ router.get('/runs/:id', (req, res) => {
   res.json(publicRun(run));
 });
 
-router.delete('/runs/:id', (req, res) => {
+router.delete('/runs/:id', authenticate, (req, res) => {
   const run = runs.get(req.params.id);
   if (!run) {
     res.status(404).json({ error: 'No such run.' });
@@ -229,6 +246,25 @@ router.delete('/runs/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// Deliberately not behind `authenticate`, unlike every other route here — and
+// not just because a browser navigation can't carry the bearer header the
+// rest of the API needs (true, but solvable with a query-string token). The
+// real reason is that the report is not one request: JMeter's dashboard is
+// index.html plus its own CSS/JS/image assets, each fetched by the browser as
+// a separate, ordinary <link>/<script>/<img> request that has no way to carry
+// a token at all, query string or otherwise. Making every one of those
+// authenticate would mean rewriting JMeter's own generated HTML to thread a
+// token through every asset reference — fragile, and more code than the
+// report is worth protecting further.
+//
+// What protects it instead is the same thing that already protects
+// /api/checkout (see routes/checkout.js): a 122-bit random id
+// (crypto.randomUUID(), assigned in POST /runs above) standing in for a
+// session. It is never guessable, and `GET /runs` — which is what could hand
+// one to somebody who did not already have it — is itself behind
+// `authenticate`. Knowing this URL already means you were an authenticated
+// caller when the run was created or listed.
+//
 // A named RegExp route rather than a `*` wildcard segment: Express 5's
 // wildcard syntax (path-to-regexp v6+) requires a named parameter for a
 // multi-segment splat, and a RegExp route is one fewer place for that syntax
@@ -237,6 +273,17 @@ router.get(/^\/runs\/([^/]+)\/report(\/.*)?$/, (req, res) => {
   const run = runs.get(req.params[0]);
   if (!run || !run.reportDir) {
     res.status(404).json({ error: 'No report for this run.' });
+    return;
+  }
+  // The bare .../report path (no trailing slash) is where jmeterReportUrl()
+  // used to point, and it looks like it works — index.html loads — but every
+  // relative asset reference inside it (content/*.css, sbadmin2-*/*.js) then
+  // resolves against .../runs/<id>/ instead of .../runs/<id>/report/, one
+  // level too high, and every one of them 404s. Redirecting to add the slash
+  // fixes it the same way a static file server redirects a directory request
+  // without one — the browser then resolves those relative paths correctly.
+  if (req.params[1] === undefined) {
+    res.redirect(302, `${req.originalUrl}/`);
     return;
   }
   const rel = (req.params[1] || '/index.html').replace(/^\/+/, '') || 'index.html';

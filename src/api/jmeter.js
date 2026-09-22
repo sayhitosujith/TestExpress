@@ -4,9 +4,10 @@ import { apiMessage } from "./apiError";
 const API_BASE = process.env.REACT_APP_API_URL || "";
 const BASE = `${API_BASE}/api/jmeter`;
 
-// The load-testing engine's client. Super Admin only on the server (see
-// Backend/routes/jmeter.js) — every call here can 403 for anyone else, and
-// that is the server's rule to enforce, not this module's to duplicate.
+// The load-testing engine's client. Requires sign-in on the server (see
+// Backend/routes/jmeter.js) — every call here can 401 for a signed-out
+// caller, and that is the server's rule to enforce, not this module's to
+// duplicate.
 
 /**
  * Whether this backend can run a load test at all, and the limits a plan
@@ -26,8 +27,16 @@ export async function jmeterCapabilities() {
  * Starts a load test and returns its initial state immediately — the run
  * itself continues on the server. Poll `getJmeterRun` for progress.
  *
- * @param {{name?: string, targetUrl: string, method?: string, threads: number,
- *   rampUpSeconds: number, loops: number, headers?: object, body?: string}} plan
+ * Every target in `targets` runs as its own thread group, all concurrently —
+ * ten targets means ten independent endpoints under load at the same time,
+ * not ten requests in one flow.
+ *
+ * `username`/`password`, if given, are sent as HTTP Basic/Digest auth to
+ * every target's origin — not a form login or a session cookie.
+ *
+ * @param {{name?: string, targets: {targetUrl: string, method?: string}[],
+ *   threads: number, rampUpSeconds: number, loops: number, headers?: object,
+ *   body?: string, username?: string, password?: string}} plan
  */
 export async function startJmeterRun(plan) {
   try {
@@ -68,7 +77,29 @@ export async function cancelJmeterRun(id) {
   }
 }
 
-/** The full JMeter HTML dashboard for a finished run, to open in a new tab. */
+// CRA's dev-server proxy (package.json's "proxy" field) only forwards
+// XHR/fetch requests to the backend, not full-page navigations — that
+// exclusion is deliberate, so React Router can handle page loads instead of
+// every unmatched path being proxied. A relative URL opened as a real
+// navigation (this function feeds an <a href target="_blank">, not axios)
+// therefore never reaches the backend in dev: it hits the CRA dev server,
+// which serves the SPA shell for the unrecognised path, and the router's
+// catch-all then lands on /my-app. REACT_APP_API_URL already sidesteps this
+// in production, where it is set to the real backend origin; this fills the
+// same gap for a dev server started without it, matching the port CRA's own
+// proxy config already names.
+const REPORT_ORIGIN =
+  process.env.REACT_APP_API_URL ||
+  (process.env.NODE_ENV === "development" ? "http://localhost:5000" : "");
+
+/**
+ * The full JMeter HTML dashboard for a finished run, to open in a new tab.
+ *
+ * The trailing slash matters: the dashboard's own CSS/JS/image references are
+ * relative, and the browser resolves them against this exact URL. Without it
+ * they resolve one level too high and 404 — the backend redirects to add it
+ * if this is ever hit without one, but this saves that extra round trip.
+ */
 export function jmeterReportUrl(id) {
-  return `${BASE}/runs/${encodeURIComponent(id)}/report`;
+  return `${REPORT_ORIGIN}/api/jmeter/runs/${encodeURIComponent(id)}/report/`;
 }

@@ -102,6 +102,22 @@ const input = {
   boxSizing: "border-box",
 };
 const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10 };
+const targetList = { display: "flex", flexDirection: "column", gap: 6 };
+const targetRow = { display: "flex", gap: 6, alignItems: "center" };
+const methodSelect = { width: 92, flexShrink: 0 };
+const removeBtn = {
+  background: "transparent",
+  border: "1px solid var(--tr-border-strong)",
+  color: "var(--tr-soft)",
+  borderRadius: 7,
+  width: 28,
+  height: 28,
+  padding: 0,
+  cursor: "pointer",
+  flexShrink: 0,
+  fontSize: 13,
+  lineHeight: 1,
+};
 const btn = {
   border: "none",
   borderRadius: 9,
@@ -114,9 +130,40 @@ const btn = {
 const btnRun = { ...btn, background: "#f59e0b", color: "#1c1400" };
 const btnStop = { ...btn, background: "#ef4444", color: "#fff" };
 const btnGhost = { ...btn, background: "var(--tr-border)", color: "var(--tr-text-2)", border: "1px solid #334155" };
+const addTargetBtn = { ...btnGhost, alignSelf: "flex-start", padding: "6px 12px", fontSize: 12 };
 const table = { width: "100%", borderCollapse: "collapse", fontSize: 11.5 };
 const th = { textAlign: "left", padding: "6px 8px", color: "var(--tr-muted)", fontWeight: 700, borderBottom: "1px solid var(--tr-border)" };
 const td = { padding: "6px 8px", borderBottom: "1px solid var(--tr-border)", color: "var(--tr-text-2)", fontFamily: "ui-monospace, monospace" };
+
+const kpiGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(128px, 1fr))", gap: 10 };
+const kpiCard = {
+  background: "var(--tr-panel)",
+  border: "1px solid var(--tr-border)",
+  borderRadius: 10,
+  padding: "11px 13px",
+  display: "flex",
+  flexDirection: "column",
+  gap: 3,
+};
+const kpiLabel = { fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--tr-muted)" };
+const kpiValue = { fontSize: 19, fontWeight: 800, lineHeight: 1.15, fontFamily: "ui-monospace, monospace" };
+const metaRow = { display: "flex", flexWrap: "wrap", gap: 6, fontSize: 11, color: "var(--tr-text-2)" };
+const metaChip = {
+  background: "var(--tr-panel)",
+  border: "1px solid var(--tr-border)",
+  borderRadius: 999,
+  padding: "3px 10px",
+  fontWeight: 600,
+  whiteSpace: "nowrap",
+};
+const targetLine = {
+  fontFamily: "ui-monospace, monospace",
+  fontSize: 12,
+  color: "var(--tr-text)",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
 
 /** "Header: Value" lines, one per header, into the object the API wants. */
 function parseHeaders(text) {
@@ -138,8 +185,68 @@ const STATUS_COLOR = {
   cancelled: "var(--tr-dim)",
 };
 
-function SummaryTable({ overall, samplers }) {
-  const rows = [overall, ...(samplers || [])].filter(Boolean);
+const statusBadgeStyle = (status) => ({
+  fontSize: 10.5,
+  fontWeight: 800,
+  textTransform: "uppercase",
+  letterSpacing: "0.05em",
+  padding: "3px 9px",
+  borderRadius: 999,
+  color: STATUS_COLOR[status] || "var(--tr-text)",
+  background: "var(--tr-panel)",
+  border: `1px solid ${STATUS_COLOR[status] || "var(--tr-border)"}`,
+  flexShrink: 0,
+});
+
+/** "4.2s" under a minute, "1m 12s" past it — matches how the rest of the
+ *  runner reports elapsed time (see reportDoc.js's own duration format). */
+function formatDuration(ms) {
+  if (!Number.isFinite(ms) || ms < 0) return "—";
+  const totalSeconds = ms / 1000;
+  if (totalSeconds < 60) return `${totalSeconds.toFixed(1)}s`;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = Math.round(totalSeconds % 60);
+  return `${minutes}m ${seconds}s`;
+}
+
+function formatClock(ts) {
+  if (!ts) return "—";
+  return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+/** The four numbers a reader wants first, before the per-request detail. */
+function KpiCards({ overall }) {
+  if (!overall) return null;
+  return (
+    <div style={kpiGrid}>
+      <div style={kpiCard}>
+        <span style={kpiLabel}>Error rate</span>
+        <span style={{ ...kpiValue, color: overall.errors ? "var(--tr-rec)" : "var(--tr-ok)" }}>
+          {(overall.errorPct ?? 0).toFixed(1)}%
+        </span>
+      </div>
+      <div style={kpiCard}>
+        <span style={kpiLabel}>Avg response</span>
+        <span style={kpiValue}>{overall.avgMs} ms</span>
+      </div>
+      <div style={kpiCard}>
+        <span style={kpiLabel}>p95 response</span>
+        <span style={kpiValue}>{overall.p95Ms} ms</span>
+      </div>
+      <div style={kpiCard}>
+        <span style={kpiLabel}>Throughput</span>
+        <span style={kpiValue}>{overall.throughputPerSec}/s</span>
+      </div>
+    </div>
+  );
+}
+
+/** The per-sampler breakdown beneath the KPI cards above — one row per
+ *  distinct request in the plan, not the "Overall" figure the cards already
+ *  show, so the table is detail rather than a repeat of the summary. */
+function SummaryTable({ samplers }) {
+  const rows = samplers || [];
+  if (!rows.length) return null;
   return (
     <div style={{ overflowX: "auto" }}>
       <table style={table}>
@@ -158,9 +265,7 @@ function SummaryTable({ overall, samplers }) {
         <tbody>
           {rows.map((r, i) => (
             <tr key={r.label + i}>
-              <td style={{ ...td, fontWeight: i === 0 ? 800 : 400, color: i === 0 ? "var(--tr-text)" : td.color }}>
-                {i === 0 ? "Overall" : r.label}
-              </td>
+              <td style={td}>{r.label}</td>
               <td style={td}>{r.samples}</td>
               <td style={{ ...td, color: r.errors ? "var(--tr-rec)" : td.color }}>
                 {r.errors} ({r.errorPct?.toFixed?.(1) ?? 0}%)
@@ -182,13 +287,17 @@ export default function PerformanceModal({ onClose }) {
   const [caps, setCaps] = useState(null); // null while loading
   const [plan, setPlan] = useState({
     name: "Load test",
-    targetUrl: "",
-    method: "GET",
+    // Each target gets its own thread group and runs concurrently with the
+    // others (see testrunner/jmeter.js) — this is "test several endpoints at
+    // once", not a multi-step journey through one of them.
+    targets: [{ url: "", method: "GET" }],
     threads: 5,
     rampUpSeconds: 5,
     loops: 10,
     headersText: "",
     body: "",
+    username: "",
+    password: "",
   });
   const [run, setRun] = useState(null); // the active/last run's state from the server
   const [starting, setStarting] = useState(false);
@@ -230,8 +339,23 @@ export default function PerformanceModal({ onClose }) {
 
   const setField = (k) => (e) => setPlan((p) => ({ ...p, [k]: e.target.value }));
 
-  const canStart = caps?.available && !starting && (!run || run.status !== "running");
-  const hasBody = ["POST", "PUT", "PATCH"].includes(plan.method);
+  const maxTargets = caps?.limits?.maxTargets || 10;
+  const running = run?.status === "running";
+  const targetsFilled = plan.targets.length > 0 && plan.targets.every((t) => t.url.trim());
+  const canStart = caps?.available && !starting && !running && targetsFilled;
+  // Shown if any row needs one — one shared body applies to whichever
+  // targets are POST/PUT/PATCH, the same way one shared headers block does.
+  const hasBody = plan.targets.some((t) => ["POST", "PUT", "PATCH"].includes(t.method));
+
+  const setTarget = (i, field) => (e) =>
+    setPlan((p) => ({
+      ...p,
+      targets: p.targets.map((t, ti) => (ti === i ? { ...t, [field]: e.target.value } : t)),
+    }));
+  const addTarget = () =>
+    setPlan((p) => (p.targets.length >= maxTargets ? p : { ...p, targets: [...p.targets, { url: "", method: "GET" }] }));
+  const removeTarget = (i) =>
+    setPlan((p) => ({ ...p, targets: p.targets.filter((_, ti) => ti !== i) }));
 
   async function onRun() {
     setStartError(null);
@@ -239,13 +363,14 @@ export default function PerformanceModal({ onClose }) {
     try {
       const started = await startJmeterRun({
         name: plan.name,
-        targetUrl: plan.targetUrl,
-        method: plan.method,
+        targets: plan.targets.map((t) => ({ targetUrl: t.url, method: t.method })),
         threads: Number(plan.threads),
         rampUpSeconds: Number(plan.rampUpSeconds),
         loops: Number(plan.loops),
         headers: parseHeaders(plan.headersText),
         body: hasBody ? plan.body : undefined,
+        username: plan.username.trim() || undefined,
+        password: plan.password || undefined,
       });
       setRun(started);
     } catch (err) {
@@ -283,55 +408,114 @@ export default function PerformanceModal({ onClose }) {
             <>
               <div style={sectionLabel}>Load profile</div>
               <div style={hint}>
-                Sends {plan.method} requests at the target below, ramping up to {plan.threads || 0} concurrent
-                users over {plan.rampUpSeconds || 0}s, each running {plan.loops || 0} times. Capped at{" "}
-                {caps.limits?.maxThreads} threads, {caps.limits?.maxLoops} loops and{" "}
-                {caps.limits?.runTimeoutSeconds}s total — this is a smoke-level load check, not a capacity study.
+                Runs every target below as its own thread group, all under load at the same time, each ramping up
+                to {plan.threads || 0} concurrent users over {plan.rampUpSeconds || 0}s and running {plan.loops || 0}{" "}
+                times. Capped at {caps.limits?.maxThreads} threads, {caps.limits?.maxLoops} loops,{" "}
+                {maxTargets} targets and {caps.limits?.runTimeoutSeconds}s total — this is a smoke-level load
+                check, not a capacity study.
               </div>
 
               <div style={field}>
-                <label style={fieldLabel}>Target URL</label>
-                <input
-                  style={input}
-                  placeholder="https://your-app.example/api/checkout"
-                  value={plan.targetUrl}
-                  onChange={setField("targetUrl")}
-                  disabled={run?.status === "running"}
+                <label style={fieldLabel}>Target URLs</label>
+                <div style={targetList}>
+                  {plan.targets.map((t, i) => (
+                    <div key={i} style={targetRow}>
+                      <select
+                        style={{ ...input, ...methodSelect }}
+                        value={t.method}
+                        onChange={setTarget(i, "method")}
+                        disabled={running}
+                      >
+                        {["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"].map((m) => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                      <input
+                        style={input}
+                        placeholder="https://your-app.example/api/checkout"
+                        value={t.url}
+                        onChange={setTarget(i, "url")}
+                        disabled={running}
+                      />
+                      {plan.targets.length > 1 && (
+                        <button
+                          style={removeBtn}
+                          onClick={() => removeTarget(i)}
+                          disabled={running}
+                          title="Remove this target"
+                          aria-label={`Remove target ${i + 1}`}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button
+                  style={{ ...addTargetBtn, opacity: running || plan.targets.length >= maxTargets ? 0.5 : 1 }}
+                  onClick={addTarget}
+                  disabled={running || plan.targets.length >= maxTargets}
+                >
+                  + Add another URL
+                </button>
+              </div>
+
+              <div style={grid}>
+                <div style={field}>
+                  <label style={fieldLabel}>Threads</label>
+                  <input type="number" min={1} max={caps.limits?.maxThreads} style={input} value={plan.threads} onChange={setField("threads")} disabled={running} />
+                </div>
+                <div style={field}>
+                  <label style={fieldLabel}>Ramp-up (s)</label>
+                  <input type="number" min={0} max={caps.limits?.maxRampUpSeconds} style={input} value={plan.rampUpSeconds} onChange={setField("rampUpSeconds")} disabled={running} />
+                </div>
+                <div style={field}>
+                  <label style={fieldLabel}>Loops / thread</label>
+                  <input type="number" min={1} max={caps.limits?.maxLoops} style={input} value={plan.loops} onChange={setField("loops")} disabled={running} />
+                </div>
+              </div>
+
+              <div style={field}>
+                <label style={fieldLabel}>Headers (optional, one "Name: value" per line, sent with every target)</label>
+                <textarea
+                  style={{ ...input, minHeight: 50, resize: "vertical", fontFamily: "ui-monospace, monospace" }}
+                  value={plan.headersText}
+                  onChange={setField("headersText")}
+                  disabled={running}
                 />
               </div>
 
               <div style={grid}>
                 <div style={field}>
-                  <label style={fieldLabel}>Method</label>
-                  <select style={input} value={plan.method} onChange={setField("method")} disabled={run?.status === "running"}>
-                    {["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"].map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
+                  <label style={fieldLabel}>Username (optional)</label>
+                  <input
+                    style={input}
+                    autoComplete="off"
+                    placeholder="HTTP Basic/Digest auth"
+                    value={plan.username}
+                    onChange={setField("username")}
+                    disabled={running}
+                  />
                 </div>
                 <div style={field}>
-                  <label style={fieldLabel}>Threads</label>
-                  <input type="number" min={1} max={caps.limits?.maxThreads} style={input} value={plan.threads} onChange={setField("threads")} disabled={run?.status === "running"} />
-                </div>
-                <div style={field}>
-                  <label style={fieldLabel}>Ramp-up (s)</label>
-                  <input type="number" min={0} max={caps.limits?.maxRampUpSeconds} style={input} value={plan.rampUpSeconds} onChange={setField("rampUpSeconds")} disabled={run?.status === "running"} />
-                </div>
-                <div style={field}>
-                  <label style={fieldLabel}>Loops / thread</label>
-                  <input type="number" min={1} max={caps.limits?.maxLoops} style={input} value={plan.loops} onChange={setField("loops")} disabled={run?.status === "running"} />
+                  <label style={fieldLabel}>Password</label>
+                  <input
+                    type="password"
+                    style={input}
+                    autoComplete="off"
+                    value={plan.password}
+                    onChange={setField("password")}
+                    disabled={running || !plan.username.trim()}
+                  />
                 </div>
               </div>
-
-              <div style={field}>
-                <label style={fieldLabel}>Headers (optional, one "Name: value" per line)</label>
-                <textarea
-                  style={{ ...input, minHeight: 50, resize: "vertical", fontFamily: "ui-monospace, monospace" }}
-                  value={plan.headersText}
-                  onChange={setField("headersText")}
-                  disabled={run?.status === "running"}
-                />
-              </div>
+              {plan.username.trim() && (
+                <div style={hint}>
+                  Sent as HTTP Basic/Digest auth to every target's origin. This authenticates a request the way an
+                  API or a reverse proxy would ask for it — it cannot sign into a page that logs in with a form and
+                  a session cookie (or, e.g., Gmail's full OAuth flow).
+                </div>
+              )}
 
               {hasBody && (
                 <div style={field}>
@@ -340,7 +524,7 @@ export default function PerformanceModal({ onClose }) {
                     style={{ ...input, minHeight: 60, resize: "vertical", fontFamily: "ui-monospace, monospace" }}
                     value={plan.body}
                     onChange={setField("body")}
-                    disabled={run?.status === "running"}
+                    disabled={running}
                   />
                 </div>
               )}
@@ -349,7 +533,7 @@ export default function PerformanceModal({ onClose }) {
                 <button style={{ ...btnRun, opacity: canStart ? 1 : 0.5 }} disabled={!canStart} onClick={onRun}>
                   {starting ? "Starting…" : "Run load test"}
                 </button>
-                {run?.status === "running" && (
+                {running && (
                   <button style={btnStop} onClick={onStop}>Stop</button>
                 )}
               </div>
@@ -358,12 +542,28 @@ export default function PerformanceModal({ onClose }) {
               {run && (
                 <>
                   <div style={sectionLabel}>Result</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
-                    <span style={{ fontWeight: 800, color: STATUS_COLOR[run.status] || "var(--tr-text)" }}>
-                      {run.status}
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={statusBadgeStyle(run.status)}>{run.status}</span>
+                    <span style={metaChip}>
+                      {(run.targets || []).length} target{(run.targets || []).length === 1 ? "" : "s"}
                     </span>
-                    {run.error && <span style={hint}>{run.error}</span>}
                   </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    {(run.targets || []).map((t, i) => (
+                      <span key={i} style={targetLine} title={t.url}>{t.method} {t.url}</span>
+                    ))}
+                  </div>
+                  <div style={metaRow}>
+                    <span style={metaChip}>{run.threads} threads</span>
+                    <span style={metaChip}>{run.rampUpSeconds}s ramp-up</span>
+                    <span style={metaChip}>{run.loops} loops/thread</span>
+                    <span style={metaChip}>started {formatClock(run.startedAt)}</span>
+                    {run.finishedAt && (
+                      <span style={metaChip}>ran for {formatDuration(run.finishedAt - run.startedAt)}</span>
+                    )}
+                  </div>
+                  {run.error && <div style={{ ...hint, color: "var(--tr-warn)" }}>{run.error}</div>}
 
                   {run.status === "running" && (
                     <pre style={{ ...input, whiteSpace: "pre-wrap", maxHeight: 140, overflowY: "auto", fontFamily: "ui-monospace, monospace", fontSize: 11 }}>
@@ -373,7 +573,11 @@ export default function PerformanceModal({ onClose }) {
 
                   {run.summary && (
                     <>
-                      <SummaryTable overall={run.summary.overall} samplers={run.summary.samplers} />
+                      <KpiCards overall={run.summary.overall} />
+
+                      <div style={sectionLabel}>Per-request breakdown</div>
+                      <SummaryTable samplers={run.summary.samplers} />
+
                       <div>
                         <a
                           href={jmeterReportUrl(run.id)}
@@ -407,7 +611,7 @@ export default function PerformanceModal({ onClose }) {
                         }}
                       >
                         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {r.name} — {r.targetUrl}
+                          {r.name} — {(r.targets || []).map((t) => t.url).join(", ") || "no targets"}
                         </span>
                         <span style={{ color: STATUS_COLOR[r.status] || "var(--tr-text)", fontWeight: 700, flexShrink: 0 }}>
                           {r.status}

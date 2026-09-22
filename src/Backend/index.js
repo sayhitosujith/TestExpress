@@ -102,9 +102,9 @@ app.use('/api/testrunner', testrunnerRouter);
 // step that is missing — server, adb, device — rather than failing the request,
 // so the recorder can offer or hide the engine on its own.
 app.use('/api/mobile', mobileRouter);
-// Load-testing engine (JMeter). Super Admin only and answers `available:
-// false` with install steps when Java/JMeter is missing — see routes/jmeter.js
-// for why this one is gated where the other two engines are not.
+// Load-testing engine (JMeter). Open to any signed-in account; answers
+// `available: false` with install steps when Java/JMeter is missing — see
+// routes/jmeter.js for the caps that keep one account from doing real damage.
 app.use('/api/jmeter', jmeterRouter);
 // Google Sheets datastore. Answers 501 with setup steps when unconfigured, so
 // the rest of the API is unaffected until credentials are in place.

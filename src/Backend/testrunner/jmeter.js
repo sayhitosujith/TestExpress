@@ -160,9 +160,73 @@ function escapeXml(value) {
 const MAX_THREADS = 50;
 const MAX_LOOPS = 200;
 const MAX_RAMP_UP_SECONDS = 300;
+// Each target gets its own thread group running at the full thread count
+// concurrently with every other one — ten targets at fifty threads is
+// already five hundred concurrent requests, which is plenty for what this
+// engine is for (see the module comment on MAX_THREADS et al.).
+const MAX_TARGETS = 10;
+
+const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'];
+
+// A baseline guard, not a substitute for a real allow-list: this only catches
+// a target naming a loopback/private address literally. It does not resolve
+// DNS to catch a hostname that *points at* one (a rebind), which would need
+// an async lookup here — worth doing before this is opened up further.
+function isPrivateLiteral(hostname) {
+  const host = hostname.toLowerCase();
+  return (
+    host === 'localhost' ||
+    host === '::1' ||
+    /^127\./.test(host) ||
+    /^0\.0\.0\.0$/.test(host) ||
+    /^10\./.test(host) ||
+    /^192\.168\./.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+    /^169\.254\./.test(host)
+  );
+}
 
 /**
- * Validates and normalises a load-test request from the UI.
+ * Validates and normalises one target URL + method, sharing the caller's
+ * headers/body — every target in a run answers to the same auth header or
+ * request body, since a run is "these URLs, under this load", not a
+ * different request built per target.
+ *
+ * @throws {Error} with `.status = 400` on anything that fails validation.
+ */
+function normaliseTarget(input, index, sharedHeaders, sharedBody, bad) {
+  const label = `Target #${index + 1}`;
+  const targetUrl = String(input?.targetUrl || '').trim();
+  if (!targetUrl) bad(`${label}: a URL is required.`);
+  let url;
+  try {
+    url = new URL(targetUrl);
+  } catch {
+    bad(`${label}: "${targetUrl}" is not a valid URL.`);
+  }
+  if (!/^https?:$/.test(url.protocol)) bad(`${label}: only http and https are supported.`);
+  if (isPrivateLiteral(url.hostname)) bad(`${label}: cannot be a loopback or private address.`);
+
+  const method = String(input?.method || 'GET').toUpperCase();
+  if (!METHODS.includes(method)) bad(`${label}: "${method}" is not a supported HTTP method.`);
+
+  return {
+    name: `${method} ${url.hostname}${url.pathname}`.slice(0, 120),
+    protocol: url.protocol.replace(':', ''),
+    domain: url.hostname,
+    port: url.port || (url.protocol === 'https:' ? '443' : '80'),
+    path: (url.pathname || '/') + (url.search || ''),
+    method,
+    headers: sharedHeaders,
+    body: ['POST', 'PUT', 'PATCH'].includes(method) ? sharedBody : '',
+  };
+}
+
+/**
+ * Validates and normalises a load-test request from the UI: one or more
+ * target URLs, each run as its own thread group so they generate load
+ * concurrently rather than one after another, sharing one thread/ramp-up/loop
+ * profile and one set of headers/body.
  *
  * The caps here are deliberate, not arbitrary round numbers: this engine is
  * the first one in the product that can point real, sustained network load at
@@ -179,33 +243,6 @@ function normalisePlan(input = {}) {
     throw e;
   };
 
-  const targetUrl = String(input.targetUrl || '').trim();
-  if (!targetUrl) bad('targetUrl is required.');
-  let url;
-  try {
-    url = new URL(targetUrl);
-  } catch {
-    bad(`"${targetUrl}" is not a valid URL.`);
-  }
-  if (!/^https?:$/.test(url.protocol)) bad('Only http and https targets are supported.');
-
-  // A baseline guard, not a substitute for a real allow-list: this only
-  // catches the target naming a loopback/private address literally. It does
-  // not resolve DNS to catch a hostname that *points at* one (a rebind), which
-  // would need an async lookup here — worth doing before this is opened up
-  // beyond Super Admin.
-  const host = url.hostname.toLowerCase();
-  const isPrivateLiteral =
-    host === 'localhost' ||
-    host === '::1' ||
-    /^127\./.test(host) ||
-    /^0\.0\.0\.0$/.test(host) ||
-    /^10\./.test(host) ||
-    /^192\.168\./.test(host) ||
-    /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
-    /^169\.254\./.test(host);
-  if (isPrivateLiteral) bad('The target cannot be a loopback or private address.');
-
   const threads = Math.round(Number(input.threads));
   if (!Number.isFinite(threads) || threads < 1 || threads > MAX_THREADS) {
     bad(`threads must be a whole number from 1 to ${MAX_THREADS}.`);
@@ -219,50 +256,52 @@ function normalisePlan(input = {}) {
     bad(`loops must be a whole number from 1 to ${MAX_LOOPS}.`);
   }
 
-  const method = String(input.method || 'GET').toUpperCase();
-  if (!['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'].includes(method)) {
-    bad(`"${method}" is not a supported HTTP method.`);
-  }
-
-  const headers =
+  const sharedHeaders =
     input.headers && typeof input.headers === 'object' && !Array.isArray(input.headers)
       ? Object.entries(input.headers)
           .filter(([k]) => k && String(k).trim())
           .map(([k, v]) => [String(k).trim(), String(v ?? '')])
       : [];
+  const sharedBody = String(input.body || '');
 
-  const body = ['POST', 'PUT', 'PATCH'].includes(method) ? String(input.body || '') : '';
+  // Optional: HTTP Basic/Digest credentials, shared across every target the
+  // same way headers and the body are. A username with no password is kept
+  // as an empty password rather than rejected — some services genuinely use
+  // one — but no username means no auth at all, since a password alone is
+  // not a credential JMeter's Authorization Manager can use.
+  const username = String(input.username || '').trim();
+  const password = String(input.password || '');
+  const auth = username ? { username, password } : null;
+
+  const rawTargets = Array.isArray(input.targets) ? input.targets : [];
+  if (!rawTargets.length) bad('At least one target URL is required.');
+  if (rawTargets.length > MAX_TARGETS) bad(`At most ${MAX_TARGETS} target URLs are supported in one run.`);
+
+  const requests = rawTargets.map((t, i) => normaliseTarget(t, i, sharedHeaders, sharedBody, bad));
 
   return {
     name: String(input.name || 'Load test').slice(0, 120),
-    protocol: url.protocol.replace(':', ''),
-    domain: url.hostname,
-    port: url.port || (url.protocol === 'https:' ? '443' : '80'),
-    path: (url.pathname || '/') + (url.search || ''),
-    method,
     threads,
     rampUpSeconds,
     loops,
-    headers,
-    body,
+    requests,
+    auth,
   };
 }
 
 /**
- * Renders a plan into the .jmx XML JMeter's non-GUI mode reads.
- *
- * Hand-built rather than templated from a saved sample file: the shape is
- * small (one thread group, one HTTP sampler, an optional header manager) and
- * every value that came from a caller is escaped going in, which a copied
- * .jmx-with-placeholders approach makes easy to get wrong in exactly the
- * fields an attacker would target.
+ * One thread group + its HTTP sampler (+ optional header manager), for one
+ * request in the plan. JMeter runs every thread group in a test plan
+ * concurrently by default, which is exactly "independent targets, tested
+ * together" — no scheduler or ordering needed, one thread group per target is
+ * the whole mechanism.
  */
-function buildPlanXml(plan) {
-  const headerManager = plan.headers.length
+function threadGroupXml(request, threads, rampUpSeconds, loops) {
+  const headerManager = request.headers.length
     ? `
         <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Headers" enabled="true">
           <collectionProp name="HeaderManager.headers">
-            ${plan.headers
+            ${request.headers
               .map(
                 ([k, v]) => `<elementProp name="" elementType="Header">
               <stringProp name="Header.name">${escapeXml(k)}</stringProp>
@@ -275,14 +314,14 @@ function buildPlanXml(plan) {
         <hashTree/>`
     : '';
 
-  const bodyProp = plan.body
+  const bodyProp = request.body
     ? `
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
               <elementProp name="" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">${escapeXml(plan.body)}</stringProp>
+                <stringProp name="Argument.value">${escapeXml(request.body)}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
             </collectionProp>
@@ -291,6 +330,86 @@ function buildPlanXml(plan) {
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments"/>
           </elementProp>`;
+
+  return `
+    <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="${escapeXml(request.name)}" enabled="true">
+      <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+      <elementProp name="ThreadGroup.main_controller" elementType="LoopController" testclass="LoopController" testname="Loop Controller" enabled="true">
+        <boolProp name="LoopController.continue_forever">false</boolProp>
+        <stringProp name="LoopController.loops">${loops}</stringProp>
+      </elementProp>
+      <stringProp name="ThreadGroup.num_threads">${threads}</stringProp>
+      <stringProp name="ThreadGroup.ramp_time">${rampUpSeconds}</stringProp>
+      <boolProp name="ThreadGroup.scheduler">false</boolProp>
+    </ThreadGroup>
+    <hashTree>
+      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="${escapeXml(request.name)}" enabled="true">
+        <stringProp name="HTTPSampler.domain">${escapeXml(request.domain)}</stringProp>
+        <stringProp name="HTTPSampler.port">${escapeXml(request.port)}</stringProp>
+        <stringProp name="HTTPSampler.protocol">${escapeXml(request.protocol)}</stringProp>
+        <stringProp name="HTTPSampler.path">${escapeXml(request.path)}</stringProp>
+        <stringProp name="HTTPSampler.method">${escapeXml(request.method)}</stringProp>
+        <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+        <boolProp name="HTTPSampler.use_keepalive">true</boolProp>${bodyProp}
+      </HTTPSamplerProxy>
+      <hashTree>${headerManager}
+      </hashTree>
+    </hashTree>`;
+}
+
+/**
+ * One HTTP Authorization Manager, shared by every thread group, holding one
+ * Basic/Digest credential entry per distinct target origin.
+ *
+ * A single manager at the test-plan level rather than one per thread group:
+ * JMeter matches an Authorization entry to a sampler by comparing the
+ * entry's URL against the request's, so one manager whose entries cover
+ * every origin in the plan authenticates every target exactly the way a
+ * per-thread-group copy would, without repeating the same username/password
+ * once per target.
+ *
+ * Basic/Digest only — this cannot log into a page that authenticates with a
+ * form post and a session cookie (or, as in Gmail's case, a full OAuth flow);
+ * that would need a login request plus extracting a token from its response
+ * before every sampler, which is a materially different feature from "this
+ * origin wants an Authorization header".
+ */
+function authManagerXml(auth, requests) {
+  if (!auth) return '';
+  const origins = [...new Set(requests.map((r) => `${r.protocol}://${r.domain}:${r.port}`))];
+  return `
+    <AuthManager guiclass="AuthPanel" testclass="AuthManager" testname="HTTP Authorization Manager" enabled="true">
+      <collectionProp name="AuthManager.auth_list">
+        ${origins
+          .map(
+            (origin) => `<elementProp name="" elementType="Authorization">
+          <stringProp name="Authorization.url">${escapeXml(origin)}</stringProp>
+          <stringProp name="Authorization.username">${escapeXml(auth.username)}</stringProp>
+          <stringProp name="Authorization.password">${escapeXml(auth.password)}</stringProp>
+          <stringProp name="Authorization.mechanism">BASIC_DIGEST</stringProp>
+        </elementProp>`,
+          )
+          .join('\n        ')}
+      </collectionProp>
+    </AuthManager>
+    <hashTree/>`;
+}
+
+/**
+ * Renders a plan into the .jmx XML JMeter's non-GUI mode reads: one thread
+ * group per target URL, all siblings under the same test plan so they run
+ * concurrently.
+ *
+ * Hand-built rather than templated from a saved sample file: the shape is
+ * small and every value that came from a caller is escaped going in, which a
+ * copied .jmx-with-placeholders approach makes easy to get wrong in exactly
+ * the fields an attacker would target.
+ */
+function buildPlanXml(plan) {
+  const threadGroups = plan.requests
+    .map((r) => threadGroupXml(r, plan.threads, plan.rampUpSeconds, plan.loops))
+    .join('\n');
+  const auth = authManagerXml(plan.auth, plan.requests);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
@@ -303,30 +422,7 @@ function buildPlanXml(plan) {
         <collectionProp name="Arguments.arguments"/>
       </elementProp>
     </TestPlan>
-    <hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Load" enabled="true">
-        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
-        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" testclass="LoopController" testname="Loop Controller" enabled="true">
-          <boolProp name="LoopController.continue_forever">false</boolProp>
-          <stringProp name="LoopController.loops">${plan.loops}</stringProp>
-        </elementProp>
-        <stringProp name="ThreadGroup.num_threads">${plan.threads}</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">${plan.rampUpSeconds}</stringProp>
-        <boolProp name="ThreadGroup.scheduler">false</boolProp>
-      </ThreadGroup>
-      <hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="${escapeXml(plan.name)}" enabled="true">
-          <stringProp name="HTTPSampler.domain">${escapeXml(plan.domain)}</stringProp>
-          <stringProp name="HTTPSampler.port">${escapeXml(plan.port)}</stringProp>
-          <stringProp name="HTTPSampler.protocol">${escapeXml(plan.protocol)}</stringProp>
-          <stringProp name="HTTPSampler.path">${escapeXml(plan.path)}</stringProp>
-          <stringProp name="HTTPSampler.method">${escapeXml(plan.method)}</stringProp>
-          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>${bodyProp}
-        </HTTPSamplerProxy>
-        <hashTree>${headerManager}
-        </hashTree>
-      </hashTree>
+    <hashTree>${auth}${threadGroups}
     </hashTree>
   </hashTree>
 </jmeterTestPlan>
@@ -511,4 +607,5 @@ module.exports = {
   MAX_THREADS,
   MAX_LOOPS,
   MAX_RAMP_UP_SECONDS,
+  MAX_TARGETS,
 };
