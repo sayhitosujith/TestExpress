@@ -3,6 +3,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Fragment, useState, useEffect, useRef } from "react";
 import { FaChevronUp, FaChevronLeft, FaChevronRight, FaLinkedin } from "react-icons/fa";
+import { FaXTwitter, FaInstagram } from "react-icons/fa6";
 import { MdMenu, MdClose } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import Slider from "react-slick";
@@ -16,6 +17,7 @@ import {
 } from "./homePageTracking";
 import { PLANS, addedBy, capabilitiesOf, planKind, priceLabel } from "./plans";
 import { VscArrowRight } from "react-icons/vsc";
+import backendPackageJson from "./Backend/package.json";
 
 const Icon = ({ size = 22, children, ...rest }) => (
   <svg
@@ -297,16 +299,24 @@ function Welcome() {
     { n: "04", title: "Report", body: "Read the run: which step failed, how long it took, a screenshot of the moment it broke, and whether a locator had to heal itself." },
   ];
 
+  // Versions are read from the backend's package.json rather than typed in here,
+  // so a dependency bump is reflected on the page without anyone remembering to
+  // update this list by hand.
+  const versionOf = (pkg) => {
+    const range = backendPackageJson.dependencies?.[pkg];
+    return range ? `v${range.replace(/^[^\d]*/, "")}` : undefined;
+  };
+
   // Named because they are what the product is genuinely built on, and each is
   // visible in the UI. No logos: hotlinking third-party marks from image search
   // is how a landing page ends up showing the wrong company's logo.
   const builtOn = [
-    { name: "Playwright", role: "Real-browser engine and export format", version: "v1.63" },
-    { name: "Appium",     role: "Android device automation" },
-    { name: "Chromium",   role: "Blink rendering engine" },
-    { name: "Firefox",    role: "Gecko rendering engine" },
-    { name: "WebKit",     role: "The engine behind Safari" },
-    { name: "Qase",       role: "Import existing test cases" },
+    { name: "Playwright",           role: "Real-browser engine and export format", version: versionOf("playwright") },
+    { name: "Appium",               role: "Android & IOS device automation" },
+    { name: "API Automation",       role: "Request, response and contract checks" },
+    { name: "Performance Testing",  role: "Load testing with JMeter" },
+    { name: "Security Testing",     role: "Vulnerability and penetration checks" },
+    { name: "DB Testing",           role: "Data integrity and query validation" },
   ];
 
   // What a tester actually asks before trying this, with the limits left in.
@@ -508,6 +518,27 @@ function Welcome() {
               className="p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 hover:text-[#34d399] transition-colors"
             >
               <FaLinkedin size={20} />
+            </a>
+            {/* Sample URLs — swap for the real profiles once they exist. */}
+            <a
+              href="https://twitter.com/testexpress"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackHomePageCta("nav_twitter")}
+              aria-label={`${branding.name} on Twitter`}
+              className="p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+            >
+              <FaXTwitter size={20} />
+            </a>
+            <a
+              href="https://instagram.com/testexpress"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackHomePageCta("nav_instagram")}
+              aria-label={`${branding.name} on Instagram`}
+              className="p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+            >
+              <FaInstagram size={20} />
             </a>
             <button
               onClick={() => {
@@ -1241,8 +1272,16 @@ function Welcome() {
           </div>
         </div>
 
-        <div className="border-t border-white/10 text-center py-5 text-xs text-[#94a3b8]">
-          © {new Date().getFullYear()} {branding.name}. All rights reserved.
+        <div className="border-t border-white/10 max-w-7xl mx-auto px-8 py-5 text-xs text-[#94a3b8] flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span>
+            © {new Date().getFullYear()} {branding.name}. All rights reserved.
+          </span>
+          <span>
+            Email:{" "}
+            <a href="mailto:wetestexpress@gmail.com" className="hover:text-[#34d399] transition-colors">
+              wetestexpress@gmail.com
+            </a>
+          </span>
         </div>
       </footer>
 
