@@ -89,6 +89,12 @@ import { BROWSERS, PROVIDERS, TRIGGERS, secretEnv, toPipeline } from "./testrunn
 // The downloadable run report — an Extent-style dashboard in one self-contained
 // HTML file. See ./testrunner/reportDoc.
 import { toReportHtml } from "./testrunner/reportDoc";
+// Load testing (JMeter). Its own file and its own modal component, not a
+// fourth branch of the step-by-step engine picker above: a load test is a
+// batch job the server runs to completion and reports on, not a session this
+// component steps through one recorded action at a time. See its own file for
+// why, and Backend/routes/jmeter.js for how it runs.
+import PerformanceModal from "./testrunner/PerformanceModal";
 // Self-healing locators: what to try once every recorded selector has gone
 // stale. Shared with the backend engine, which requires it straight from Node,
 // so the module is CommonJS — and the bundler will only hand out its default
@@ -4800,6 +4806,7 @@ export default function TestRunner() {
   const [dataOpen, setDataOpen] = useState(false); // the test data editor
   const [cicdOpen, setCicdOpen] = useState(false); // the CI pipeline generator
   const [reportsOpen, setReportsOpen] = useState(false); // run history across every test
+  const [perfOpen, setPerfOpen] = useState(false); // the JMeter performance-testing panel
 
   // How many tests are red as of their last run. On the Reports button itself,
   // because a badge you have to open a modal to see is a badge that tells you
@@ -6042,6 +6049,13 @@ export default function TestRunner() {
             )}
           </button>
           <button
+            style={{ ...S.btn, ...S.btnGhost, ...S.btnIcon }}
+            onClick={() => setPerfOpen(true)}
+            title="Load-test a URL with JMeter — threads, ramp-up and loops, no code"
+          >
+            <Icon size={14}><path d="M3 17l6-6 4 4 8-8" /><path d="M17 7h4v4" /></Icon> Performance
+          </button>
+          <button
             style={{ ...S.btn, ...S.btnGhost, ...S.btnIcon, opacity: refusal("data") ? 0.4 : 1 }}
             disabled={!!refusal("data")}
             onClick={() => setDataOpen(true)}
@@ -6619,6 +6633,8 @@ export default function TestRunner() {
           onClose={() => setCicdOpen(false)}
         />
       )}
+
+      {perfOpen && <PerformanceModal onClose={() => setPerfOpen(false)} />}
 
       <footer style={S.footer}>
         <span style={S.footerText}>

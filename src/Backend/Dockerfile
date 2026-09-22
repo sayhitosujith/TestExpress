@@ -12,6 +12,26 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
+# The performance-testing engine (testrunner/jmeter.js) shells out to a real
+# `jmeter`, the same way Playwright above needs real browser binaries — a JRE
+# and an unpacked JMeter distribution. JMETER_HOME is set below to the fixed
+# path it is unpacked to; the JRE is left to testrunner/jmeter.js's own
+# discovery (it already searches /usr/lib/jvm), since apt installs it under a
+# directory named after the machine's architecture, not a fixed path this file
+# could name in advance.
+ARG JMETER_VERSION=5.6.3
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openjdk-17-jre-headless wget \
+  && wget -q "https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz" -O /tmp/jmeter.tgz \
+  && tar -xzf /tmp/jmeter.tgz -C /opt \
+  && mv "/opt/apache-jmeter-${JMETER_VERSION}" /opt/jmeter \
+  && rm /tmp/jmeter.tgz \
+  && apt-get purge -y wget \
+  && apt-get autoremove -y \
+  && rm -rf /var/lib/apt/lists/*
+ENV JMETER_HOME=/opt/jmeter
+ENV PATH="${JMETER_HOME}/bin:${PATH}"
+
 WORKDIR /app
 
 COPY src/Backend/package*.json ./src/Backend/
