@@ -23,26 +23,12 @@ function createPool(url, label = 'db') {
   const isLocal = /@(localhost|127\.0\.0\.1|\[::1\])[:/]/.test(url);
   const sslDisabled = /[?&]sslmode=disable\b/.test(url);
 
-  const sslOption =
-    !url || isLocal || sslDisabled
-      ? false
-      : { rejectUnauthorized: process.env.DATABASE_SSL_NO_VERIFY !== 'true' };
-
-  // TEMPORARY: the deployed Render container keeps reporting a self-signed
-  // certificate for a host that verifies fine under strict TLS from outside
-  // it, through three different attempted fixes. This says what the process
-  // actually has, rather than what the dashboard or the Dockerfile claim it
-  // should have -- remove once that mismatch is found.
-  console.log(
-    `[${label}] ssl option:`, sslOption,
-    '| DATABASE_SSL_NO_VERIFY=', JSON.stringify(process.env.DATABASE_SSL_NO_VERIFY),
-    '| NODE_EXTRA_CA_CERTS=', JSON.stringify(process.env.NODE_EXTRA_CA_CERTS),
-    '| node=', process.version,
-  );
-
   const pool = new Pool({
     connectionString: url,
-    ssl: sslOption,
+    ssl:
+      !url || isLocal || sslDisabled
+        ? false
+        : { rejectUnauthorized: process.env.DATABASE_SSL_NO_VERIFY !== 'true' },
   });
 
   // Without a listener, a dropped backend connection raises an unhandled 'error'
