@@ -1,11 +1,17 @@
-// The public Contact Us form. Unauthenticated by design -- a visitor filling
-// this in has no account yet -- so there is no GET here: a route that could
-// list every message anyone had ever sent, reachable without a password,
-// would hand a stranger everyone else's contact details.
+// The public Contact Us form, and the Super Admin's read of what it has
+// collected.
+//
+// POST is unauthenticated by design -- a visitor filling this in has no
+// account yet. GET is the opposite question and answers it the opposite way:
+// behind the same guard as the other admin-only panels, so a stranger cannot
+// reach everyone else's contact details just because the form itself needs
+// no password.
 const express = require('express');
 const router = express.Router();
 const contactMessages = require('../contactMessagesDb');
 const { sendContactNotification } = require('../emailNotify');
+const { authenticate, requireRole } = require('../requireRole');
+const { PRIVILEGED_ROLES } = require('../accounts');
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Generous enough for a real message, small enough that a script cannot use
@@ -49,6 +55,15 @@ router.post('/', async (req, res) => {
     }
     console.error('[contact] submission failed:', err.message);
     res.status(500).json({ error: 'Could not save your message. Please try again.' });
+  }
+});
+
+// GET /api/contact — every submission, newest first. Super Admin only.
+router.get('/', authenticate, requireRole(...PRIVILEGED_ROLES), async (req, res) => {
+  try {
+    res.json({ messages: await contactMessages.list({ limit: req.query.limit }) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

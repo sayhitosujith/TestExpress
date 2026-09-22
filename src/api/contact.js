@@ -18,3 +18,19 @@ export async function sendContactMessage({ name, email, subject, message }) {
     throw new Error(apiMessage(err, "Could not send your message"));
   }
 }
+
+/**
+ * Every Contact Us submission, newest first. Super Admin only — the session
+ * token interceptor installed in index.js sends the bearer token this needs.
+ *
+ * @param {{limit?: number}} [opts]
+ * @returns {Promise<object[]>}
+ */
+export async function getContactMessages({ limit } = {}) {
+  try {
+    const { data } = await axios.get(`${API_BASE}/api/contact`, { params: { limit } });
+    return data.messages;
+  } catch (err) {
+    throw new Error(apiMessage(err, "Could not load contact messages"));
+  }
+}

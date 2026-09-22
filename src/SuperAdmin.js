@@ -12,6 +12,7 @@ import {
   ChevronUpIcon,
   ClockIcon,
   Cog6ToothIcon,
+  EnvelopeIcon,
   ExclamationTriangleIcon,
   KeyIcon,
   MagnifyingGlassIcon,
@@ -38,6 +39,9 @@ import HomePageAnalyticsModal from "./HomePageAnalyticsModal";
 // Who is on which plan. Its own module for the same reason the analytics panel
 // is one — see the note at the top of it.
 import SubscriptionsModal from "./SubscriptionsModal";
+// What the public Contact Us form has collected. Its own module for the same
+// reason — see the note at the top of it.
+import ContactMessagesModal from "./ContactMessagesModal";
 // What was actually charged, as opposed to who is on what. Its own module for
 // the same reason — see the note at the top of it.
 import PaymentsModal from "./PaymentsModal";
@@ -649,7 +653,14 @@ function BrandLockup() {
  * @param {{onSettings: () => void, onAnalytics: () => void,
  *   onSignOut: () => void}} props
  */
-function RailActions({ onSettings, onSubscriptions, onPayments, onAnalytics, onSignOut }) {
+function RailActions({
+  onSettings,
+  onSubscriptions,
+  onPayments,
+  onAnalytics,
+  onContactMessages,
+  onSignOut,
+}) {
   const row =
     "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm font-medium transition ";
   return (
@@ -698,6 +709,16 @@ function RailActions({ onSettings, onSubscriptions, onPayments, onAnalytics, onS
         className={row + "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"}
       >
         <ChartBarIcon className="h-4 w-4 flex-shrink-0" /> Website - analytics
+      </button>
+      {/* Below analytics, same reasoning: a view of the public site rather
+          than of the accounts this page administers. */}
+      <button
+        type="button"
+        onClick={onContactMessages}
+        title="Every submission from the public Contact Us form"
+        className={row + "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"}
+      >
+        <EnvelopeIcon className="h-4 w-4 flex-shrink-0" /> Contact messages
       </button>
       {/* Last, not under Settings: leaving the session is the one action here
           that ends what you are doing, and it should not sit a mis-click away
@@ -1650,6 +1671,9 @@ function AccountsAdmin() {
   // of its state here: nothing about landing-page traffic belongs in a page
   // about accounts, and nobody should pay for the query by arriving.
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  // Same reasoning as analyticsOpen above: the panel loads its own data on
+  // open, so this is the whole of its state here.
+  const [contactMessagesOpen, setContactMessagesOpen] = useState(false);
   // Read rather than held: the store outlives this page, and the header re-renders
   // from it the moment the settings panel writes to it.
   const branding = useBranding();
@@ -2163,6 +2187,7 @@ function AccountsAdmin() {
             onSubscriptions={() => setSubsOpen(true)}
             onPayments={() => setPaymentsOpen(true)}
             onAnalytics={() => setAnalyticsOpen(true)}
+            onContactMessages={() => setContactMessagesOpen(true)}
             onSignOut={handleSignOut}
           />
         </div>
@@ -2622,6 +2647,10 @@ function AccountsAdmin() {
           two reads would be two answers, and the panel that disagreed would be
           the one nobody is looking at when it goes stale. */}
       {paymentsOpen && <PaymentsModal onClose={() => setPaymentsOpen(false)} />}
+
+      {contactMessagesOpen && (
+        <ContactMessagesModal onClose={() => setContactMessagesOpen(false)} />
+      )}
 
       {subsOpen && (
         <SubscriptionsModal
