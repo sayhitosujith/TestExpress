@@ -4,16 +4,23 @@
 // why this is a batch-job runner rather than a session, unlike testrunner.js
 // and mobile.js).
 //
-// Open to any signed-in account, by product decision — not Super Admin only.
+// Gated to any signed-in account whose plan carries the "performance"
+// capability (Enterprise and up — see paymentOptions.json), enforced with
+// requirePlan the same way src/api/corporate.js's routes are: the browser's
+// own check in src/plans.js is what draws the pricing page, this is what
+// actually refuses the request, because a client that could name its own
+// plan could name the top one.
+//
+// Signing in is not enough on its own, unlike the other two engines.
 // Playwright and Appium can only ever do what a recorded step already does —
 // click, fill, navigate. This is the first engine that originates real,
 // sustained network load against a target the caller names, which makes an
-// open version of it a DDoS-as-a-service endpoint; `authenticate` below is
-// the remaining control (an anonymous caller still cannot start a run), and
-// the thread/loop/duration caps and concurrency limit further down are what
-// keep one account from doing real damage. A target allow-list and
-// per-account rate limiting are the next real controls if this needs
-// tightening later — see the comment on `normalisePlan` in
+// open version of it a DDoS-as-a-service endpoint; restricting it to paying
+// tiers is a real control, not just a pricing decision, and the
+// thread/loop/duration caps and concurrency limit further down are what keep
+// one account from doing real damage even within that. A target allow-list
+// and per-account rate limiting are the next real controls if this needs
+// tightening further — see the comment on `normalisePlan` in
 // testrunner/jmeter.js for the baseline guard already in place.
 
 const crypto = require('crypto');
@@ -21,14 +28,43 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const express = require('express');
+const multer = require('multer');
 const { authenticate } = require('../requireRole');
+const { requirePlan } = require('../requirePlan');
 const jmeter = require('../testrunner/jmeter');
+
+// Mounted once and reused on every route below rather than re-created per
+// route: same middleware instance, same capability id, one place to change
+// if this ever needs to move to a different tier.
+const requirePerformancePlan = requirePlan('performance');
 
 const router = express.Router();
 
-// `authenticate` is applied per-route below rather than with a blanket
-// `router.use`, because the report route at the bottom deliberately has none
-// — see the comment there for why.
+// `authenticate` and `requirePerformancePlan` are applied per-route below
+// rather than with a blanket `router.use`, because the report route at the
+// bottom deliberately has neither — see the comment there for why.
+
+// Uploaded CSVs for {{colName}} data sets. Named by a fresh id rather than
+// the upload's own filename, matching mobile.js's APK upload — the point is
+// the same: a crafted name in the upload must not be able to steer where it
+// lands on disk.
+const DATA_SET_DIR = path.join(os.tmpdir(), 'testexpress-jmeter-datasets');
+const uploadCsv = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => fs.mkdir(DATA_SET_DIR, { recursive: true }, (err) => cb(err, DATA_SET_DIR)),
+    filename: (req, file, cb) => cb(null, `${crypto.randomUUID()}.csv`),
+  }),
+  // A few thousand short rows fits easily well under 1MB; this is generous
+  // headroom, not a sizing target — MAX_DATA_SET_ROWS is the real cap.
+  limits: { fileSize: 2 * 1024 * 1024 },
+});
+// Kept independently of `runs` below: one CSV is commonly reused across
+// several runs in the same session (tweak the load profile, run it again),
+// so its lifetime is its own retention window rather than tied to any one
+// run's.
+const DATA_SET_RETENTION_MS = 4 * 60 * 60 * 1000;
+/** @type {Map<string, {path: string, columns: string[], rowCount: number, uploadedAt: number}>} */
+const dataSets = new Map();
 
 // Wall-clock cap on a single run, independent of thread/loop counts: a plan
 // that validated fine can still misbehave against a slow or hanging target,
@@ -84,6 +120,10 @@ function publicRun(run) {
     threads: run.plan.threads,
     rampUpSeconds: run.plan.rampUpSeconds,
     loops: run.plan.loops,
+    // Row count only, never the file path or its content — the client has no
+    // legitimate use for either, and the columns are already known to it
+    // from the /data-sets response that created this id.
+    dataSetRows: run.plan.dataSet ? run.plan.dataSet.rowCount : null,
     startedAt: run.startedAt,
     finishedAt: run.finishedAt,
     error: run.error,
@@ -158,7 +198,7 @@ async function execute(run, pre) {
 
 // ---- routes ----------------------------------------------------------
 
-router.get('/capabilities', authenticate, (req, res) => {
+router.get('/capabilities', authenticate, requirePerformancePlan, (req, res) => {
   const pre = jmeter.preflight();
   res.json({
     available: pre.canRun,
@@ -169,6 +209,7 @@ router.get('/capabilities', authenticate, (req, res) => {
       maxLoops: jmeter.MAX_LOOPS,
       maxRampUpSeconds: jmeter.MAX_RAMP_UP_SECONDS,
       maxTargets: jmeter.MAX_TARGETS,
+      maxDataSetRows: jmeter.MAX_DATA_SET_ROWS,
       runTimeoutSeconds: RUN_TIMEOUT_MS / 1000,
       maxConcurrentRuns: MAX_CONCURRENT_RUNS,
     },
@@ -176,7 +217,42 @@ router.get('/capabilities', authenticate, (req, res) => {
   });
 });
 
-router.get('/runs', authenticate, (req, res) => {
+// Uploads a CSV and parses/validates it up front — before it is ever handed
+// to `jmeter -n`, where a bad file would only surface minutes later as an
+// opaque run failure, not a message naming the row and column at fault.
+router.post('/data-sets', authenticate, requirePerformancePlan, uploadCsv.single('file'), (req, res) => {
+  if (!req.file) {
+    res.status(400).json({ error: 'No file was uploaded.' });
+    return;
+  }
+  const cleanup = () => fs.unlink(req.file.path, () => {});
+  let rows;
+  try {
+    rows = jmeter.parseCsv(fs.readFileSync(req.file.path, 'utf8'));
+  } catch (err) {
+    cleanup();
+    res.status(400).json({ error: `Could not read that file: ${err.message}` });
+    return;
+  }
+  let info;
+  try {
+    info = jmeter.validateCsvRows(rows, (msg) => {
+      const e = new Error(msg);
+      e.status = 400;
+      throw e;
+    });
+  } catch (err) {
+    cleanup();
+    res.status(err.status || 400).json({ error: err.message });
+    return;
+  }
+
+  const id = crypto.randomUUID();
+  dataSets.set(id, { path: req.file.path, columns: info.columns, rowCount: info.rowCount, uploadedAt: Date.now() });
+  res.json({ id, columns: info.columns, rowCount: info.rowCount });
+});
+
+router.get('/runs', authenticate, requirePerformancePlan, (req, res) => {
   const list = [...runs.values()]
     .sort((a, b) => b.startedAt - a.startedAt)
     .slice(0, 50)
@@ -184,7 +260,7 @@ router.get('/runs', authenticate, (req, res) => {
   res.json({ runs: list });
 });
 
-router.post('/runs', authenticate, (req, res) => {
+router.post('/runs', authenticate, requirePerformancePlan, (req, res) => {
   const pre = jmeter.preflight();
   if (!pre.canRun) {
     res.status(501).json({ error: pre.missing.join(' ') });
@@ -195,9 +271,18 @@ router.post('/runs', authenticate, (req, res) => {
     return;
   }
 
+  let dataSet = null;
+  if (req.body?.dataSetId) {
+    dataSet = dataSets.get(req.body.dataSetId);
+    if (!dataSet || !fs.existsSync(dataSet.path)) {
+      res.status(400).json({ error: 'That data set was not found — it may have expired. Upload the CSV again.' });
+      return;
+    }
+  }
+
   let plan;
   try {
-    plan = jmeter.normalisePlan(req.body);
+    plan = jmeter.normalisePlan(req.body, dataSet);
   } catch (err) {
     res.status(err.status || 400).json({ error: err.message });
     return;
@@ -224,7 +309,7 @@ router.post('/runs', authenticate, (req, res) => {
   res.json(publicRun(run));
 });
 
-router.get('/runs/:id', authenticate, (req, res) => {
+router.get('/runs/:id', authenticate, requirePerformancePlan, (req, res) => {
   const run = runs.get(req.params.id);
   if (!run) {
     res.status(404).json({ error: 'No such run.' });
@@ -233,7 +318,7 @@ router.get('/runs/:id', authenticate, (req, res) => {
   res.json(publicRun(run));
 });
 
-router.delete('/runs/:id', authenticate, (req, res) => {
+router.delete('/runs/:id', authenticate, requirePerformancePlan, (req, res) => {
   const run = runs.get(req.params.id);
   if (!run) {
     res.status(404).json({ error: 'No such run.' });
@@ -309,6 +394,11 @@ function reap() {
     if (!run.finishedAt || now - run.finishedAt < RUN_RETENTION_MS) continue;
     runs.delete(id);
     fs.rm(run.dir, { recursive: true, force: true }, () => {});
+  }
+  for (const [id, ds] of dataSets) {
+    if (now - ds.uploadedAt < DATA_SET_RETENTION_MS) continue;
+    dataSets.delete(id);
+    fs.unlink(ds.path, () => {});
   }
 }
 setInterval(reap, REAP_INTERVAL_MS).unref();

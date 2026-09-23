@@ -38,7 +38,8 @@
     "adds": [
       "android",
       "apitokens",
-      "apitesting"
+      "apitesting",
+      "performance"
     ],
     "price": 4999,
     "currency": "INR",

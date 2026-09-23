@@ -34,9 +34,13 @@ export async function jmeterCapabilities() {
  * `username`/`password`, if given, are sent as HTTP Basic/Digest auth to
  * every target's origin — not a form login or a session cookie.
  *
+ * `dataSetId`, if given (from `uploadJmeterDataSet`), is what makes
+ * `{{colName}}` in a target URL, header, username, password or body mean
+ * anything — each iteration pulls the next row's value for it.
+ *
  * @param {{name?: string, targets: {targetUrl: string, method?: string}[],
  *   threads: number, rampUpSeconds: number, loops: number, headers?: object,
- *   body?: string, username?: string, password?: string}} plan
+ *   body?: string, username?: string, password?: string, dataSetId?: string}} plan
  */
 export async function startJmeterRun(plan) {
   try {
@@ -64,6 +68,26 @@ export async function listJmeterRuns() {
     return data.runs;
   } catch (err) {
     throw new Error(apiMessage(err, "Could not load past runs"));
+  }
+}
+
+/**
+ * Uploads a CSV to back `{{colName}}` placeholders — one row per iteration,
+ * the header row naming the columns. Validated and parsed on the server
+ * before this resolves, so a malformed file is reported here rather than as
+ * an opaque failure minutes into a run.
+ *
+ * @param {File} file
+ * @returns {Promise<{id: string, columns: string[], rowCount: number}>}
+ */
+export async function uploadJmeterDataSet(file) {
+  try {
+    const form = new FormData();
+    form.append("file", file);
+    const { data } = await axios.post(`${BASE}/data-sets`, form);
+    return data;
+  } catch (err) {
+    throw new Error(apiMessage(err, "Could not read that CSV"));
   }
 }
 

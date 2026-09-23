@@ -4771,6 +4771,7 @@ export default function TestRunner() {
   // allowance UserMenu makes — in which case tests are simply saved unowned.
   const user = (useAuth() || {}).user || null;
   const branding = useBranding();
+  const navigate = useNavigate();
   const [recorded, setRecorded] = useState(loadRecorded);
   const [projects, setProjects] = useState(loadProjects);
   // Faces for the owner stamps. Re-read on the storage event, which is how the
@@ -5971,13 +5972,30 @@ export default function TestRunner() {
     <div style={S.page} data-tr-theme={theme}>
       {/* Top bar */}
       <header style={S.topbar}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <button
+          onClick={() => navigate("/HomePage")}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            background: "transparent",
+            border: "none",
+            padding: 0,
+            margin: 0,
+            font: "inherit",
+            color: "inherit",
+            textAlign: "left",
+            cursor: "pointer",
+          }}
+          title="Go to the homepage"
+          aria-label={`${branding.name} home`}
+        >
           <TestExpressMark />
           <div>
             <div style={S.wordmark}>{branding.name}</div>
             <div style={S.subtitle}>{branding.tagline}</div>
           </div>
-        </div>
+        </button>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {/* Restoring this needs its suite back with it, which is why the
               derivation lives in here rather than above as an unused const. A

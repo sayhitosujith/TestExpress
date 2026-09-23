@@ -116,6 +116,11 @@ export const CAPABILITIES = [
     refusal: "API request steps are not part of this plan.",
   },
   {
+    id: "performance",
+    label: "Performance testing — load-test multiple URLs at once with JMeter",
+    refusal: "Performance testing is not part of this plan.",
+  },
+  {
     id: "support",
     label: "Named support contact",
     refusal: "Priority support is not part of this plan.",

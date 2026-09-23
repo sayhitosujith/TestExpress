@@ -168,6 +168,120 @@ const MAX_TARGETS = 10;
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'];
 
+// ---- CSV data sets --------------------------------------------------------
+// A run can attach a CSV so `{{colName}}` in a URL, header, username,
+// password or body pulls a different value on every iteration — the same
+// `{{ref}}` syntax the recorder's own data sets use (see testrunner/testdata.js),
+// translated to JMeter's `${colName}` variable syntax at plan-build time.
+
+const MAX_DATA_SET_ROWS = 2000;
+const COLUMN_NAME_RE = /^[A-Za-z_]\w*$/;
+
+/**
+ * A minimal RFC 4180 CSV parser: quoted fields, doubled-quote escaping,
+ * commas and newlines inside quotes, and either line ending. `String.split`
+ * would break on the first quoted field containing a comma, which is common
+ * enough in real exports (a name, an address) that it is not an edge case.
+ *
+ * @returns {string[][]} one array per row, including the header row.
+ */
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  const pushField = () => {
+    row.push(field);
+    field = '';
+  };
+  const pushRow = () => {
+    pushField();
+    rows.push(row);
+    row = [];
+  };
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += c;
+      }
+    } else if (c === '"' && field === '') {
+      inQuotes = true;
+    } else if (c === ',') {
+      pushField();
+    } else if (c === '\r') {
+      /* paired \n handles the line break */
+    } else if (c === '\n') {
+      pushRow();
+    } else {
+      field += c;
+    }
+  }
+  if (field.length || row.length) pushRow();
+  // A trailing blank line (the common case of a file ending in \n) parses as
+  // one empty field, not "no row" — dropped so it is not counted as data.
+  return rows.filter((r) => !(r.length === 1 && r[0] === ''));
+}
+
+/**
+ * Validates a CSV's header row and row lengths.
+ *
+ * @throws {Error} with `.status = 400` naming the first problem found.
+ */
+function validateCsvRows(rows, bad) {
+  if (rows.length < 2) bad('The CSV needs a header row plus at least one data row.');
+  const [header, ...dataRows] = rows;
+  const seen = new Set();
+  for (const name of header) {
+    if (!COLUMN_NAME_RE.test(name)) {
+      bad(`"${name}" is not a usable column name — use letters, digits and underscores, starting with a letter.`);
+    }
+    if (seen.has(name)) bad(`Column "${name}" appears more than once.`);
+    seen.add(name);
+  }
+  if (dataRows.length > MAX_DATA_SET_ROWS) {
+    bad(`At most ${MAX_DATA_SET_ROWS} data rows are supported (this file has ${dataRows.length}).`);
+  }
+  const badRow = dataRows.findIndex((r) => r.length !== header.length);
+  if (badRow !== -1) {
+    bad(`Row ${badRow + 2} has ${dataRows[badRow].length} column(s); the header has ${header.length}.`);
+  }
+  return { columns: header, rowCount: dataRows.length };
+}
+
+const TEMPLATE_RE = /\{\{(\w+)\}\}/g;
+const PROTECTED_TOKEN_RE = /__TPL_(\w+)_TPL__/g;
+
+// A target URL is parsed with `new URL()` to validate and split it into
+// domain/path/etc — but the WHATWG URL parser percent-encodes `{` and `}` in
+// a path (turning "{{row}}" into "%7B%7Brow%7D%7D") while leaving them alone
+// in a query string, an inconsistency that would make `{{name}}` work in
+// "?x={{name}}" and silently break in "/users/{{name}}". Swapping each
+// placeholder for a plain-identifier token before parsing, then swapping it
+// back afterwards, keeps it intact through either code path.
+const protectTemplates = (str) => String(str).replace(TEMPLATE_RE, (_, name) => `__TPL_${name}_TPL__`);
+
+/**
+ * Turns a protected placeholder into JMeter's `${name}` when a data set is
+ * attached to supply it a value, or back into the exact `{{name}}` text the
+ * caller typed when there is none — so referencing a column without a CSV
+ * attached is inert text instead of a silently broken half-transform.
+ */
+const restoreTemplates = (str, asVariables) =>
+  String(str).replace(PROTECTED_TOKEN_RE, (_, name) => (asVariables ? `\${${name}}` : `{{${name}}}`));
+
+/** Applies the `{{name}}` -> `${name}` swap directly, for fields that never
+ *  go through URL parsing (headers, body, username, password). */
+const applyTemplate = (str, hasDataSet) =>
+  hasDataSet ? String(str).replace(TEMPLATE_RE, (_, name) => `\${${name}}`) : str;
+
 // A baseline guard, not a substitute for a real allow-list: this only catches
 // a target naming a loopback/private address literally. It does not resolve
 // DNS to catch a hostname that *points at* one (a rebind), which would need
@@ -194,28 +308,34 @@ function isPrivateLiteral(hostname) {
  *
  * @throws {Error} with `.status = 400` on anything that fails validation.
  */
-function normaliseTarget(input, index, sharedHeaders, sharedBody, bad) {
+function normaliseTarget(input, index, sharedHeaders, sharedBody, hasDataSet, bad) {
   const label = `Target #${index + 1}`;
   const targetUrl = String(input?.targetUrl || '').trim();
   if (!targetUrl) bad(`${label}: a URL is required.`);
   let url;
   try {
-    url = new URL(targetUrl);
+    url = new URL(protectTemplates(targetUrl));
   } catch {
     bad(`${label}: "${targetUrl}" is not a valid URL.`);
   }
   if (!/^https?:$/.test(url.protocol)) bad(`${label}: only http and https are supported.`);
-  if (isPrivateLiteral(url.hostname)) bad(`${label}: cannot be a loopback or private address.`);
+  // Checked on the restored hostname: a templated host ("{{tenant}}.example.com")
+  // would otherwise compare its protected placeholder token against this list
+  // and never match, silently skipping a guard that matters more, not less,
+  // once the actual host is only known at run time from a CSV.
+  if (isPrivateLiteral(restoreTemplates(url.hostname, false))) {
+    bad(`${label}: cannot be a loopback or private address.`);
+  }
 
   const method = String(input?.method || 'GET').toUpperCase();
   if (!METHODS.includes(method)) bad(`${label}: "${method}" is not a supported HTTP method.`);
 
   return {
-    name: `${method} ${url.hostname}${url.pathname}`.slice(0, 120),
+    name: `${method} ${restoreTemplates(url.hostname, false)}${restoreTemplates(url.pathname, false)}`.slice(0, 120),
     protocol: url.protocol.replace(':', ''),
-    domain: url.hostname,
+    domain: restoreTemplates(url.hostname, hasDataSet),
     port: url.port || (url.protocol === 'https:' ? '443' : '80'),
-    path: (url.pathname || '/') + (url.search || ''),
+    path: restoreTemplates((url.pathname || '/') + (url.search || ''), hasDataSet),
     method,
     headers: sharedHeaders,
     body: ['POST', 'PUT', 'PATCH'].includes(method) ? sharedBody : '',
@@ -234,9 +354,15 @@ function normaliseTarget(input, index, sharedHeaders, sharedBody, bad) {
  * genuinely needs more than this is exactly the kind of test that should be
  * run from a dedicated load-testing setup, not a landing-page feature.
  *
+ * `dataSet`, if given (`{path, columns}`, as stored by routes/jmeter.js after
+ * a CSV upload), is what makes `{{colName}}` in a target URL, header,
+ * username, password or body mean something — see applyTemplate()/
+ * restoreTemplates() above. Without one, that text is inert: it is not an
+ * error to type it, it simply is not replaced with anything.
+ *
  * @throws {Error} with `.status = 400` on anything that fails validation.
  */
-function normalisePlan(input = {}) {
+function normalisePlan(input = {}, dataSet = null) {
   const bad = (msg) => {
     const e = new Error(msg);
     e.status = 400;
@@ -256,28 +382,31 @@ function normalisePlan(input = {}) {
     bad(`loops must be a whole number from 1 to ${MAX_LOOPS}.`);
   }
 
+  const hasDataSet = !!dataSet;
+  const tpl = (s) => applyTemplate(s, hasDataSet);
+
   const sharedHeaders =
     input.headers && typeof input.headers === 'object' && !Array.isArray(input.headers)
       ? Object.entries(input.headers)
           .filter(([k]) => k && String(k).trim())
-          .map(([k, v]) => [String(k).trim(), String(v ?? '')])
+          .map(([k, v]) => [tpl(String(k).trim()), tpl(String(v ?? ''))])
       : [];
-  const sharedBody = String(input.body || '');
+  const sharedBody = tpl(String(input.body || ''));
 
   // Optional: HTTP Basic/Digest credentials, shared across every target the
   // same way headers and the body are. A username with no password is kept
   // as an empty password rather than rejected — some services genuinely use
   // one — but no username means no auth at all, since a password alone is
   // not a credential JMeter's Authorization Manager can use.
-  const username = String(input.username || '').trim();
-  const password = String(input.password || '');
+  const username = tpl(String(input.username || '').trim());
+  const password = tpl(String(input.password || ''));
   const auth = username ? { username, password } : null;
 
   const rawTargets = Array.isArray(input.targets) ? input.targets : [];
   if (!rawTargets.length) bad('At least one target URL is required.');
   if (rawTargets.length > MAX_TARGETS) bad(`At most ${MAX_TARGETS} target URLs are supported in one run.`);
 
-  const requests = rawTargets.map((t, i) => normaliseTarget(t, i, sharedHeaders, sharedBody, bad));
+  const requests = rawTargets.map((t, i) => normaliseTarget(t, i, sharedHeaders, sharedBody, hasDataSet, bad));
 
   return {
     name: String(input.name || 'Load test').slice(0, 120),
@@ -286,6 +415,7 @@ function normalisePlan(input = {}) {
     loops,
     requests,
     auth,
+    dataSet,
   };
 }
 
@@ -396,6 +526,33 @@ function authManagerXml(auth, requests) {
 }
 
 /**
+ * One CSV Data Set Config, feeding `{{colName}}` -> `${colName}` its values.
+ *
+ * Placed once at the test-plan level rather than per thread group, with
+ * `shareMode.all`: every thread across every target pulls from the same
+ * advancing position in the file, so a hundred rows are spread once across
+ * the whole run's requests rather than each target replaying the same
+ * hundred rows independently. `recycle` is on so a run with more iterations
+ * than rows wraps back to the top instead of erroring out.
+ */
+function csvDataSetXml(dataSet) {
+  if (!dataSet) return '';
+  return `
+    <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Data" enabled="true">
+      <stringProp name="filename">${escapeXml(dataSet.path)}</stringProp>
+      <stringProp name="fileEncoding">UTF-8</stringProp>
+      <stringProp name="variableNames"></stringProp>
+      <boolProp name="ignoreFirstLine">false</boolProp>
+      <stringProp name="delimiter">,</stringProp>
+      <boolProp name="quotedData">true</boolProp>
+      <boolProp name="recycle">true</boolProp>
+      <boolProp name="stopThread">false</boolProp>
+      <stringProp name="shareMode">shareMode.all</stringProp>
+    </CSVDataSet>
+    <hashTree/>`;
+}
+
+/**
  * Renders a plan into the .jmx XML JMeter's non-GUI mode reads: one thread
  * group per target URL, all siblings under the same test plan so they run
  * concurrently.
@@ -410,6 +567,7 @@ function buildPlanXml(plan) {
     .map((r) => threadGroupXml(r, plan.threads, plan.rampUpSeconds, plan.loops))
     .join('\n');
   const auth = authManagerXml(plan.auth, plan.requests);
+  const dataSet = csvDataSetXml(plan.dataSet);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
@@ -422,7 +580,7 @@ function buildPlanXml(plan) {
         <collectionProp name="Arguments.arguments"/>
       </elementProp>
     </TestPlan>
-    <hashTree>${auth}${threadGroups}
+    <hashTree>${dataSet}${auth}${threadGroups}
     </hashTree>
   </hashTree>
 </jmeterTestPlan>
@@ -603,9 +761,12 @@ module.exports = {
   runToCompletion,
   generateReport,
   readSummary,
+  parseCsv,
+  validateCsvRows,
   LOG_LINES,
   MAX_THREADS,
   MAX_LOOPS,
   MAX_RAMP_UP_SECONDS,
   MAX_TARGETS,
+  MAX_DATA_SET_ROWS,
 };

@@ -6,6 +6,7 @@ import {
   jmeterReportUrl,
   listJmeterRuns,
   startJmeterRun,
+  uploadJmeterDataSet,
 } from "../api/jmeter";
 
 /**
@@ -303,7 +304,11 @@ export default function PerformanceModal({ onClose }) {
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState(null);
   const [history, setHistory] = useState([]);
+  const [dataSet, setDataSet] = useState(null); // {id, columns, rowCount} once a CSV is uploaded
+  const [dataSetUploading, setDataSetUploading] = useState(false);
+  const [dataSetError, setDataSetError] = useState(null);
   const pollRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     jmeterCapabilities().then(setCaps);
@@ -357,6 +362,25 @@ export default function PerformanceModal({ onClose }) {
   const removeTarget = (i) =>
     setPlan((p) => ({ ...p, targets: p.targets.filter((_, ti) => ti !== i) }));
 
+  async function onUploadDataSet(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = ""; // lets picking the same file again re-trigger onChange
+    if (!file) return;
+    setDataSetError(null);
+    setDataSetUploading(true);
+    try {
+      setDataSet(await uploadJmeterDataSet(file));
+    } catch (err) {
+      setDataSetError(err.message);
+    } finally {
+      setDataSetUploading(false);
+    }
+  }
+  const removeDataSet = () => {
+    setDataSet(null);
+    setDataSetError(null);
+  };
+
   async function onRun() {
     setStartError(null);
     setStarting(true);
@@ -371,6 +395,7 @@ export default function PerformanceModal({ onClose }) {
         body: hasBody ? plan.body : undefined,
         username: plan.username.trim() || undefined,
         password: plan.password || undefined,
+        dataSetId: dataSet?.id,
       });
       setRun(started);
     } catch (err) {
@@ -458,6 +483,49 @@ export default function PerformanceModal({ onClose }) {
                 >
                   + Add another URL
                 </button>
+              </div>
+
+              <div style={field}>
+                <label style={fieldLabel}>Data set (optional CSV, one row used per iteration)</label>
+                {!dataSet ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <button
+                      style={{ ...btnGhost, opacity: dataSetUploading || running ? 0.5 : 1 }}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={dataSetUploading || running}
+                    >
+                      {dataSetUploading ? "Uploading…" : "Upload CSV"}
+                    </button>
+                    <span style={hint}>
+                      First row is the header — its column names become {"{{name}}"}-style placeholders you can use
+                      in the URL, headers, username, password or body. Up to {caps.limits?.maxDataSetRows} rows.
+                    </span>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span style={metaChip}>{dataSet.rowCount} rows</span>
+                    {dataSet.columns.map((c) => (
+                      <span key={c} style={{ ...metaChip, fontFamily: "ui-monospace, monospace" }}>{`{{${c}}}`}</span>
+                    ))}
+                    <button
+                      style={removeBtn}
+                      onClick={removeDataSet}
+                      disabled={running}
+                      title="Remove this data set"
+                      aria-label="Remove data set"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  style={{ display: "none" }}
+                  onChange={onUploadDataSet}
+                />
+                {dataSetError && <div style={{ ...hint, color: "var(--tr-rec)" }}>{dataSetError}</div>}
               </div>
 
               <div style={grid}>
@@ -558,6 +626,7 @@ export default function PerformanceModal({ onClose }) {
                     <span style={metaChip}>{run.threads} threads</span>
                     <span style={metaChip}>{run.rampUpSeconds}s ramp-up</span>
                     <span style={metaChip}>{run.loops} loops/thread</span>
+                    {run.dataSetRows != null && <span style={metaChip}>{run.dataSetRows} CSV rows</span>}
                     <span style={metaChip}>started {formatClock(run.startedAt)}</span>
                     {run.finishedAt && (
                       <span style={metaChip}>ran for {formatDuration(run.finishedAt - run.startedAt)}</span>
