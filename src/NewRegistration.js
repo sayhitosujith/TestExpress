@@ -102,8 +102,22 @@ function NewRegistration() {
   }, []);
 
   // Auto-save to localStorage
+  //
+  // Each entry can carry a profile picture as a base64 data URL, and this
+  // array only ever grows -- nothing here ever prunes it. A full origin quota
+  // (a few MB, shared with every other key this app writes) is reachable
+  // after enough registrations, and setItem throws synchronously when it is.
+  // Uncaught, that exception fires inside a render-phase effect with no
+  // route error boundary to catch it, which took the whole app down with a
+  // blank "Unexpected Application Error!" screen on every registration
+  // afterwards -- not just this one. AuthContext's persistSession guards its
+  // own write the same way, for the same reason.
   useEffect(() => {
-    localStorage.setItem("registeredUsers", JSON.stringify(users));
+    try {
+      localStorage.setItem("registeredUsers", JSON.stringify(users));
+    } catch (e) {
+      console.warn("[registration] registeredUsers was not saved locally:", e.message);
+    }
   }, [users]);
 
   // Unique ID generator
