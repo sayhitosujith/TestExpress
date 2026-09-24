@@ -22,11 +22,14 @@ if (gmailUser && gmailAppPassword) {
   transporter = nodemailer.createTransport({
     // Explicit host/port/STARTTLS rather than the `service: 'gmail'`
     // shorthand, which resolves to port 465 (implicit TLS). That port timed
-    // out connecting from Render -- a network-level block, not a rejected
-    // credential -- and 587 is the other port Gmail accepts submissions on.
+    // out connecting from Render; switching to 587 then failed faster and
+    // more specifically -- ENETUNREACH on smtp.gmail.com's IPv6 address.
+    // Render's network has no outbound IPv6 route, so `family: 4` is what
+    // actually matters here; the port switch alone was not the fix.
     host: 'smtp.gmail.com',
     port: 587,
     secure: false,
+    family: 4,
     auth: { user: gmailUser, pass: gmailAppPassword },
   });
 }
