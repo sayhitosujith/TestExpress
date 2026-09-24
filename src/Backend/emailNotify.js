@@ -20,7 +20,13 @@ const APP_ORIGIN = (process.env.APP_URL || 'https://testexpress-qa.netlify.app')
 let transporter = null;
 if (gmailUser && gmailAppPassword) {
   transporter = nodemailer.createTransport({
-    service: 'gmail',
+    // Explicit host/port/STARTTLS rather than the `service: 'gmail'`
+    // shorthand, which resolves to port 465 (implicit TLS). That port timed
+    // out connecting from Render -- a network-level block, not a rejected
+    // credential -- and 587 is the other port Gmail accepts submissions on.
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     auth: { user: gmailUser, pass: gmailAppPassword },
   });
 }
