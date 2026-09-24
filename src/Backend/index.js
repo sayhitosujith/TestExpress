@@ -62,6 +62,14 @@ app.use(express.json({ limit: '25mb' }));
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
+// Whether Gmail is configured, nothing more. Read-only and unauthenticated on
+// purpose: it exposes no secret, only whether one is present, and answers the
+// question "did GMAIL_USER/GMAIL_APP_PASSWORD ever actually reach this
+// environment" without pulling server logs to find out.
+app.get('/health/email', (req, res) => {
+  res.json({ configured: require('./emailNotify').isConfigured() });
+});
+
 // Sign-in, verified server-side against a bcrypt hash. Replaces the plaintext
 // comparison App.js used to do against localStorage, which was both readable in
 // devtools and skippable by editing it. Answers 501 with setup steps when there
