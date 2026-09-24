@@ -399,7 +399,13 @@ function Welcome() {
   };
 
   return (
-    <div className="hp min-h-screen bg-[#0b1120]">
+    // pb-28 reserves room for the fixed mobile CTA bar at the bottom of the
+    // page (see "Floating CTA" below) -- without it, the bar sits on top of
+    // whatever section happens to be last in view rather than below it,
+    // permanently hiding a slice of real content behind a bar that never
+    // moves. md:pb-0 because that bar is md:hidden and desktop has nothing
+    // fixed to leave room for.
+    <div className="hp min-h-screen bg-[#0b1120] pb-28 md:pb-0">
 
       {/* ── Full-page loader ─────────────────────────────────── */}
       <PageLoader />
@@ -521,13 +527,18 @@ function Welcome() {
               to the sign-in page was offering the product to the one person who
               cannot use it yet. */}
           <div className="flex items-center gap-3">
+            {/* Hidden below md: three icons plus the hamburger button do not
+                fit beside the logo under ~360px wide, and used to push the
+                button itself off-screen -- the one thing on this row a phone
+                actually needs. The links themselves move into the drawer
+                below rather than disappearing. */}
             <a
               href="https://www.linkedin.com/in/test-express-b365b2438"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackHomePageCta("nav_linkedin")}
               aria-label={`${branding.name} on LinkedIn`}
-              className="p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+              className="hidden md:inline-flex p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 hover:text-[#34d399] transition-colors"
             >
               <FaLinkedin size={20} />
             </a>
@@ -538,17 +549,17 @@ function Welcome() {
               rel="noopener noreferrer"
               onClick={() => trackHomePageCta("nav_twitter")}
               aria-label={`${branding.name} on Twitter`}
-              className="p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+              className="hidden md:inline-flex p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 hover:text-[#34d399] transition-colors"
             >
               <FaXTwitter size={20} />
             </a>
             <a
-              href="https://instagram.com/testexpress"
+              href="https://www.instagram.com/wetestexpress/"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackHomePageCta("nav_instagram")}
               aria-label={`${branding.name} on Instagram`}
-              className="p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+              className="hidden md:inline-flex p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 hover:text-[#34d399] transition-colors"
             >
               <FaInstagram size={20} />
             </a>
@@ -621,6 +632,40 @@ function Welcome() {
               >
                 Open Recorder
               </button>
+              {/* Where the social icons hidden from the nav row above land on
+                  a phone -- moved, not dropped. */}
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <a
+                  href="https://www.linkedin.com/in/test-express-b365b2438"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackHomePageCta("nav_linkedin")}
+                  aria-label={`${branding.name} on LinkedIn`}
+                  className="p-2 rounded-lg text-[#94a3b8] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+                >
+                  <FaLinkedin size={20} />
+                </a>
+                <a
+                  href="https://twitter.com/testexpress"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackHomePageCta("nav_twitter")}
+                  aria-label={`${branding.name} on Twitter`}
+                  className="p-2 rounded-lg text-[#94a3b8] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+                >
+                  <FaXTwitter size={20} />
+                </a>
+                <a
+                  href="https://www.instagram.com/wetestexpress/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackHomePageCta("nav_instagram")}
+                  aria-label={`${branding.name} on Instagram`}
+                  className="p-2 rounded-lg text-[#94a3b8] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+                >
+                  <FaInstagram size={20} />
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -1016,7 +1061,7 @@ function Welcome() {
                   border: "1.5px solid rgba(129,140,248,0.24)",
                 }}
               >
-                <div className="flex items-baseline gap-2">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                   <div className="font-black text-[#f1f5f9]">{name}</div>
                   {version && (
                     <span className="mono text-[10px] font-bold text-[#34d399]">{version}</span>
