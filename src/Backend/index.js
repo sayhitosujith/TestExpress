@@ -1,3 +1,12 @@
+// Some hosts (this app runs on Render) resolve a server's IPv6 address just
+// fine but have no outbound IPv6 route at all -- dns.lookup() defaults to
+// preferring that address anyway, and the connection then fails with
+// ENETUNREACH against a host (smtp.gmail.com, among others) that is
+// perfectly reachable over IPv4. This is Node's own documented fix for that
+// class of environment; it has to run before anything else does DNS
+// resolution, which is why it is the first statement in the file.
+require('dns').setDefaultResultOrder('ipv4first');
+
 const express = require('express');
 const cors = require('cors');
 // By absolute path, not from the working directory. Started from the repo
