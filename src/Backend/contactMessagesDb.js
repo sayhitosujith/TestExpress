@@ -5,6 +5,7 @@
 // createCollectionStore for the same reason every other online store is —
 // one schema round-trip and one upsert query, not a copy of both per table.
 const crypto = require('crypto');
+const pool = require('./db');
 const { createCollectionStore } = require('./collectionStore');
 
 const store = createCollectionStore({
@@ -69,4 +70,84 @@ async function list({ limit = 500 } = {}) {
   return rows.sort((a, b) => String(b.submittedAt || '').localeCompare(String(a.submittedAt || '')));
 }
 
-module.exports = { submit, list, isConfigured: store.isConfigured };
+/**
+ * One submission by id, or null when there is no database or no match.
+ *
+ * A raw query rather than filtering `list()`: the reply route needs exactly
+ * one row out of a table that only grows, and reading all of them to find it
+ * is the query this bypasses.
+ *
+ * @param {string} id
+ * @returns {Promise<object|null>}
+ */
+async function get(id) {
+  const key = String(id || '').trim();
+  if (!key || !store.isConfigured()) return null;
+  await store.init();
+  const { rows } = await pool.query(
+    'SELECT data FROM contact_messages WHERE message_key = $1',
+    [key],
+  );
+  return rows[0] ? rows[0].data : null;
+}
+
+/**
+ * Appends an admin's reply to a submission's history and stores it.
+ *
+ * A list rather than a single "replied" field: a submitter can be answered
+ * more than once, and each reply is worth keeping rather than overwriting the
+ * one before it. The record itself is otherwise untouched -- the reply is
+ * appended to the same JSONB `list()` already reads, so the panel shows it
+ * without a schema change.
+ *
+ * @param {string} id
+ * @param {{message: string, repliedBy?: string}} fields
+ * @returns {Promise<object>} the updated record.
+ * @throws {Error} `notFound: true` when `id` matches no submission.
+ */
+async function addReply(id, { message, repliedBy }) {
+  const record = await get(id);
+  if (!record) {
+    const err = new Error('Message not found');
+    err.notFound = true;
+    throw err;
+  }
+  const updated = {
+    ...record,
+    replies: [
+      ...(record.replies || []),
+      {
+        message: String(message).trim(),
+        sentAt: new Date().toISOString(),
+        sentBy: repliedBy || null,
+      },
+    ],
+  };
+  await store.upsert(updated);
+  return updated;
+}
+
+/**
+ * Permanently deletes the given submissions. The one place this table is
+ * ever pruned -- everything else about it is append-only, so this is a
+ * deliberate admin action rather than something a route reaches for lightly.
+ *
+ * @param {string[]} ids
+ * @returns {Promise<{deleted: number}>}
+ */
+async function removeMany(ids) {
+  const keys = (Array.isArray(ids) ? ids : [])
+    .map((id) => String(id || '').trim())
+    .filter(Boolean);
+  if (!keys.length || !store.isConfigured()) return { deleted: 0 };
+  return store.removeMany(keys);
+}
+
+module.exports = {
+  submit,
+  list,
+  get,
+  addReply,
+  removeMany,
+  isConfigured: store.isConfigured,
+};

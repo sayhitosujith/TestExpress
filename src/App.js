@@ -19,6 +19,8 @@ import { landingAfterLogin } from "./routeAccess";
 // Sign in with Google. Google draws the button and collects the credentials —
 // see the note at the top of that module for why that division matters.
 import GoogleSignIn from "./GoogleSignIn";
+// Shared with VerifyAccessKey.jsx — see the note there for why one copy.
+import { sessionFrom } from "./sessionFrom";
 
 /**
  * Where the email of someone who ticked "Remember Me" is kept.
@@ -120,38 +122,6 @@ function App() {
     document.removeEventListener("mousemove", onDrag);
     document.removeEventListener("mouseup", stopDrag);
   };
-
-  /**
-   * The session object, from an account the server has just vouched for.
-   *
-   * Shared by the password path and the Google one, because "what a signed-in
-   * user is" must not depend on how they proved it — two copies of this is how
-   * one route ends up carrying a field the other does not, and the plan gating
-   * downstream reads `payment`.
-   *
-   * @param {object} account the account as the server returned it.
-   * @param {string} [typedEmail] what was in the form, as a last resort for the
-   *   display name.
-   * @returns {object} the session.
-   */
-  const sessionFrom = (account, typedEmail) => ({
-    name:
-      `${account.firstName || ""} ${account.lastName || ""}`.trim() ||
-      account.name ||
-      account.email ||
-      typedEmail ||
-      "",
-    firstName: account.firstName || "",
-    lastName: account.lastName || "",
-    email: account.email,
-    role: account.role || "CUSTOMER",
-    // Carried because everything downstream gates on it — without this a
-    // Google sign-in would land on the floor plan whatever the account is on.
-    payment: account.payment || "",
-    // How they got in. Nothing branches on it yet; it is here so that a screen
-    // asking "can this account change its password" has an answer.
-    authProvider: account.authProvider || "password",
-  });
 
   /**
    * Opens the session and leaves, whichever way the account was proved.

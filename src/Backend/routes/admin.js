@@ -25,6 +25,7 @@ const express = require('express');
 const { store, registrationKey } = require('../registrationsDb');
 const { isHashed } = require('../passwords');
 const { publicUser, findByKey, requireConfig, PRIVILEGED_ROLES } = require('../accounts');
+const { isAccessKeyExpired } = require('../accessKeys');
 const { authenticate, requireRole } = require('../requireRole');
 // The recycle bin behind Delete/Undo. Its own module because it is a store, not
 // a route, and because nothing else in the app should have to know it exists.
@@ -110,7 +111,14 @@ const adminView = (user) => ({
   // A password OR a federated identity. Without the second half, an account
   // created through Google — which has no hash by design — would show in this
   // table as unable to sign in, next to a switch that is already on.
-  canSignIn: (isHashed(user.passwordHash) || Boolean(user.authProvider)) && !user.signInDisabled,
+  //
+  // A third reason, alongside the other two: a temporary access key that
+  // expired unused. Left out, this column would say "Yes" right up to the
+  // moment /login started refusing it.
+  canSignIn:
+    (isHashed(user.passwordHash) || Boolean(user.authProvider)) &&
+    !user.signInDisabled &&
+    !isAccessKeyExpired(user.accessKeyExpiresAt),
 });
 
 /**
@@ -241,7 +249,11 @@ router.post('/accounts/:key/password', requireConfig, async (req, res) => {
       res.status(404).json({ error: 'No account with that key' });
       return;
     }
-    await store.upsert({ ...stored, password });
+    // A password an administrator chose and is about to relay themselves is
+    // not time-limited the way an emailed access key is -- clearing this is
+    // what "an administrator resets it" means for an account whose key
+    // expired before it was ever used.
+    await store.upsert({ ...stored, password, accessKeyExpiresAt: null });
     const saved = await findByKey(req.params.key);
     res.json({ account: adminView(saved) });
   } catch (err) {

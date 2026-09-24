@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Typography, Input, Button } from "@material-tailwind/react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
-import { MdFileCopy } from "react-icons/md";
 import emailjs from "@emailjs/browser";
 import { logAction } from "./api/actions";
 // Shared with the Super Admin editor, so a face uploaded on either screen is
@@ -20,13 +18,12 @@ import { openCheckout } from "./api/checkout";
 // The credentials that step needs to sign the account in afterwards. In memory
 // for one navigation — see ./pendingSignIn for why not storage.
 import { remember } from "./pendingSignIn";
-import { saveRegistration } from "./api/registrations";
 // Registration goes through the backend so the password is hashed there.
 import { register } from "./api/auth";
 // This screen is on a public route, so which roles it may hand out depends on
 // who is filling it in — see assignableRoles.
 import { useAuth } from "./context/AuthContext";
-import { assignableRoles } from "./routeAccess";
+import { assignableRoles, PRIVILEGED_ROLES, roleAllowed } from "./routeAccess";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
@@ -35,6 +32,11 @@ function NewRegistration() {
   // no session at all, which is exactly the case assignableRoles narrows.
   const { user: actingUser } = useAuth() || {};
   const offeredRoles = assignableRoles(actingUser && actingUser.role);
+  // An administrator adding someone else's account, as opposed to a visitor
+  // signing themselves up. Only this case skips the password fields below —
+  // the server issues a temporary access key and emails it instead, so an
+  // administrator never has to invent a password and relay it by hand.
+  const isAdminCreating = roleAllowed(PRIVILEGED_ROLES, actingUser && actingUser.role);
 
   const sendRegistrationEmail = async (user) => {
     const templateParams = {
@@ -68,20 +70,6 @@ function NewRegistration() {
     role: "",
     profilePicture: "",
   };
-  // The Registered Users grid is off by default — this is a public page, so the
-  // list of everyone who has signed up is not something to show unasked. The
-  // toggle below turns it back on and the choice is remembered.
-  //
-  // Read in the initialiser rather than a mount effect: the persist effect below
-  // runs first on mount, so a restoring effect would only ever read back the
-  // value it had just overwritten and the saved setting would never survive.
-  const [showGrid, setShowGrid] = useState(() => {
-    const savedSetting = localStorage.getItem("showRegisteredUsersGrid");
-    return savedSetting !== null ? JSON.parse(savedSetting) : false;
-  });
-  useEffect(() => {
-    localStorage.setItem("showRegisteredUsersGrid", JSON.stringify(showGrid));
-  }, [showGrid]);
   const [users, setUsers] = useState(() => {
     const storedUsers = localStorage.getItem("registeredUsers");
     return storedUsers ? JSON.parse(storedUsers) : [];
@@ -101,14 +89,6 @@ function NewRegistration() {
   );
   const [editIndex, setEditIndex] = useState(null);
   const [phoneError, setPhoneError] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedUsers, setSelectedUsers] = useState([]);
-
-  const usersPerPage = 5;
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
-  const totalPages = Math.ceil(users.length / usersPerPage);
 
   // Load users on mount
   useEffect(() => {
@@ -192,7 +172,10 @@ function NewRegistration() {
     // account nobody can sign in to, so there it is still required.
     const changingPassword = !!password || !!confirmPassword;
     const editing = editIndex !== null;
-    const passwordRequired = !editing || !users[editIndex]?.passwordHash;
+    // An administrator adding someone else's account never types a password
+    // for them — see isAdminCreating and the server-issued access key it
+    // triggers — so the usual "a password is required" rule does not apply.
+    const passwordRequired = !isAdminCreating && (!editing || !users[editIndex]?.passwordHash);
 
     if (
       !firstName ||
@@ -312,11 +295,16 @@ function NewRegistration() {
         payment,
         role,
         profilePicture: formData.profilePicture,
-        // A paid plan starts unable to sign in, and the checkout is the only
-        // thing that switches this off. The account is real either way — the
-        // form was filled in and nothing about it is lost — it simply cannot be
-        // used until the plan it chose is settled. Free plans are unaffected.
-        ...(paidPlan ? { signInDisabled: true } : {}),
+        // A paid plan starts unable to sign in, and the checkout below is the
+        // only thing that switches this off. That rule is for a visitor
+        // signing themselves up — the same browser continues straight to
+        // payment. An administrator adding someone else's account has no
+        // such next step to redirect through, so the account they created
+        // would be silently stuck disabled with an access key that cannot
+        // actually be used. Billing for an admin-provisioned account is the
+        // administrator's business to arrange, not something this form can
+        // enforce for them.
+        ...(paidPlan && !isAdminCreating ? { signInDisabled: true } : {}),
       };
 
       // As in the edit path: the backend hashes, and what comes back is what is
@@ -344,13 +332,16 @@ function NewRegistration() {
       }).catch((err) => console.warn("logAction failed:", err.message));
 
       // Where a paid plan goes next. The account is real but cannot sign in
-      // yet — see the signInDisabled below — so it is walked through the
+      // yet — see the signInDisabled above — so it is walked through the
       // payment step, which is the only thing that switches sign-in on.
+      // Skipped entirely for an administrator creating someone else's
+      // account: there is no self-checkout to send them through, and their
+      // own browser paying for another account is not what this step means.
       //
       // The credentials are held in memory for that one navigation so the
       // person is signed in automatically when it settles; losing them (a
       // reload) costs the convenience and nothing else.
-      if (paidPlan) {
+      if (paidPlan && !isAdminCreating) {
         try {
           const { checkout } = await openCheckout({ email, plan: payment });
           remember({ email, password });
@@ -380,71 +371,6 @@ function NewRegistration() {
     setFormData(emptyForm);
     setEditIndex(null);
     setPhoneError("");
-  };
-
-  // Edit user
-  const handleEdit = (index) => {
-    const userToEdit = users[index];
-    // Password fields start empty: nothing readable is stored to prefill them
-    // with, and an edit therefore requires the password to be set again.
-    setFormData({ ...userToEdit, password: "", confirmPassword: "" });
-    setEditIndex(index);
-    setPhoneError("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // Delete user
-  const handleDelete = (index) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
-    const updatedUsers = users.filter((_, i) => i !== index);
-    setUsers(updatedUsers);
-  };
-
-  // Clone user
-  const handleClone = (user) => {
-    const clonedUser = {
-      ...user,
-      id: generateUniqueId(),
-      email: `copy_${Date.now()}_${user.email}`,
-    };
-    setUsers([...users, clonedUser]);
-
-    // A clone is a new record, not an edit: it carries a fresh id, which is what
-    // the online store keys on, so this inserts rather than overwriting the
-    // original. Fire-and-forget like the other save calls.
-    saveRegistration(clonedUser).catch((err) =>
-      console.warn("saveRegistration failed:", err.message),
-    );
-  };
-
-  // Selection
-  const handleSelectUser = (email) => {
-    setSelectedUsers((prev) =>
-      prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email],
-    );
-  };
-
-  const handleSelectAll = () => {
-    const currentEmails = currentUsers.map((u) => u.email);
-    const allSelected = currentEmails.every((email) =>
-      selectedUsers.includes(email),
-    );
-    if (allSelected) {
-      setSelectedUsers((prev) =>
-        prev.filter((email) => !currentEmails.includes(email)),
-      );
-    } else {
-      setSelectedUsers((prev) => [...new Set([...prev, ...currentEmails])]);
-    }
-  };
-
-  const handleBulkDelete = () => {
-    if (!window.confirm("Delete selected users?")) return;
-    const updatedUsers = users.filter(
-      (user) => !selectedUsers.includes(user.email),
-    );
-    setUsers(updatedUsers);
-    setSelectedUsers([]);
   };
 
   return (
@@ -511,29 +437,43 @@ function NewRegistration() {
                 <p className="text-red-500 text-sm mt-1">{phoneError}</p>
               )}
             </div>
-            {/* On an edit these start empty and stay optional, so the label has
-                to say so — an empty required-looking box is how someone ends up
-                inventing a new password just to change a phone number. */}
-            <Input
-              label={editIndex !== null ? "New Password (optional)" : "Password"}
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-            />
-            <Input
-              label={
-                editIndex !== null ? "Confirm New Password" : "Confirm Password"
-              }
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-            />
-            {editIndex !== null && (
-              <p className="text-gray-500 text-xs -mt-4 md:col-span-2">
-                Leave both password boxes empty to keep the current password.
+            {/* An administrator adding someone else's account never types a
+                password here — the server issues a temporary access key and
+                emails it to the new account instead, so nobody has to invent
+                one and relay it out of band. */}
+            {isAdminCreating ? (
+              <p className="text-gray-500 text-sm md:col-span-2">
+                An access key will be generated and emailed to this person — no
+                password needed here.
               </p>
+            ) : (
+              <>
+                {/* On an edit these start empty and stay optional, so the label
+                    has to say so — an empty required-looking box is how someone
+                    ends up inventing a new password just to change a phone
+                    number. */}
+                <Input
+                  label={editIndex !== null ? "New Password (optional)" : "Password"}
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+                <Input
+                  label={
+                    editIndex !== null ? "Confirm New Password" : "Confirm Password"
+                  }
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                />
+                {editIndex !== null && (
+                  <p className="text-gray-500 text-xs -mt-4 md:col-span-2">
+                    Leave both password boxes empty to keep the current password.
+                  </p>
+                )}
+              </>
             )}
             <Input
               label="Zip Code"
@@ -613,162 +553,6 @@ function NewRegistration() {
               Login
             </Link>
           </Typography>
-
-          {/* Only worth offering when there is something to show; with no users
-              registered the toggle reveals an empty section. */}
-          {users.length > 0 && (
-            <div className="flex justify-center items-center gap-3 mt-8 mb-6">
-              <span className="font-semibold text-gray-700">
-                {showGrid ? "Hide Registered Users" : "Show Registered Users"}
-              </span>
-
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={showGrid}
-                  onChange={() => setShowGrid(!showGrid)}
-                />
-                <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-600 transition-colors"></div>
-                <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-              </label>
-            </div>
-          )}
-
-          {users.length > 0 && showGrid && (
-            <div className="mt-12">
-              <h3 className="text-xl font-semibold text-center mb-6 text-green-700">
-                Registered Users
-              </h3>
-
-              {selectedUsers.length > 0 && (
-                <div className="mb-4 text-center">
-                  <Button color="black" onClick={handleBulkDelete}>
-                    Delete Selected ({selectedUsers.length})
-                  </Button>
-                </div>
-              )}
-
-              <div className="overflow-x-auto rounded-xl shadow">
-                <table className="w-full text-sm text-left border-collapse">
-                  <thead className="bg-green-600 text-white">
-                    <tr>
-                      <th className="p-3">
-                        <input
-                          type="checkbox"
-                          onChange={handleSelectAll}
-                          checked={
-                            currentUsers.length > 0 &&
-                            currentUsers.every((u) =>
-                              selectedUsers.includes(u.email),
-                            )
-                          }
-                        />
-                      </th>
-                      <th className="p-3">Profile</th>
-                      <th className="p-3">Name</th>
-                      <th className="p-3">Email</th>
-                      <th className="p-3">Phone</th>
-                      <th className="p-3">Zip</th>
-                      <th className="p-3">Payment</th>
-                      <th className="p-3">Role</th>
-                      <th className="p-3">Password</th>
-                      <th className="p-3 text-center">Actions</th>
-                    </tr>
-                  </thead>
-
-                  <tbody className="bg-gray-50">
-                    {currentUsers.map((user) => {
-                      const realIndex = users.findIndex(
-                        (u) => u.email === user.email,
-                      );
-
-                      return (
-                        <tr
-                          key={user.id}
-                          className="border-b hover:bg-green-50"
-                        >
-                          <td className="p-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedUsers.includes(user.email)}
-                              onChange={() => handleSelectUser(user.email)}
-                            />
-                          </td>
-                          <td className="p-3">
-                            {user.profilePicture ? (
-                              <img
-                                src={user.profilePicture}
-                                alt="Profile"
-                                className="h-10 w-10 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-xs">
-                                N/A
-                              </div>
-                            )}
-                          </td>
-                          <td className="p-3">
-                            {user.firstName} {user.lastName}
-                          </td>
-                          <td className="p-3">{user.email}</td>
-                          <td className="p-3">{user.phoneNumber}</td>
-                          <td className="p-3">{user.zipCode}</td>
-                          <td className="p-3">{user.payment}</td>
-                          <td className="p-3">{user.role}</td>
-                          {/* Passwords are bcrypt hashes now and there is
-                              nothing meaningful — or safe — to show here. */}
-                          <td className="p-3 text-gray-400">••••••••</td>
-                          <td className="p-3 text-center flex justify-center gap-3">
-                            <button
-                              onClick={() => handleEdit(realIndex)}
-                              className="bg-green-100 p-2 rounded-full hover:bg-green-200"
-                            >
-                              <PencilIcon className="h-5 w-5 text-green-600" />
-                            </button>
-
-                            <button
-                              onClick={() => handleClone(user)}
-                              className="bg-green-100 p-2 rounded-full hover:bg-green-200"
-                            >
-                              <MdFileCopy className="h-5 w-5 text-green-600" />
-                            </button>
-
-                            <button
-                              onClick={() => handleDelete(realIndex)}
-                              className="bg-red-100 p-2 rounded-full hover:bg-red-200"
-                            >
-                              <TrashIcon className="h-5 w-5 text-black-600" />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-
-                <div className="flex justify-center items-center gap-4 mt-6">
-                  <Button
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    color="black"
-                  >
-                    Previous
-                  </Button>
-                  <span className="font-semibold">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    color="black"
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

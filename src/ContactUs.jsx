@@ -143,7 +143,7 @@ function ContactUs() {
         >
           {status === "sent" && (
             <div className="rounded-lg border border-[#34d399]/30 bg-[#34d399]/10 text-[#6ee7b7] text-sm font-medium px-4 py-3">
-              Thanks — your message has been sent. We'll be in touch.
+              Thanks — your message has been sent. We'll be in touch with in 24 hours. you will also receive a copy of your message in your inbox.
             </div>
           )}
           {status === "error" && (

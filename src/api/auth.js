@@ -61,6 +61,60 @@ export async function register(user) {
 }
 
 /**
+ * Checks an administrator-issued access key, without using it up.
+ *
+ * The first thing VerifyAccessKey.jsx does, before it shows a password field
+ * at all -- whether the link someone clicked is real and still good.
+ * resetAccessKey below checks the same two things again server-side; this
+ * call exists purely so the page can say so up front rather than after
+ * somebody has already typed a new password.
+ *
+ * @param {string} email
+ * @param {string} key the plaintext access key from the email link.
+ * @returns {Promise<{valid: boolean, name: string}>}
+ * @throws {Error} with the server's own message — invalid or expired.
+ */
+export async function verifyAccessKey(email, key) {
+  try {
+    const { data } = await axios.post(`${API_BASE}/api/auth/verify-access-key`, { email, key });
+    return data;
+  } catch (err) {
+    throw new Error(apiMessage(err, "That access key could not be verified"));
+  }
+}
+
+/**
+ * Spends an access key on a real, self-chosen password.
+ *
+ * An access key is a one-time credential (see accessKeys.js on the server);
+ * this is the one action that retires it, and it signs the account in in the
+ * same request when sign-in is not otherwise blocked — proving the key is as
+ * much proof of identity as a normal login's password.
+ *
+ * @param {string} email
+ * @param {string} key the plaintext access key.
+ * @param {string} newPassword
+ * @returns {Promise<{reset: boolean, signedIn: boolean, user?: object,
+ *   token?: string, expiresAt?: string, error?: string}>} `signedIn` is false
+ *   when the password was set but the account is disabled for an unrelated
+ *   reason — `error` then explains why, without this having failed.
+ * @throws {Error} with the server's own message when the key itself was
+ *   rejected — invalid, expired, or too short a password.
+ */
+export async function resetAccessKey(email, key, newPassword) {
+  try {
+    const { data } = await axios.post(`${API_BASE}/api/auth/reset-access-key`, {
+      email,
+      key,
+      newPassword,
+    });
+    return data;
+  } catch (err) {
+    throw new Error(apiMessage(err, "That access key could not be used"));
+  }
+}
+
+/**
  * Whether this install offers Google sign-in, and under which client id.
  *
  * Asked of the backend rather than read from the bundle: the client id belongs

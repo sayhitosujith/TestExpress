@@ -17,6 +17,7 @@ import Checkout from './Checkout';
 import Profile from './Profile';
 import HomePage from './HomePage';
 import ContactUs from './ContactUs';
+import VerifyAccessKey from './VerifyAccessKey';
 import { SettingsProvider } from "./context/SettingsContext";
 import { AuthProvider } from './context/AuthContext';
 import { TreatmentsProvider } from './context/TreatmentsContext';
@@ -84,6 +85,9 @@ const publicPaths = [
   "/my-app",
   "/HomePage",
   "/Contact",
+  // Reached from an access-key email before anyone is signed in — it carries
+  // its own credential in the URL, same reasoning as /Checkout above.
+  "/verify-access-key",
 ];
 
 const wrap = (path, el) => (publicPaths.includes(path) ? el : <AuthRoute>{el}</AuthRoute>);
@@ -110,6 +114,10 @@ const router = createBrowserRouter([
   {
     path: "/Contact",
     element: wrap("/Contact", <ContactUs />),
+  },
+  {
+    path: "/verify-access-key",
+    element: wrap("/verify-access-key", <VerifyAccessKey />),
   },
   {
     path: "/Checkout",

@@ -26,6 +26,8 @@ const google = require('../googleAuth');
 const { store, registrationKey } = require('../registrationsDb');
 const { verifyPassword } = require('../passwords');
 const { issue } = require('../sessions');
+const { generateAccessKey, accessKeyExpiry, isAccessKeyExpired } = require('../accessKeys');
+const { sendAccountAccessKey } = require('../emailNotify');
 // Registration is public but writes the role, so it needs to know whether the
 // caller happens to be a Super Admin. `identify` attaches one if the request
 // carries a token and shrugs if it does not.
@@ -36,6 +38,7 @@ const {
   publicUser,
   normalisedEmail,
   resolveRole,
+  isPrivilegedRole,
   findAllByEmail,
   findByEmail,
   findByKey,
@@ -80,6 +83,23 @@ router.post('/login', requireConfig, async (req, res) => {
       });
       return;
     }
+    // A temporary access key that was never used in time. Checked after the
+    // password for the same reason signInDisabled is: the password already
+    // being right means nothing more is revealed by naming why sign-in still
+    // refuses it.
+    if (isAccessKeyExpired(user.accessKeyExpiresAt)) {
+      res.status(403).json({
+        error: 'Your access key has expired. Ask an administrator to send a new one.',
+      });
+      return;
+    }
+    // A key that worked has done its job -- clearing it here means this check
+    // only ever runs once per key, rather than racing the clock on every
+    // future sign-in. Awaited so a login response never claims success before
+    // the account it describes has actually stopped being time-limited.
+    if (user.accessKeyExpiresAt) {
+      await store.upsert({ ...user, accessKeyExpiresAt: null });
+    }
     // Keyed on the registration key, not the email: the key is the record's
     // identity, and an account whose address is later corrected must not have
     // its session silently point at nothing -- or, worse, at whoever else is
@@ -89,6 +109,126 @@ router.post('/login', requireConfig, async (req, res) => {
       email: normalisedEmail(user.email),
     });
     res.json({ user: publicUser(user), token, expiresAt });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// A real password, chosen by the account holder, is required before this
+// long-lived route lets anyone in with it.
+const MIN_PASSWORD_LENGTH = 8;
+
+/**
+ * The account an access key belongs to, or null.
+ *
+ * Same shape as /login's own search -- every candidate on the address is
+ * tried, not just the first, for the reason findAllByEmail exists: rows can
+ * share an address. `accessKeyExpiresAt` being unset rules out a match
+ * against an ordinary chosen password reaching this endpoint by coincidence
+ * -- this is specifically for a key an administrator issued, not a second
+ * way to try a guessed password.
+ *
+ * @param {string} email
+ * @param {string} key the plaintext access key.
+ * @returns {Promise<object|null>}
+ */
+async function findByAccessKey(email, key) {
+  const candidates = await findAllByEmail(email);
+  for (const candidate of candidates) {
+    if (candidate.accessKeyExpiresAt && (await verifyPassword(key, candidate.passwordHash))) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+/**
+ * POST /api/auth/verify-access-key  { email, key }
+ *
+ * What the "verify access key" page calls before it ever shows a password
+ * field -- whether this link is real and still good, without changing
+ * anything yet. /reset-access-key checks the same two things again rather
+ * than trust this call's answer; verifying twice costs one extra bcrypt
+ * compare and closes the gap between "was valid when checked" and "still
+ * valid when used".
+ */
+router.post('/verify-access-key', requireConfig, async (req, res) => {
+  const { email, key } = req.body || {};
+  try {
+    const user = await findByAccessKey(email, key);
+    if (!user) {
+      res.status(401).json({ error: 'This access key is invalid.' });
+      return;
+    }
+    if (isAccessKeyExpired(user.accessKeyExpiresAt)) {
+      res.status(401).json({
+        error: 'This access key has expired. Ask an administrator to send a new one.',
+      });
+      return;
+    }
+    res.json({
+      valid: true,
+      name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/auth/reset-access-key  { email, key, newPassword }
+ *
+ * What that page's form actually submits: the key proves who is asking, and
+ * in the same request it is replaced by a password only this person has ever
+ * typed -- an access key is a one-time credential by design (see
+ * accessKeys.js), and letting it go on working after this step would leave
+ * it as a permanent password nobody chose. Signs the account in immediately
+ * afterwards, since proving the key is exactly as much proof of identity as
+ * a normal login's password is.
+ */
+router.post('/reset-access-key', requireConfig, async (req, res) => {
+  const { email, key, newPassword } = req.body || {};
+  try {
+    if (typeof newPassword !== 'string' || newPassword.length < MIN_PASSWORD_LENGTH) {
+      res.status(400).json({
+        error: `a password of at least ${MIN_PASSWORD_LENGTH} characters is required`,
+      });
+      return;
+    }
+
+    const user = await findByAccessKey(email, key);
+    if (!user) {
+      res.status(401).json({ error: 'This access key is invalid.' });
+      return;
+    }
+    if (isAccessKeyExpired(user.accessKeyExpiresAt)) {
+      res.status(401).json({
+        error: 'This access key has expired. Ask an administrator to send a new one.',
+      });
+      return;
+    }
+
+    await store.upsert({ ...user, password: newPassword, accessKeyExpiresAt: null });
+    const saved = await findByEmail(user.email);
+
+    if (saved.signInDisabled) {
+      // The password change still happened -- only the account is disabled,
+      // a separate and pre-existing state this request has no reason to
+      // touch. Reported plainly rather than as an error, since nothing here
+      // actually failed.
+      res.json({
+        reset: true,
+        signedIn: false,
+        error: 'Password set, but this account has been disabled. Ask an administrator to switch it back on.',
+      });
+      return;
+    }
+
+    const { token, expiresAt } = issue({
+      key: registrationKey(saved),
+      email: normalisedEmail(saved.email),
+    });
+    res.json({ reset: true, signedIn: true, user: publicUser(saved), token, expiresAt });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -142,6 +282,20 @@ router.post('/register', requireConfig, identify, async (req, res) => {
       };
     }
 
+    // An administrator adding someone else's account, with no password typed
+    // in for them to relay: rather than force one to be invented, the server
+    // issues a temporary access key and emails it directly to the new
+    // account. `stored` being absent is what tells the two cases apart from
+    // an edit -- an administrator correcting their own record already has a
+    // password, so this never fires for one.
+    let issuedAccessKey = null;
+    let issuedAccessKeyExpiresAt = null;
+    if (!stored && !user.password && !user.passwordHash && req.account && isPrivilegedRole(req.account.role)) {
+      issuedAccessKey = generateAccessKey();
+      issuedAccessKeyExpiresAt = accessKeyExpiry();
+      user = { ...user, password: issuedAccessKey, accessKeyExpiresAt: issuedAccessKeyExpiresAt };
+    }
+
     if (!user.password && !user.passwordHash) {
       res.status(400).json({ error: 'a password is required' });
       return;
@@ -164,6 +318,21 @@ router.post('/register', requireConfig, identify, async (req, res) => {
     // actually persisted — including the hash the store generated, which is what
     // makes the record re-syncable without the plaintext ever coming back.
     const saved = await findByEmail(user.email);
+
+    if (issuedAccessKey && saved) {
+      const { sent, reason } = await sendAccountAccessKey({
+        name: `${saved.firstName || ''} ${saved.lastName || ''}`.trim() || saved.email,
+        email: saved.email,
+        phoneNumber: saved.phoneNumber,
+        payment: saved.payment,
+        role: saved.role,
+        canSignIn: !saved.signInDisabled,
+        accessKey: issuedAccessKey,
+        accessKeyExpiresAt: issuedAccessKeyExpiresAt,
+      });
+      if (!sent) console.error('[auth] access key email not sent:', reason);
+    }
+
     res.json({
       key,
       user: publicUser(saved || user),
