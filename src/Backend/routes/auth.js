@@ -282,6 +282,21 @@ router.post('/register', requireConfig, identify, async (req, res) => {
       };
     }
 
+    // Refused before anything else about a NEW registration is decided: two
+    // rows sharing an email is exactly what findAllByEmail's own comment
+    // warns is "a real possibility rather than a theoretical one" -- and it
+    // used to be, here, since the only duplicate check was a client-side
+    // array that a failed localStorage load (or a second browser) could
+    // silently skip. /login already copes with duplicates it finds, but
+    // never creating a second one is simpler than every reader having to.
+    if (!stored && (await findAllByEmail(user.email)).length) {
+      const err = new Error(
+        'An account with this email already exists. Sign in instead, or ask an administrator to reset its password.',
+      );
+      err.status = 409;
+      throw err;
+    }
+
     // An administrator adding someone else's account, with no password typed
     // in for them to relay: rather than force one to be invented, the server
     // issues a temporary access key and emails it directly to the new
