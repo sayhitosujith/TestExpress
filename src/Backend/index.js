@@ -62,12 +62,17 @@ app.use(express.json({ limit: '25mb' }));
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-// Whether Gmail is configured, nothing more. Read-only and unauthenticated on
-// purpose: it exposes no secret, only whether one is present, and answers the
-// question "did GMAIL_USER/GMAIL_APP_PASSWORD ever actually reach this
-// environment" without pulling server logs to find out.
-app.get('/health/email', (req, res) => {
-  res.json({ configured: require('./emailNotify').isConfigured() });
+// Whether Gmail is configured AND actually reachable with those credentials.
+// Read-only and unauthenticated on purpose: it exposes no secret, only
+// whether the env vars are present and whether Gmail accepts them --
+// "configured" alone answers the first question, not the second, and every
+// send path here only logs its real failure server-side rather than
+// surfacing it, so this is the only way to see it without pulling logs.
+app.get('/health/email', async (req, res) => {
+  const emailNotify = require('./emailNotify');
+  const configured = emailNotify.isConfigured();
+  const verified = configured ? await emailNotify.verifyConnection() : { ok: false, reason: 'not configured' };
+  res.json({ configured, verified });
 });
 
 // Sign-in, verified server-side against a bcrypt hash. Replaces the plaintext

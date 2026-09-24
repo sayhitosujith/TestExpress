@@ -29,6 +29,27 @@ function isConfigured() {
   return Boolean(transporter && contactNotifyEmail);
 }
 
+/**
+ * Checks the Gmail SMTP connection and credentials without sending anything.
+ *
+ * `isConfigured()` only means the two env vars were non-empty -- it says
+ * nothing about whether Gmail actually accepts them. This is what surfaces
+ * the real reason a send is silently failing (a stale App Password, a
+ * revoked one, a typo), since every send path here only logs its failure
+ * server-side and answers the caller as if nothing went wrong.
+ *
+ * @returns {Promise<{ok: boolean, reason?: string}>}
+ */
+async function verifyConnection() {
+  if (!transporter) return { ok: false, reason: 'not configured' };
+  try {
+    await transporter.verify();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, reason: err.message };
+  }
+}
+
 // ---- shared HTML template ------------------------------------------------
 // One card, reused by all three emails below, so "professional" is a property
 // of this file rather than something each send function tries to reproduce.
@@ -357,4 +378,5 @@ module.exports = {
   sendContactReply,
   sendAccountAccessKey,
   isConfigured,
+  verifyConnection,
 };
