@@ -307,16 +307,28 @@ function Welcome() {
     return range ? `v${range.replace(/^[^\d]*/, "")}` : undefined;
   };
 
+  // JMeter is a downloaded binary (see the Dockerfile's JMETER_VERSION build
+  // arg), not an npm dependency, so versionOf can't read it -- this constant
+  // is the one other place that number has to be kept in step by hand.
+  const JMETER_VERSION = "v5.6.3";
+
   // Named because they are what the product is genuinely built on, and each is
   // visible in the UI. No logos: hotlinking third-party marks from image search
   // is how a landing page ends up showing the wrong company's logo.
+  //
+  // A version is shown only where the label and the number genuinely refer to
+  // the same thing. Appium and DB Testing show the client library actually
+  // driving them (webdriverio, pg) rather than a server/engine version this
+  // codebase has no way to know. API Automation and Security Testing have no
+  // pinned dependency of their own at all, so they carry the "New" flag
+  // instead of a fabricated number.
   const builtOn = [
     { name: "Playwright",           role: "Real-browser engine and export format", version: versionOf("playwright") },
-    { name: "Appium",               role: "Android & IOS device automation" },
-    { name: "API Automation",       role: "Request, response and contract checks" },
-    { name: "Performance Testing",  role: "Load testing with JMeter" },
-    { name: "Security Testing",     role: "Vulnerability and penetration checks" },
-    { name: "DB Testing",           role: "Data integrity and query validation" },
+    { name: "Appium",               role: "Android & IOS device automation",        version: versionOf("webdriverio") },
+    { name: "API Automation",       role: "Request, response and contract checks", isNew: true },
+    { name: "Performance Testing",  role: "Load testing with JMeter",              version: JMETER_VERSION, isNew: true },
+    { name: "Security Testing",     role: "Vulnerability and penetration checks",  isNew: true },
+    { name: "DB Testing",           role: "Data integrity and query validation",   version: versionOf("pg"), isNew: true },
   ];
 
   // What a tester actually asks before trying this, with the limits left in.
@@ -994,7 +1006,7 @@ function Welcome() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {builtOn.map(({ name, role, version }, i) => (
+            {builtOn.map(({ name, role, version, isNew }, i) => (
               <div
                 key={name}
                 className={`sr d${(i % 6) + 1} rounded-2xl px-6 py-5 transition-all duration-300`}
@@ -1008,6 +1020,14 @@ function Welcome() {
                   <div className="font-black text-[#f1f5f9]">{name}</div>
                   {version && (
                     <span className="mono text-[10px] font-bold text-[#34d399]">{version}</span>
+                  )}
+                  {isNew && (
+                    <span
+                      className="text-[9px] font-black uppercase tracking-[0.08em] text-[#04231a] px-1.5 py-0.5 rounded-full"
+                      style={{ background: "#34d399" }}
+                    >
+                      New
+                    </span>
                   )}
                 </div>
                 <div className="text-xs text-[#94a3b8] mt-1 leading-relaxed">{role}</div>
