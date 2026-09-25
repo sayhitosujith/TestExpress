@@ -18,6 +18,10 @@ import {
 import { PLANS, addedBy, capabilitiesOf, planKind, priceLabel } from "./plans";
 import { VscArrowRight } from "react-icons/vsc";
 import backendPackageJson from "./Backend/package.json";
+// Light or dark, shared with the rest of the app -- see the note at the top
+// of theme.js. This page used to be 100% hardcoded dark; it now joins the
+// same choice everything else already honours.
+import { useAppTheme } from "./theme";
 
 const Icon = ({ size = 22, children, ...rest }) => (
   <svg
@@ -161,6 +165,7 @@ function CountUp({ value }) {
 function Welcome() {
   const navigate = useNavigate();
   const branding = useBranding();
+  const { theme } = useAppTheme();
 
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -366,7 +371,7 @@ function Welcome() {
     <button
       onClick={onClick}
       aria-label="Previous"
-      className="absolute -left-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 border border-white/20 text-white w-10 h-10 rounded-full shadow-lg hover:bg-white/20 transition flex items-center justify-center"
+      className="absolute -left-6 top-1/2 -translate-y-1/2 z-20 bg-black/5 dark:bg-white/10 border border-black/15 dark:border-white/20 text-slate-900 dark:text-white w-10 h-10 rounded-full shadow-lg hover:bg-black/10 dark:hover:bg-white/20 transition flex items-center justify-center"
     >
       <FaChevronLeft size={14} />
     </button>
@@ -376,7 +381,7 @@ function Welcome() {
     <button
       onClick={onClick}
       aria-label="Next"
-      className="absolute -right-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 border border-white/20 text-white w-10 h-10 rounded-full shadow-lg hover:bg-white/20 transition flex items-center justify-center"
+      className="absolute -right-6 top-1/2 -translate-y-1/2 z-20 bg-black/5 dark:bg-white/10 border border-black/15 dark:border-white/20 text-slate-900 dark:text-white w-10 h-10 rounded-full shadow-lg hover:bg-black/10 dark:hover:bg-white/20 transition flex items-center justify-center"
     >
       <FaChevronRight size={14} />
     </button>
@@ -405,7 +410,7 @@ function Welcome() {
     // permanently hiding a slice of real content behind a bar that never
     // moves. md:pb-0 because that bar is md:hidden and desktop has nothing
     // fixed to leave room for.
-    <div className="hp min-h-screen bg-[#0b1120] pb-28 md:pb-0">
+    <div className={`hp min-h-screen bg-[#f8fafc] dark:bg-[#0b1120] pb-28 md:pb-0 ${theme === "dark" ? "dark" : ""}`}>
 
       {/* ── Full-page loader ─────────────────────────────────── */}
       <PageLoader />
@@ -454,10 +459,18 @@ function Welcome() {
           font-weight: 700;
           letter-spacing: 0.12em;
           text-transform: uppercase;
+          /* Light-page default. The dark-mode green (#6ee7b7 on a green wash)
+             fails contrast on white, so light gets its own darker green --
+             see the .dark override below. */
+          color: #15803d;
+          background: rgba(22,163,74,0.10);
+          border: 1px solid rgba(22,163,74,0.28);
+          margin-bottom: 12px;
+        }
+        .dark .section-pill {
           color: #6ee7b7;
           background: rgba(16,185,129,0.14);
-          border: 1px solid rgba(16,185,129,0.32);
-          margin-bottom: 12px;
+          border-color: rgba(16,185,129,0.32);
         }
         .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
         /* Where the keyboard is. :focus-visible rather than :focus, so a mouse
@@ -490,8 +503,8 @@ function Welcome() {
       <nav
         className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-[#0b1120] shadow-md border-b border-white/10"
-            : "bg-[#0b1120]/85 backdrop-blur-md border-b border-white/5"
+            ? "bg-[#f1f5f9] dark:bg-[#0b1120] shadow-md border-b border-black/10 dark:border-white/10"
+            : "bg-[#f1f5f9]/85 dark:bg-[#0b1120]/85 backdrop-blur-md border-b border-black/5 dark:border-white/5"
         }`}
       >
         <div className="max-w-7xl mx-auto px-5 md:px-9 h-20 flex items-center justify-between">
@@ -515,7 +528,7 @@ function Welcome() {
                   runner's theme tokens and this page has none of them; #34d399
                   is this page's own accent, already carrying the hero word on
                   the same dark ground. */}
-              <span className="block font-black italic tracking-[0.06em] text-[#34d399] text-lg">{branding.name}</span>
+              <span className="block font-black italic tracking-[0.06em] text-[#16a34a] dark:text-[#34d399] text-lg">{branding.name}</span>
               <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-[#64748b] mt-1">
                 {branding.tagline}
               </span>
@@ -538,7 +551,7 @@ function Welcome() {
               rel="noopener noreferrer"
               onClick={() => trackHomePageCta("nav_linkedin")}
               aria-label={`${branding.name} on LinkedIn`}
-              className="hidden md:inline-flex p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+              className="hidden md:inline-flex p-2 rounded-lg text-[#475569] dark:text-[#cbd5e1] hover:bg-black/5 dark:hover:bg-white/10 hover:text-[#16a34a] dark:hover:text-[#34d399] transition-colors"
             >
               <FaLinkedin size={20} />
             </a>
@@ -549,7 +562,7 @@ function Welcome() {
               rel="noopener noreferrer"
               onClick={() => trackHomePageCta("nav_twitter")}
               aria-label={`${branding.name} on Twitter`}
-              className="hidden md:inline-flex p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+              className="hidden md:inline-flex p-2 rounded-lg text-[#475569] dark:text-[#cbd5e1] hover:bg-black/5 dark:hover:bg-white/10 hover:text-[#16a34a] dark:hover:text-[#34d399] transition-colors"
             >
               <FaXTwitter size={20} />
             </a>
@@ -559,7 +572,7 @@ function Welcome() {
               rel="noopener noreferrer"
               onClick={() => trackHomePageCta("nav_instagram")}
               aria-label={`${branding.name} on Instagram`}
-              className="hidden md:inline-flex p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+              className="hidden md:inline-flex p-2 rounded-lg text-[#475569] dark:text-[#cbd5e1] hover:bg-black/5 dark:hover:bg-white/10 hover:text-[#16a34a] dark:hover:text-[#34d399] transition-colors"
             >
               <FaInstagram size={20} />
             </a>
@@ -569,7 +582,7 @@ function Welcome() {
                 setMobileMenuOpen(true);
               }}
               aria-label="Open menu"
-              className="md:hidden p-2 rounded-lg text-[#cbd5e1] hover:bg-white/10 transition-colors"
+              className="md:hidden p-2 rounded-lg text-[#475569] dark:text-[#cbd5e1] hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
             >
               <MdMenu size={24} />
             </button>
@@ -581,16 +594,16 @@ function Welcome() {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-[60] md:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
-          <div className="absolute top-0 right-0 h-full w-72 bg-[#111a2e] shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div className="absolute top-0 right-0 h-full w-72 bg-white dark:bg-[#111a2e] shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-black/10 dark:border-white/10">
               <div className="flex items-center gap-2">
                 <TestExpressMark size={28} />
-                <span className="font-black italic tracking-[0.06em] text-[#34d399]">{branding.name}</span>
+                <span className="font-black italic tracking-[0.06em] text-[#16a34a] dark:text-[#34d399]">{branding.name}</span>
               </div>
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="Close menu"
-                className="p-2 rounded-lg text-[#94a3b8] hover:bg-white/10 transition-colors"
+                className="p-2 rounded-lg text-[#475569] dark:text-[#94a3b8] hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
               >
                 <MdClose size={22} />
               </button>
@@ -604,20 +617,20 @@ function Welcome() {
                     setMobileMenuOpen(false);
                     navigate(item.path);
                   }}
-                  className="w-full text-left px-4 py-3 rounded-xl text-[#cbd5e1] hover:bg-[rgba(16,185,129,0.12)] hover:text-[#6ee7b7] font-medium text-sm transition-colors"
+                  className="w-full text-left px-4 py-3 rounded-xl text-[#475569] dark:text-[#cbd5e1] hover:bg-[rgba(16,185,129,0.12)] hover:text-[#16a34a] dark:hover:text-[#6ee7b7] font-medium text-sm transition-colors"
                 >
                   {item.name}
                 </button>
               ))}
             </nav>
-            <div className="p-4 border-t border-white/10 space-y-2">
+            <div className="p-4 border-t border-black/10 dark:border-white/10 space-y-2">
               <button
                 onClick={() => {
                   trackHomePageCta("drawer_create_account");
                   setMobileMenuOpen(false);
                   navigate("/NewRegistration");
                 }}
-                className="w-full py-3 rounded-xl border border-white/25 text-white font-semibold text-sm hover:bg-white/10 transition-colors"
+                className="w-full py-3 rounded-xl border border-black/20 dark:border-white/25 text-slate-900 dark:text-white font-semibold text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
               >
                 Create account
               </button>
@@ -641,7 +654,7 @@ function Welcome() {
                   rel="noopener noreferrer"
                   onClick={() => trackHomePageCta("nav_linkedin")}
                   aria-label={`${branding.name} on LinkedIn`}
-                  className="p-2 rounded-lg text-[#94a3b8] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+                  className="p-2 rounded-lg text-[#475569] dark:text-[#94a3b8] hover:bg-black/5 dark:hover:bg-white/10 hover:text-[#16a34a] dark:hover:text-[#34d399] transition-colors"
                 >
                   <FaLinkedin size={20} />
                 </a>
@@ -651,7 +664,7 @@ function Welcome() {
                   rel="noopener noreferrer"
                   onClick={() => trackHomePageCta("nav_twitter")}
                   aria-label={`${branding.name} on Twitter`}
-                  className="p-2 rounded-lg text-[#94a3b8] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+                  className="p-2 rounded-lg text-[#475569] dark:text-[#94a3b8] hover:bg-black/5 dark:hover:bg-white/10 hover:text-[#16a34a] dark:hover:text-[#34d399] transition-colors"
                 >
                   <FaXTwitter size={20} />
                 </a>
@@ -661,7 +674,7 @@ function Welcome() {
                   rel="noopener noreferrer"
                   onClick={() => trackHomePageCta("nav_instagram")}
                   aria-label={`${branding.name} on Instagram`}
-                  className="p-2 rounded-lg text-[#94a3b8] hover:bg-white/10 hover:text-[#34d399] transition-colors"
+                  className="p-2 rounded-lg text-[#475569] dark:text-[#94a3b8] hover:bg-black/5 dark:hover:bg-white/10 hover:text-[#16a34a] dark:hover:text-[#34d399] transition-colors"
                 >
                   <FaInstagram size={20} />
                 </a>
@@ -672,7 +685,7 @@ function Welcome() {
       )}
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section data-section="hero" className="relative bg-[#0b1120] overflow-hidden" style={{ paddingTop: "64px" }}>
+      <section data-section="hero" className="relative bg-[#f8fafc] dark:bg-[#0b1120] overflow-hidden" style={{ paddingTop: "64px" }}>
         <div className="absolute -top-40 -right-40 w-[520px] h-[520px] rounded-full pointer-events-none"
           style={{ background: "radial-gradient(circle, rgba(16,185,129,0.20) 0%, transparent 68%)" }} />
         <div className="absolute -bottom-24 -left-24 w-[380px] h-[380px] rounded-full pointer-events-none"
@@ -685,41 +698,41 @@ function Welcome() {
 
             {/* Left — Text */}
             <div className="flex-1 text-center lg:text-left">
-              <div className="ha1 inline-flex items-center gap-2.5 bg-[rgba(16,185,129,0.12)] border border-[rgba(16,185,129,0.32)] text-[#6ee7b7] text-xs font-bold px-4 py-2.5 rounded-full mb-6 shadow-sm">
+              <div className="ha1 inline-flex items-center gap-2.5 bg-[rgba(16,185,129,0.12)] border border-[rgba(16,185,129,0.32)] text-[#15803d] dark:text-[#6ee7b7] text-xs font-bold px-4 py-2.5 rounded-full mb-6 shadow-sm">
                 <span className="pulse-badge w-2 h-2 bg-green-500 rounded-full inline-block" />
                 Test Smarter &middot; Deliver Faster
               </div>
 
-              <h1 className="ha2 font-black text-white leading-[1.08] tracking-tight mb-5"
+              <h1 className="ha2 font-black text-slate-900 dark:text-white leading-[1.08] tracking-tight mb-5"
                 style={{ fontSize: "clamp(2.1rem, 5vw, 3.6rem)" }}>
                 <span className="whitespace-nowrap">Less Code.</span>
                 <br />
-                <span className="relative inline-block text-[#34d399]">
+                <span className="relative inline-block text-[#16a34a] dark:text-[#34d399]">
                   Better Automation
                   <svg className="absolute -bottom-1.5 left-0 w-full overflow-visible" viewBox="0 0 320 10"
                     preserveAspectRatio="none" style={{ height: "7px" }}>
                     <path d="M4,7 Q80,1 160,6 Q240,11 316,4"
-                      stroke="#a7f3d0" strokeWidth="3" fill="none" strokeLinecap="round" />
+                      stroke={theme === "dark" ? "#a7f3d0" : "#059669"} strokeWidth="3" fill="none" strokeLinecap="round" />
                   </svg>
                 </span>
               </h1>
 
-              <p className="ha3 text-[#94a3b8] text-base md:text-lg leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
+              <p className="ha3 text-[#475569] dark:text-[#94a3b8] text-base md:text-lg leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
               Build, Run and Scale Automated tests with ease - empovering QA Teams to achieve more with {branding.name}
               </p>
 
               <div className="ha3b flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-4 mb-8">
                 {HERO_HIGHLIGHTS.map(({ icon: HighlightIcon, title, detail }, i) => (
                   <Fragment key={title}>
-                    {i > 0 && <span className="hidden lg:block w-px h-9 bg-white/10" aria-hidden="true" />}
+                    {i > 0 && <span className="hidden lg:block w-px h-9 bg-black/10 dark:bg-white/10" aria-hidden="true" />}
                     <div className="flex items-center gap-2.5">
                       <span className="flex items-center justify-center w-9 h-9 rounded-full shrink-0 bg-[rgba(16,185,129,0.12)] border border-[rgba(16,185,129,0.28)] text-[#34d399]">
                         <HighlightIcon size={17} />
                       </span>
-                      <span className="text-left text-xs font-bold leading-tight text-[#e2e8f0]">
+                      <span className="text-left text-xs font-bold leading-tight text-[#0f172a] dark:text-[#e2e8f0]">
                         {title}
                         <br />
-                        <span className="font-semibold text-[#94a3b8]">{detail}</span>
+                        <span className="font-semibold text-[#475569] dark:text-[#94a3b8]">{detail}</span>
                       </span>
                     </div>
                   </Fragment>
@@ -740,15 +753,15 @@ function Welcome() {
               </div>
 
               <div className="ha5 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-sm">
-                <span className="inline-flex items-center gap-1.5 text-[#94a3b8]">
+                <span className="inline-flex items-center gap-1.5 text-[#475569] dark:text-[#94a3b8]">
                   <IconBrowser size={16} /> Chromium &middot; Firefox &middot; WebKit
                 </span>
-                <span className="w-px h-4 bg-white/20" />
-                <span className="inline-flex items-center gap-1.5 text-[#94a3b8]">
+                <span className="w-px h-4 bg-black/15 dark:bg-white/20" />
+                <span className="inline-flex items-center gap-1.5 text-[#475569] dark:text-[#94a3b8]">
                   <IconMobile size={16} /> Android
                 </span>
-                <span className="w-px h-4 bg-white/20" />
-                <span className="inline-flex items-center gap-1.5 text-[#34d399] font-semibold">
+                <span className="w-px h-4 bg-black/15 dark:bg-white/20" />
+                <span className="inline-flex items-center gap-1.5 text-[#16a34a] dark:text-[#34d399] font-semibold">
                   <IconCode size={16} /> Exports Playwright
                 </span>
               </div>
@@ -818,32 +831,32 @@ function Welcome() {
 
               {/* Floating cards — anchored in the gutter above and below the
                   window, not across it. */}
-              <div className="fc1 absolute top-0 left-2 bg-[#16203a] rounded-2xl px-4 py-3 shadow-lg border border-white/10 flex items-center gap-3">
+              <div className="fc1 absolute top-0 left-2 bg-white dark:bg-[#16203a] rounded-2xl px-4 py-3 shadow-lg border border-black/10 dark:border-white/10 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-[#34d399]" style={{ background: "rgba(16,185,129,0.14)" }}>
                   <IconBrowser size={20} />
                 </div>
                 <div>
-                  <div className="text-xl font-black text-white leading-none"><CountUp value="3" /></div>
+                  <div className="text-xl font-black text-slate-900 dark:text-white leading-none"><CountUp value="3" /></div>
                   <div className="text-xs text-[#64748b] mt-0.5">Browser engines</div>
                 </div>
               </div>
 
-              <div className="fc2 absolute bottom-0 right-2 bg-[#16203a] rounded-2xl px-4 py-3 shadow-lg border border-white/10 flex items-center gap-3">
+              <div className="fc2 absolute bottom-0 right-2 bg-white dark:bg-[#16203a] rounded-2xl px-4 py-3 shadow-lg border border-black/10 dark:border-white/10 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-amber-600" style={{ background: "rgba(245,158,11,0.16)" }}>
                   <IconHeal size={20} />
                 </div>
                 <div>
-                  <div className="text-sm font-black text-white leading-none">Self-healing</div>
+                  <div className="text-sm font-black text-slate-900 dark:text-white leading-none">Self-healing</div>
                   <div className="text-xs text-[#64748b] mt-0.5">Locators repair themselves</div>
                 </div>
               </div>
 
-              <div className="fc3 hidden lg:flex absolute top-1/2 -right-10 -translate-y-1/2 bg-[#16203a] rounded-2xl px-4 py-3 shadow-lg border border-white/10 items-center gap-2.5">
+              <div className="fc3 hidden lg:flex absolute top-1/2 -right-10 -translate-y-1/2 bg-white dark:bg-[#16203a] rounded-2xl px-4 py-3 shadow-lg border border-black/10 dark:border-white/10 items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[#34d399]" style={{ background: "rgba(16,185,129,0.14)" }}>
                   <IconCode size={18} />
                 </div>
                 <div>
-                  <div className="text-sm font-black text-white leading-none">Playwright</div>
+                  <div className="text-sm font-black text-slate-900 dark:text-white leading-none">Playwright</div>
                   <div className="text-xs text-[#64748b] mt-0.5">Export as code</div>
                 </div>
               </div>
@@ -852,17 +865,17 @@ function Welcome() {
 
           </div>
         </div>
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-[rgba(255,255,255,0.15)] to-transparent" />
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-black/10 dark:via-[rgba(255,255,255,0.15)] to-transparent" />
       </section>
 
       {/* ── Fact Strip ───────────────────────────────────────── */}
-      <section data-section="facts" className="bg-[#0b1120] py-16 px-4">
+      <section data-section="facts" className="bg-[#f8fafc] dark:bg-[#0b1120] py-16 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {facts.map(({ Icon: I, number, label, sub, color, bg }, i) => (
               <div
                 key={label}
-                className={`sr d${i + 1} group flex flex-col items-center text-center p-6 rounded-2xl border border-white/10 bg-[#16203a] hover:shadow-lg hover:-translate-y-1.5 transition-all duration-300 cursor-default`}
+                className={`sr d${i + 1} group flex flex-col items-center text-center p-6 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#16203a] shadow-sm hover:shadow-lg hover:-translate-y-1.5 transition-all duration-300 cursor-default`}
               >
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300"
                   style={{ background: bg, color }}>
@@ -871,7 +884,7 @@ function Welcome() {
                 {number && (
                   <div className="text-3xl font-black mb-1" style={{ color }}><CountUp value={number} /></div>
                 )}
-                <div className="text-sm font-bold text-[#f1f5f9]">{label}</div>
+                <div className="text-sm font-bold text-[#0f172a] dark:text-[#f1f5f9]">{label}</div>
                 <div className="text-xs text-[#64748b] mt-1">{sub}</div>
               </div>
             ))}
@@ -880,14 +893,14 @@ function Welcome() {
       </section>
 
       {/* ── Features ─────────────────────────────────────────── */}
-      <section data-section="features" className="py-20 px-4 border-t border-white/10" style={{ background: "#0f172a" }}>
+      <section data-section="features" className="py-20 px-4 border-t border-black/10 dark:border-white/10" style={{ background: theme === "dark" ? "#0f172a" : "#f1f5f9" }}>
         <div className="max-w-7xl mx-auto">
           <div className="sr text-center mb-14">
             <span className="section-pill">What It Does</span>
-            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-3">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
               Everything in the Recorder
             </h2>
-            <p className="text-[#94a3b8] max-w-lg mx-auto text-sm leading-relaxed">
+            <p className="text-[#475569] dark:text-[#94a3b8] max-w-lg mx-auto text-sm leading-relaxed">
               Not a roadmap. Every tile below is a control that exists in the recorder today —
               open one and you land on it.
             </p>
@@ -901,13 +914,13 @@ function Welcome() {
                   trackHomePageCta("feature_tile", { label });
                   navigate("/TestRunner");
                 }}
-                className={`sr d${(index % 6) + 1} group text-left p-5 rounded-2xl bg-[#16203a] border border-white/10 hover:border-[rgba(52,211,153,0.6)] hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-400`}
+                className={`sr d${(index % 6) + 1} group text-left p-5 rounded-2xl bg-white dark:bg-[#16203a] border border-black/10 dark:border-white/10 shadow-sm hover:border-[rgba(22,163,74,0.5)] dark:hover:border-[rgba(52,211,153,0.6)] hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-400`}
               >
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3 text-[#34d399] group-hover:scale-110 transition-transform duration-300"
                   style={{ background: "rgba(16,185,129,0.14)" }}>
                   <I size={22} />
                 </div>
-                <p className="text-sm font-bold text-[#f1f5f9] group-hover:text-[#6ee7b7] transition-colors leading-tight">
+                <p className="text-sm font-bold text-[#0f172a] dark:text-[#f1f5f9] group-hover:text-[#16a34a] dark:group-hover:text-[#6ee7b7] transition-colors leading-tight">
                   {label}
                 </p>
                 <p className="mt-1 text-xs text-[#64748b] leading-relaxed">{note}</p>
@@ -918,18 +931,20 @@ function Welcome() {
       </section>
 
       {/* ── Export banner ────────────────────────────────────── */}
-      <div data-section="export" className="sr px-6 md:px-12 py-10 bg-[#0b1120]">
-        <div className="max-w-7xl mx-auto rounded-3xl overflow-hidden shadow-2xl border border-white/10"
-          style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #064e3b 100%)" }}>
+      <div data-section="export" className="sr px-6 md:px-12 py-10 bg-[#f8fafc] dark:bg-[#0b1120]">
+        <div className="max-w-7xl mx-auto rounded-3xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10"
+          style={{ background: theme === "dark"
+            ? "linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #064e3b 100%)"
+            : "linear-gradient(135deg, #ffffff 0%, #f1f5f9 55%, #ecfdf5 100%)" }}>
           <div className="grid md:grid-cols-2 gap-8 p-8 md:p-12 items-center">
             <div>
-              <p className="text-xs md:text-sm font-semibold uppercase tracking-widest text-green-400 mb-3">
+              <p className="text-xs md:text-sm font-semibold uppercase tracking-widest text-green-700 dark:text-green-400 mb-3">
                 No lock-in
               </p>
-              <h2 className="text-2xl md:text-3xl font-black text-white leading-tight mb-4">
+              <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-tight mb-4">
                 Your recording is<br />just Playwright
               </h2>
-              <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-sm">
+              <p className="text-slate-600 dark:text-white/60 text-sm leading-relaxed mb-6 max-w-sm">
                 Every web recording exports as a Playwright spec you can read, review and commit.
                 If you ever stop using {branding.name}, the tests keep running.
               </p>
@@ -938,8 +953,8 @@ function Welcome() {
                   trackHomePageCta("export_try");
                   navigate("/TestRunner");
                 }}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white border border-white/25 hover:bg-white/20 transition-all duration-200"
-                style={{ background: "rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-slate-900 dark:text-white border border-black/15 dark:border-white/25 hover:bg-black/10 dark:hover:bg-white/20 transition-all duration-200"
+                style={{ background: theme === "dark" ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.05)", backdropFilter: "blur(8px)" }}
               >
                 <IconCode size={16} />
                 Try the export
@@ -968,14 +983,14 @@ function Welcome() {
       </div>
 
       {/* ── Engines ──────────────────────────────────────────── */}
-      <section data-section="engines" className="py-20 px-4 border-t border-white/10" style={{ background: "#0f172a" }}>
+      <section data-section="engines" className="py-20 px-4 border-t border-black/10 dark:border-white/10" style={{ background: theme === "dark" ? "#0f172a" : "#f1f5f9" }}>
         <div className="max-w-7xl mx-auto">
           <div className="sr text-center mb-14">
             <span className="section-pill">Three Engines</span>
-            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-3">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
               Same Steps, Your Choice of Engine
             </h2>
-            <p className="text-[#94a3b8] max-w-lg mx-auto text-sm leading-relaxed">
+            <p className="text-[#475569] dark:text-[#94a3b8] max-w-lg mx-auto text-sm leading-relaxed">
               One recording runs on all three. Each has a trade-off, so here they are —
               picking the wrong one costs an afternoon.
             </p>
@@ -985,7 +1000,7 @@ function Welcome() {
             <Slider {...engineSliderSettings}>
               {engines.map(({ name, tag, Icon: I, blurb, limit }) => (
                 <div key={name} className="px-3">
-                  <div className="group h-full rounded-2xl bg-[#16203a] shadow-sm border border-white/10 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                  <div className="group h-full rounded-2xl bg-white dark:bg-[#16203a] shadow-sm border border-black/10 dark:border-white/10 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
                     <div className="p-6">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[#34d399]"
@@ -993,15 +1008,15 @@ function Welcome() {
                           <I size={24} />
                         </div>
                         <div>
-                          <h3 className="font-black text-white leading-tight">{name}</h3>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#34d399]">{tag}</span>
+                          <h3 className="font-black text-slate-900 dark:text-white leading-tight">{name}</h3>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#16a34a] dark:text-[#34d399]">{tag}</span>
                         </div>
                       </div>
-                      <p className="text-sm text-[#94a3b8] leading-relaxed min-h-[5.5rem]">{blurb}</p>
+                      <p className="text-sm text-[#475569] dark:text-[#94a3b8] leading-relaxed min-h-[5.5rem]">{blurb}</p>
                     </div>
-                    <div className="px-6 py-3 flex items-start gap-2 border-t border-white/10" style={{ background: "rgba(16,185,129,0.14)" }}>
+                    <div className="px-6 py-3 flex items-start gap-2 border-t border-black/10 dark:border-white/10" style={{ background: "rgba(16,185,129,0.14)" }}>
                       <span className="text-[#64748b] mt-0.5"><IconShield size={14} /></span>
-                      <span className="text-xs text-[#94a3b8] leading-snug">{limit}</span>
+                      <span className="text-xs text-[#475569] dark:text-[#94a3b8] leading-snug">{limit}</span>
                     </div>
                   </div>
                 </div>
@@ -1012,25 +1027,25 @@ function Welcome() {
       </section>
 
       {/* ── Workflow ─────────────────────────────────────────── */}
-      <section data-section="workflow" className="py-20 px-4 bg-[#0b1120] border-t border-white/10">
+      <section data-section="workflow" className="py-20 px-4 bg-[#f8fafc] dark:bg-[#0b1120] border-t border-black/10 dark:border-white/10">
         <div className="max-w-7xl mx-auto">
           <div className="sr text-center mb-14">
             <span className="section-pill">How It Works</span>
-            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-3">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
               From Click to Report
             </h2>
-            <p className="text-[#94a3b8] text-sm">Four steps, and none of them is writing code.</p>
+            <p className="text-[#475569] dark:text-[#94a3b8] text-sm">Four steps, and none of them is writing code.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {workflow.map(({ n, title, body }, index) => (
               <div
                 key={n}
-                className={`sr d${(index % 4) + 1} relative bg-[#16203a] rounded-2xl p-6 shadow-sm border border-white/10 hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col`}
+                className={`sr d${(index % 4) + 1} relative bg-white dark:bg-[#16203a] rounded-2xl p-6 shadow-sm border border-black/10 dark:border-white/10 hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col`}
               >
-                <span className="mono text-4xl font-black leading-none mb-3" style={{ color: "rgba(110,231,183,0.38)" }}>{n}</span>
-                <h3 className="font-black text-white mb-2">{title}</h3>
-                <p className="text-[#94a3b8] text-xs leading-relaxed">{body}</p>
+                <span className="mono text-4xl font-black leading-none mb-3" style={{ color: theme === "dark" ? "rgba(110,231,183,0.38)" : "rgba(22,163,74,0.28)" }}>{n}</span>
+                <h3 className="font-black text-slate-900 dark:text-white mb-2">{title}</h3>
+                <p className="text-[#475569] dark:text-[#94a3b8] text-xs leading-relaxed">{body}</p>
               </div>
             ))}
           </div>
@@ -1038,14 +1053,16 @@ function Welcome() {
       </section>
 
       {/* ── Built on ─────────────────────────────────────────── */}
-      <section data-section="built_on" className="py-20 px-4" style={{ background: "linear-gradient(135deg, #0b1120 0%, #101a33 50%, #16112e 100%)" }}>
+      <section data-section="built_on" className="py-20 px-4" style={{ background: theme === "dark"
+        ? "linear-gradient(135deg, #0b1120 0%, #101a33 50%, #16112e 100%)"
+        : "linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #faf5ff 100%)" }}>
         <div className="max-w-7xl mx-auto">
           <div className="sr text-center mb-14">
             <span className="section-pill">Built On</span>
-            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-3">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
               Standards, Not a Black Box
             </h2>
-            <p className="text-[#94a3b8] text-sm max-w-lg mx-auto">
+            <p className="text-[#475569] dark:text-[#94a3b8] text-sm max-w-lg mx-auto">
               {branding.name} drives tools your team already trusts, and hands the work back in their formats.
             </p>
           </div>
@@ -1056,15 +1073,15 @@ function Welcome() {
                 key={name}
                 className={`sr d${(i % 6) + 1} rounded-2xl px-6 py-5 transition-all duration-300`}
                 style={{
-                  background: "rgba(255,255,255,0.05)",
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.38)",
+                  background: theme === "dark" ? "rgba(255,255,255,0.05)" : "#ffffff",
+                  boxShadow: theme === "dark" ? "0 2px 12px rgba(0,0,0,0.38)" : "0 2px 12px rgba(15,23,42,0.08)",
                   border: "1.5px solid rgba(129,140,248,0.24)",
                 }}
               >
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                  <div className="font-black text-[#f1f5f9]">{name}</div>
+                  <div className="font-black text-[#0f172a] dark:text-[#f1f5f9]">{name}</div>
                   {version && (
-                    <span className="mono text-[10px] font-bold text-[#34d399]">{version}</span>
+                    <span className="mono text-[10px] font-bold text-[#16a34a] dark:text-[#34d399]">{version}</span>
                   )}
                   {isNew && (
                     <span
@@ -1075,7 +1092,7 @@ function Welcome() {
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-[#94a3b8] mt-1 leading-relaxed">{role}</div>
+                <div className="text-xs text-[#475569] dark:text-[#94a3b8] mt-1 leading-relaxed">{role}</div>
               </div>
             ))}
           </div>
@@ -1088,14 +1105,14 @@ function Welcome() {
           wondering. Every figure comes from the catalogue in the database —
           nothing here is typed into the page, so it cannot drift from what the
           registration form and Super Admin say. */}
-      <section data-section="plans" className="py-20 px-4 bg-[#0f172a] border-t border-white/10">
+      <section data-section="plans" className="py-20 px-4 bg-[#f1f5f9] dark:bg-[#0f172a] border-t border-black/10 dark:border-white/10">
         <div className="max-w-6xl mx-auto">
           <div className="sr text-center mb-14">
             <span className="section-pill">Plans</span>
-            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-3">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
               Start Free, Add Engines Later
             </h2>
-            <p className="text-[#94a3b8] max-w-lg mx-auto text-sm leading-relaxed">
+            <p className="text-[#475569] dark:text-[#94a3b8] max-w-lg mx-auto text-sm leading-relaxed">
               Every tier records, replays and exports. What the paid ones add is where the test
               runs — a real browser, a real device — and the automation around a suite.
             </p>
@@ -1123,14 +1140,14 @@ function Welcome() {
                   key={plan.value}
                   className={`sr d${i + 1} flex flex-col rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 ${
                     featured
-                      ? "border-[rgba(52,211,153,0.55)] bg-[#16203a] shadow-xl"
-                      : "border-white/10 bg-[#16203a]/70 hover:border-white/25"
+                      ? "border-[rgba(22,163,74,0.55)] dark:border-[rgba(52,211,153,0.55)] bg-white dark:bg-[#16203a] shadow-xl"
+                      : "border-black/10 dark:border-white/10 bg-white/70 dark:bg-[#16203a]/70 shadow-sm hover:border-black/20 dark:hover:border-white/25"
                   }`}
                 >
                   <div className="flex items-baseline gap-2">
-                    <h3 className="text-lg font-black text-white">{plan.label || plan.value}</h3>
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white">{plan.label || plan.value}</h3>
                     {featured && (
-                      <span className="rounded-full bg-[rgba(16,185,129,0.16)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#6ee7b7]">
+                      <span className="rounded-full bg-[rgba(16,185,129,0.16)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#15803d] dark:text-[#6ee7b7]">
                         Most used
                       </span>
                     )}
@@ -1138,7 +1155,7 @@ function Welcome() {
                         first thing that rules a plan in or out for a reader:
                         somebody buying for themselves can stop reading here. */}
                     {planKind(plan) === "corporate" && (
-                      <span className="rounded-full bg-[rgba(129,140,248,0.18)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#a5b4fc]">
+                      <span className="rounded-full bg-[rgba(129,140,248,0.18)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#4338ca] dark:text-[#a5b4fc]">
                         For teams
                       </span>
                     )}
@@ -1147,12 +1164,12 @@ function Welcome() {
                   {/* The price as the catalogue has it. An unpriced tier reads
                       "Price on request" rather than showing a figure nobody
                       set — the one thing a pricing section must never do. */}
-                  <div className="mt-3 text-2xl font-black text-[#34d399]">
+                  <div className="mt-3 text-2xl font-black text-[#16a34a] dark:text-[#34d399]">
                     {priceLabel(plan)}
                   </div>
 
                   {plan.blurb && (
-                    <p className="mt-2 text-xs leading-relaxed text-[#94a3b8]">{plan.blurb}</p>
+                    <p className="mt-2 text-xs leading-relaxed text-[#475569] dark:text-[#94a3b8]">{plan.blurb}</p>
                   )}
 
                   <ul className="mt-5 flex-1 space-y-2">
@@ -1162,8 +1179,8 @@ function Welcome() {
                       </li>
                     )}
                     {addedBy(plan.value).map((c) => (
-                      <li key={c.id} className="flex items-start gap-2 text-xs text-[#cbd5e1]">
-                        <span aria-hidden="true" className="mt-0.5 text-[#34d399]">
+                      <li key={c.id} className="flex items-start gap-2 text-xs text-[#475569] dark:text-[#cbd5e1]">
+                        <span aria-hidden="true" className="mt-0.5 text-[#16a34a] dark:text-[#34d399]">
                           <IconCheck size={13} />
                         </span>
                         <span className="leading-relaxed">{c.label}</span>
@@ -1172,7 +1189,7 @@ function Welcome() {
                   </ul>
 
                   <div className="mt-5 flex items-center justify-between gap-3">
-                    <span className="text-[10px] uppercase tracking-wider text-[#475569]">
+                    <span className="text-[10px] uppercase tracking-wider text-[#64748b] dark:text-[#475569]">
                       {capabilitiesOf(plan.value).length} capabilities
                     </span>
                     <button
@@ -1183,7 +1200,7 @@ function Welcome() {
                       className={`rounded-xl px-4 py-2 text-xs font-bold transition-colors duration-200 ${
                         featured
                           ? "bg-[#34d399] text-[#04231a] hover:bg-[#6ee7b7]"
-                          : "border border-white/25 text-[#e2e8f0] hover:border-[#34d399] hover:text-white"
+                          : "border border-black/20 dark:border-white/25 text-[#0f172a] dark:text-[#e2e8f0] hover:border-[#16a34a] dark:hover:border-[#34d399] hover:text-[#16a34a] dark:hover:text-white"
                       }`}
                     >
                       Get started
@@ -1211,14 +1228,14 @@ function Welcome() {
           after the pitch has landed rather than before it. Two columns on a
           wide screen so six answers do not become a page of scrolling, one on a
           phone where a two-column answer would be four words per line. */}
-      <section data-section="faq" className="py-20 px-4 bg-[#0b1120] border-t border-white/10">
+      <section data-section="faq" className="py-20 px-4 bg-[#f8fafc] dark:bg-[#0b1120] border-t border-black/10 dark:border-white/10">
         <div className="max-w-5xl mx-auto">
           <div className="sr text-center mb-12">
             <span className="section-pill">Questions</span>
-            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-3">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
               Before You Record Anything
             </h2>
-            <p className="text-[#94a3b8] text-sm max-w-lg mx-auto leading-relaxed">
+            <p className="text-[#475569] dark:text-[#94a3b8] text-sm max-w-lg mx-auto leading-relaxed">
               Including the parts that are limits rather than features — they are cheaper to
               read here than to discover on your third test.
             </p>
@@ -1228,16 +1245,16 @@ function Welcome() {
             {faqs.map(({ q, a }, i) => (
               <details
                 key={q}
-                className={`faq sr d${(i % 6) + 1} group rounded-2xl bg-[#16203a] border border-white/10 hover:border-[rgba(52,211,153,0.45)] transition-colors duration-300`}
+                className={`faq sr d${(i % 6) + 1} group rounded-2xl bg-white dark:bg-[#16203a] border border-black/10 dark:border-white/10 shadow-sm hover:border-[rgba(22,163,74,0.45)] dark:hover:border-[rgba(52,211,153,0.45)] transition-colors duration-300`}
                 onToggle={(e) => e.currentTarget.open && trackHomePageCta("faq_open", { label: q })}
               >
                 <summary className="flex items-start gap-3 p-5">
-                  <span className="flex-1 text-sm font-bold text-[#f1f5f9] leading-snug">{q}</span>
-                  <span className="chev text-[#34d399] mt-0.5 flex-shrink-0" aria-hidden="true">
+                  <span className="flex-1 text-sm font-bold text-[#0f172a] dark:text-[#f1f5f9] leading-snug">{q}</span>
+                  <span className="chev text-[#16a34a] dark:text-[#34d399] mt-0.5 flex-shrink-0" aria-hidden="true">
                     <Icon size={16}><path d="M6 9l6 6 6-6" /></Icon>
                   </span>
                 </summary>
-                <p className="px-5 pb-5 -mt-1 text-[13px] text-[#94a3b8] leading-relaxed">{a}</p>
+                <p className="px-5 pb-5 -mt-1 text-[13px] text-[#475569] dark:text-[#94a3b8] leading-relaxed">{a}</p>
               </details>
             ))}
           </div>
@@ -1248,16 +1265,18 @@ function Welcome() {
       {/* The page ends on the same two doors the header offers, because a
           visitor who has read this far has nowhere else to go: the header
           scrolled away five sections ago, and the mobile bar is not on desktop. */}
-      <section data-section="cta" className="px-6 md:px-12 py-16" style={{ background: "#0f172a" }}>
+      <section data-section="cta" className="px-6 md:px-12 py-16" style={{ background: theme === "dark" ? "#0f172a" : "#f1f5f9" }}>
         <div
-          className="sr max-w-5xl mx-auto rounded-3xl border border-white/10 shadow-2xl px-8 py-12 md:px-14 md:py-14 text-center"
-          style={{ background: "linear-gradient(135deg, #0f172a 0%, #16203a 55%, #064e3b 100%)" }}
+          className="sr max-w-5xl mx-auto rounded-3xl border border-black/10 dark:border-white/10 shadow-2xl px-8 py-12 md:px-14 md:py-14 text-center"
+          style={{ background: theme === "dark"
+            ? "linear-gradient(135deg, #0f172a 0%, #16203a 55%, #064e3b 100%)"
+            : "linear-gradient(135deg, #ffffff 0%, #f8fafc 55%, #ecfdf5 100%)" }}
         >
-          <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight leading-tight mb-4">
+          <h2 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight mb-4">
             Your first test is a recording,
             <br className="hidden sm:block" /> not a file to write
           </h2>
-          <p className="text-[#94a3b8] text-sm md:text-base leading-relaxed max-w-xl mx-auto mb-8">
+          <p className="text-[#475569] dark:text-[#94a3b8] text-sm md:text-base leading-relaxed max-w-xl mx-auto mb-8">
             Open a page, use it once, and press save. Everything else on this page — the real
             browsers, the Android device, the Playwright export — is something you reach for
             afterwards, from the same recording.
@@ -1277,7 +1296,7 @@ function Welcome() {
                 trackHomePageCta("cta_sign_in");
                 navigate("/my-app");
               }}
-              className="px-8 py-3.5 rounded-2xl text-sm font-bold text-[#e2e8f0] border-2 border-white/20 bg-white/5 hover:border-[#34d399] hover:text-white transition-all duration-200"
+              className="px-8 py-3.5 rounded-2xl text-sm font-bold text-[#0f172a] dark:text-[#e2e8f0] border-2 border-black/15 dark:border-white/20 bg-black/[0.03] dark:bg-white/5 hover:border-[#16a34a] dark:hover:border-[#34d399] hover:text-[#0f172a] dark:hover:text-white transition-all duration-200"
             >
               Sign in
             </button>
@@ -1288,27 +1307,29 @@ function Welcome() {
       {/* ── Footer ───────────────────────────────────────────── */}
       <footer
         data-section="footer"
-        className="text-[rgba(203,213,225,0.8)] pb-24 md:pb-0"
-        style={{ background: "linear-gradient(135deg, #1c1917 0%, #292524 55%, #064e3b 100%)" }}
+        className="text-[#475569] dark:text-[rgba(203,213,225,0.8)] pb-24 md:pb-0"
+        style={{ background: theme === "dark"
+          ? "linear-gradient(135deg, #1c1917 0%, #292524 55%, #064e3b 100%)"
+          : "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 55%, #ecfdf5 100%)" }}
       >
         <div className="max-w-7xl mx-auto px-8 py-14 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
           <div>
             <div className="flex items-center gap-3 mb-4">
               <TestExpressMark size={32} />
-              <span className="font-black italic tracking-[0.06em] text-[#34d399]">{branding.name}</span>
+              <span className="font-black italic tracking-[0.06em] text-[#16a34a] dark:text-[#34d399]">{branding.name}</span>
             </div>
-            <p className="text-sm leading-relaxed text-[rgba(203,213,225,0.7)]">
+            <p className="text-sm leading-relaxed text-[#475569] dark:text-[rgba(203,213,225,0.7)]">
               Record a test by using your app. Replay it in a real browser or on a real device.
               Export it as Playwright whenever you want the code.
             </p>
           </div>
 
           <div>
-            <h3 className="text-white/90 text-xs font-semibold uppercase tracking-[0.15em] mb-5">Product</h3>
+            <h3 className="text-slate-800 dark:text-white/90 text-xs font-semibold uppercase tracking-[0.15em] mb-5">Product</h3>
             {/* Plain text, like the two columns beside it: this column lists
                 what the product does, it is not a second navigation. The header
                 and the calls to action are what take you into the app. */}
-            <ul className="space-y-3 text-sm text-[rgba(203,213,225,0.7)]">
+            <ul className="space-y-3 text-sm text-[#475569] dark:text-[rgba(203,213,225,0.7)]">
               <li>Open the recorder</li>
               <li>Sign in</li>
               <li>Create account</li>
@@ -1317,8 +1338,8 @@ function Welcome() {
           </div>
 
           <div>
-            <h3 className="text-white/90 text-xs font-semibold uppercase tracking-[0.15em] mb-5">Engines</h3>
-            <ul className="space-y-3 text-sm text-[rgba(203,213,225,0.7)]">
+            <h3 className="text-slate-800 dark:text-white/90 text-xs font-semibold uppercase tracking-[0.15em] mb-5">Engines</h3>
+            <ul className="space-y-3 text-sm text-[#475569] dark:text-[rgba(203,213,225,0.7)]">
               <li>Playwright</li>
               <li>Chromium &middot; Firefox &middot; WebKit</li>
               <li>Appium</li>
@@ -1327,8 +1348,8 @@ function Welcome() {
           </div>
 
           <div>
-            <h3 className="text-white/90 text-xs font-semibold uppercase tracking-[0.15em] mb-5">Capabilities</h3>
-            <ul className="space-y-3 text-sm text-[rgba(203,213,225,0.7)]">
+            <h3 className="text-slate-800 dark:text-white/90 text-xs font-semibold uppercase tracking-[0.15em] mb-5">Capabilities</h3>
+            <ul className="space-y-3 text-sm text-[#475569] dark:text-[rgba(203,213,225,0.7)]">
               <li>Self-healing locators</li>
               <li>Named data sets</li>
               <li>Scheduled runs</li>
@@ -1337,13 +1358,13 @@ function Welcome() {
           </div>
         </div>
 
-        <div className="border-t border-white/10 max-w-7xl mx-auto px-8 py-5 text-xs text-[#94a3b8] flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="border-t border-black/10 dark:border-white/10 max-w-7xl mx-auto px-8 py-5 text-xs text-[#475569] dark:text-[#94a3b8] flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>
             © {new Date().getFullYear()} {branding.name}. All rights reserved.
           </span>
           <span>
             Email:{" "}
-            <a href="mailto:wetestexpress@gmail.com" className="hover:text-[#34d399] transition-colors">
+            <a href="mailto:wetestexpress@gmail.com" className="hover:text-[#16a34a] dark:hover:text-[#34d399] transition-colors">
               wetestexpress@gmail.com
             </a>
           </span>
@@ -1355,7 +1376,10 @@ function Welcome() {
         className={`md:hidden fixed bottom-0 inset-x-0 z-40 transition-all duration-300 ${
           showFloatingCTA ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
         }`}
-        style={{ background: "#0f172a", borderTop: "1px solid rgba(255,255,255,0.08)" }}
+        style={{
+          background: theme === "dark" ? "#0f172a" : "#f1f5f9",
+          borderTop: theme === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.08)",
+        }}
       >
         <div className="flex items-center gap-3 px-4 py-3">
           <button
@@ -1363,7 +1387,7 @@ function Welcome() {
               trackHomePageCta("floating_sign_in");
               navigate("/my-app");
             }}
-            className="flex-1 py-3 rounded-xl border border-white/25 text-[#cbd5e1] font-semibold text-sm hover:border-green-500 hover:text-green-400 transition-colors"
+            className="flex-1 py-3 rounded-xl border border-black/15 dark:border-white/25 text-[#475569] dark:text-[#cbd5e1] font-semibold text-sm hover:border-green-700 dark:hover:border-green-500 hover:text-green-700 dark:hover:text-green-400 transition-colors"
           >
             Sign in
           </button>
