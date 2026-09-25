@@ -27,7 +27,11 @@ const { store, registrationKey } = require('../registrationsDb');
 const { verifyPassword } = require('../passwords');
 const { issue } = require('../sessions');
 const { generateAccessKey, accessKeyExpiry, isAccessKeyExpired } = require('../accessKeys');
-const { sendAccountAccessKey } = require('../emailNotify');
+const { sendAccountAccessKey, sendPlanRenewal } = require('../emailNotify');
+const planChanges = require('../planChangesDb');
+const planCycles = require('../planCycles');
+const { catalogue } = require('../plansDb');
+const checkouts = require('../checkoutsDb');
 // Registration is public but writes the role, so it needs to know whether the
 // caller happens to be a Super Admin. `identify` attaches one if the request
 // carries a token and shrugs if it does not.
@@ -99,7 +103,43 @@ router.post('/login', requireConfig, async (req, res) => {
     // the account it describes has actually stopped being time-limited.
     if (user.accessKeyExpiresAt) {
       await store.upsert({ ...user, accessKeyExpiresAt: null });
+      user = { ...user, accessKeyExpiresAt: null };
     }
+
+    // A paid plan's billing cycle running out. Checked last and only for an
+    // account that has plan_changes history to anchor a cycle to -- one with
+    // none (payment set directly at registration, or by an admin edit made
+    // before this feature existed) is exempt until its plan next genuinely
+    // changes. See planCycles.js for why renewal is manual rather than an
+    // auto-charge.
+    const [lastChange] = await planChanges.history({ limit: 1, accountKey: registrationKey(user) });
+    if (lastChange) {
+      const { plans } = await catalogue();
+      const plan = plans.find((p) => p.value === lastChange.toPlan);
+      if (plan && plan.price && planCycles.isCycleLapsed(planCycles.cycleExpiry(lastChange.at))) {
+        await store.upsert({ ...user, signInDisabled: true });
+        let checkoutToken = null;
+        try {
+          checkoutToken = (await checkouts.open({ email: user.email, plan })).token;
+        } catch (err) {
+          console.error('[auth] renewal checkout not opened:', err.message);
+        }
+        if (checkoutToken) {
+          const { sent, reason } = await sendPlanRenewal({
+            name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+            email: user.email,
+            plan: plan.value,
+            checkoutToken,
+          });
+          if (!sent) console.error('[auth] renewal email not sent:', reason);
+        }
+        res.status(403).json({
+          error: `Your ${plan.value} plan has lapsed. A renewal link has been emailed to you.`,
+        });
+        return;
+      }
+    }
+
     // Keyed on the registration key, not the email: the key is the record's
     // identity, and an account whose address is later corrected must not have
     // its session silently point at nothing -- or, worse, at whoever else is

@@ -1,62 +1,97 @@
-// Email notifications via Gmail SMTP.
+// Email notifications via Resend's HTTPS API.
+//
+// Not SMTP: Render's outbound network blocks every SMTP port regardless of
+// target or IP version (465 timed out; 587 then failed with ENETUNREACH on
+// an IPv6 route that does not exist here; 587 forced over IPv4 timed out
+// too) -- confirmed by trying all three from this exact deployment. HTTPS on
+// 443 is not blocked, so an email API is the fix, not another SMTP variant.
 //
 // Same "optional provider" contract as routes/notify.js's SMS providers:
 // unconfigured means silently skipped, not a thrown error, so a fresh install
-// with no GMAIL_APP_PASSWORD set still accepts contact-form submissions.
-const nodemailer = require('nodemailer');
+// with no RESEND_API_KEY set still accepts contact-form submissions.
+const fs = require('fs');
 const path = require('path');
 
-const gmailUser = process.env.GMAIL_USER;
-const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
-// Where notifications land. Defaults to the inbox that owns the Gmail
-// account itself, so setting only GMAIL_USER/GMAIL_APP_PASSWORD is enough.
-const contactNotifyEmail = process.env.CONTACT_NOTIFY_EMAIL || gmailUser;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_API_URL = 'https://api.resend.com/emails';
+// The shared, unverified sending address every new Resend account gets.
+// Resend accepts mail from it addressed ONLY to the account's own verified
+// email -- fine for confirming sending works at all, not for real visitors
+// or admin-created accounts. Switching to a real domain later is an env var
+// change here, not a code change: verify it with Resend, then set
+// RESEND_FROM_EMAIL to an address on it.
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+// Where notifications land. No GMAIL_USER to fall back to any more, so this
+// has to be set explicitly for sendContactNotification to have anywhere to go.
+const contactNotifyEmail = process.env.CONTACT_NOTIFY_EMAIL;
 // Where the access-key email's link points. Defaults to the deployed
 // frontend rather than localhost, so an email sent from a Render backend
 // still links somewhere the recipient can actually reach. The origin only --
 // see signInUrl in sendAccountAccessKey for the page it is joined with.
 const APP_ORIGIN = (process.env.APP_URL || 'https://testexpress-qa.netlify.app').replace(/\/+$/, '');
 
-let transporter = null;
-if (gmailUser && gmailAppPassword) {
-  transporter = nodemailer.createTransport({
-    // Explicit host/port/STARTTLS rather than the `service: 'gmail'`
-    // shorthand, which resolves to port 465 (implicit TLS). That port timed
-    // out connecting from Render; 587 then failed faster and more
-    // specifically -- ENETUNREACH on smtp.gmail.com's IPv6 address. The
-    // actual fix for that is the process-wide dns.setDefaultResultOrder
-    // call at the top of index.js -- nodemailer has no `family` transport
-    // option of its own to force IPv4 with (checked: not read anywhere in
-    // its source), so there is nothing to set here for that.
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: { user: gmailUser, pass: gmailAppPassword },
-  });
-}
-
 function isConfigured() {
-  return Boolean(transporter && contactNotifyEmail);
+  return Boolean(RESEND_API_KEY && contactNotifyEmail);
 }
 
 /**
- * Checks the Gmail SMTP connection and credentials without sending anything.
+ * Checks the Resend API key without sending anything.
  *
- * `isConfigured()` only means the two env vars were non-empty -- it says
- * nothing about whether Gmail actually accepts them. This is what surfaces
- * the real reason a send is silently failing (a stale App Password, a
- * revoked one, a typo), since every send path here only logs its failure
- * server-side and answers the caller as if nothing went wrong.
+ * `isConfigured()` only means the env vars were non-empty -- it says
+ * nothing about whether Resend actually accepts the key. This is what
+ * surfaces a revoked or mistyped one, since every send path here only logs
+ * its real failure server-side and answers the caller as if nothing went
+ * wrong.
  *
  * @returns {Promise<{ok: boolean, reason?: string}>}
  */
 async function verifyConnection() {
-  if (!transporter) return { ok: false, reason: 'not configured' };
+  if (!RESEND_API_KEY) return { ok: false, reason: 'not configured' };
   try {
-    await transporter.verify();
-    return { ok: true };
+    const res = await fetch('https://api.resend.com/domains', {
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}` },
+    });
+    if (res.ok) return { ok: true };
+    const body = await res.json().catch(() => ({}));
+    return { ok: false, reason: body.message || `Resend responded ${res.status}` };
   } catch (err) {
     return { ok: false, reason: err.message };
+  }
+}
+
+/**
+ * Sends one email through Resend's HTTPS API.
+ *
+ * The one place the {from, to, replyTo, subject, text, html, attachments}
+ * shape every send function below builds gets translated into Resend's
+ * request body -- so a second provider, or a move back to SMTP once Render's
+ * block is confirmed lifted, is a change to this one function.
+ *
+ * @returns {Promise<{sent: boolean, reason?: string}>}
+ */
+async function sendViaResend({ from, to, replyTo, subject, text, html, attachments }) {
+  try {
+    const res = await fetch(RESEND_API_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from,
+        to: Array.isArray(to) ? to : [to],
+        reply_to: replyTo,
+        subject,
+        text,
+        html,
+        attachments: attachments && attachments.length ? attachments : undefined,
+      }),
+    });
+    if (res.ok) return { sent: true };
+    const body = await res.json().catch(() => ({}));
+    return { sent: false, reason: body.message || `Resend responded ${res.status}` };
+  } catch (err) {
+    return { sent: false, reason: err.message };
   }
 }
 
@@ -72,16 +107,29 @@ const BRAND_NAME = 'TestExpress';
 // notification.
 const BRAND_COLOR = '#16a34a';
 
-// Sent as a cid attachment rather than a hosted URL -- attachments render in
+// Sent as an attachment rather than a hosted URL -- attachments render in
 // every mail client with images enabled, whereas a remote <img src> is exactly
 // the kind of thing Gmail/Outlook block by default until the recipient
-// clicks "show images".
+// clicks "show images". Read once at startup rather than per send.
+//
+// `content_id` is Resend's documented equivalent of nodemailer's `cid`, for
+// referencing an attachment inline via `<img src="cid:...">` instead of it
+// only showing up as a downloadable file. Not independently verified
+// against a real delivered email at the time this was written -- check that
+// the logo actually renders inline the first time a test email arrives,
+// rather than as a bare attachment or a broken image icon.
 const LOGO_CID = 'testexpress-logo';
-const LOGO_ATTACHMENT = {
-  filename: 'testexpress-logo.png',
-  path: path.join(__dirname, 'assets', 'email-logo.png'),
-  cid: LOGO_CID,
-};
+let logoAttachment = null;
+try {
+  const logoBuffer = fs.readFileSync(path.join(__dirname, 'assets', 'email-logo.png'));
+  logoAttachment = {
+    filename: 'testexpress-logo.png',
+    content: logoBuffer.toString('base64'),
+    content_id: LOGO_CID,
+  };
+} catch (err) {
+  console.warn('[emailNotify] could not read the email logo asset:', err.message);
+}
 
 /**
  * Escapes text bound for HTML.
@@ -173,8 +221,8 @@ async function sendContactNotification({ name, email, subject, message }) {
     return { sent: false, reason: 'not configured' };
   }
   try {
-    await transporter.sendMail({
-      from: `${BRAND_NAME} Contact Form <${gmailUser}>`,
+    const result = await sendViaResend({
+      from: `${BRAND_NAME} Contact Form <${RESEND_FROM_EMAIL}>`,
       to: contactNotifyEmail,
       replyTo: email,
       subject: `[Contact form] ${subject && subject.trim() ? subject.trim() : 'New message'}`,
@@ -190,7 +238,7 @@ async function sendContactNotification({ name, email, subject, message }) {
         signOff: false,
       }),
     });
-    return { sent: true };
+    return result;
   } catch (err) {
     return { sent: false, reason: err.message };
   }
@@ -213,8 +261,8 @@ async function sendContactAutoReply({ name, email, subject }) {
     return { sent: false, reason: 'not configured' };
   }
   try {
-    await transporter.sendMail({
-      from: `${BRAND_NAME} <${gmailUser}>`,
+    const result = await sendViaResend({
+      from: `${BRAND_NAME} <${RESEND_FROM_EMAIL}>`,
       to: email,
       replyTo: contactNotifyEmail,
       subject: `Re: ${subject && subject.trim() ? subject.trim() : `Your message to ${BRAND_NAME}`}`,
@@ -230,9 +278,9 @@ async function sendContactAutoReply({ name, email, subject }) {
           `to you within <strong>24 hours</strong>.</p>`,
         footerNote: `This is an automated acknowledgement from ${BRAND_NAME} — no need to reply to it.`,
       }),
-      attachments: [LOGO_ATTACHMENT],
+      attachments: logoAttachment ? [logoAttachment] : [],
     });
-    return { sent: true };
+    return result;
   } catch (err) {
     return { sent: false, reason: err.message };
   }
@@ -253,8 +301,8 @@ async function sendContactReply({ to, name, subject, originalMessage, reply }) {
     return { sent: false, reason: 'not configured' };
   }
   try {
-    await transporter.sendMail({
-      from: `${BRAND_NAME} Support <${gmailUser}>`,
+    const result = await sendViaResend({
+      from: `${BRAND_NAME} Support <${RESEND_FROM_EMAIL}>`,
       to,
       replyTo: contactNotifyEmail,
       subject: `Re: ${subject && subject.trim() ? subject.trim() : `Your message to ${BRAND_NAME}`}`,
@@ -273,9 +321,9 @@ async function sendContactReply({ to, name, subject, originalMessage, reply }) {
           `</div>`,
         footerNote: `Reply to this email to keep the conversation with ${BRAND_NAME} Support going.`,
       }),
-      attachments: [LOGO_ATTACHMENT],
+      attachments: logoAttachment ? [logoAttachment] : [],
     });
-    return { sent: true };
+    return result;
   } catch (err) {
     return { sent: false, reason: err.message };
   }
@@ -333,8 +381,8 @@ async function sendAccountAccessKey({
     ['Can sign in', canSignIn ? 'Yes' : 'No'],
   ];
   try {
-    await transporter.sendMail({
-      from: `${BRAND_NAME} <${gmailUser}>`,
+    const result = await sendViaResend({
+      from: `${BRAND_NAME} <${RESEND_FROM_EMAIL}>`,
       to: email,
       replyTo: contactNotifyEmail,
       subject: `Your ${BRAND_NAME} account is ready`,
@@ -374,9 +422,55 @@ async function sendAccountAccessKey({
           `It stops working after that -- ask an administrator to send a new one if you have not set your password by then.</p>`,
         footerNote: `This is an automated message from ${BRAND_NAME}.`,
       }),
-      attachments: [LOGO_ATTACHMENT],
+      attachments: logoAttachment ? [logoAttachment] : [],
     });
-    return { sent: true };
+    return result;
+  } catch (err) {
+    return { sent: false, reason: err.message };
+  }
+}
+
+/**
+ * Emails an account whose paid-plan billing cycle just lapsed: sign-in is
+ * now blocked, and this is the fresh checkout link that lifts it. Sent at
+ * the moment of lapse rather than as advance warning -- see planCycles.js
+ * for why. Never throws, same contract as the other sends here.
+ *
+ * @param {{name: string, email: string, plan: string, checkoutToken: string}} fields
+ * @returns {Promise<{sent: boolean, reason?: string}>}
+ */
+async function sendPlanRenewal({ name, email, plan, checkoutToken }) {
+  if (!isConfigured()) {
+    return { sent: false, reason: 'not configured' };
+  }
+  try {
+    const checkoutUrl = `${APP_ORIGIN}/Checkout?${new URLSearchParams({ token: checkoutToken })}`;
+    const result = await sendViaResend({
+      from: `${BRAND_NAME} <${RESEND_FROM_EMAIL}>`,
+      to: email,
+      replyTo: contactNotifyEmail,
+      subject: `Your ${BRAND_NAME} ${plan} plan needs renewing`,
+      text:
+        `Hi ${name},\n\n` +
+        `Your ${plan} billing cycle has ended, so sign-in is switched off until it is renewed. ` +
+        `This does not happen automatically -- pay again here to switch it back on:\n\n` +
+        `${checkoutUrl}\n\n` +
+        `Nothing about your account or its data has changed; this is only about payment.` +
+        TEXT_SIGN_OFF,
+      html: renderEmail({
+        heading: `Hi ${escapeHtml(name)}, your ${escapeHtml(plan)} plan needs renewing`,
+        bodyHtml:
+          `<p style="margin:0 0 16px;">Your <strong>${escapeHtml(plan)}</strong> billing cycle has ended, ` +
+          `so sign-in is switched off until it is renewed. This does not happen automatically.</p>` +
+          `<div style="text-align:center;margin:0 0 16px;">` +
+          `<a href="${checkoutUrl}" style="display:inline-block;padding:10px 24px;background-color:${BRAND_COLOR};color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;border-radius:8px;">Renew ${escapeHtml(plan)}</a>` +
+          `</div>` +
+          `<p style="margin:0;font-size:13px;color:#6b7280;">Nothing about your account or its data has changed -- this is only about payment.</p>`,
+        footerNote: `This is an automated message from ${BRAND_NAME}.`,
+      }),
+      attachments: logoAttachment ? [logoAttachment] : [],
+    });
+    return result;
   } catch (err) {
     return { sent: false, reason: err.message };
   }
@@ -387,6 +481,7 @@ module.exports = {
   sendContactAutoReply,
   sendContactReply,
   sendAccountAccessKey,
+  sendPlanRenewal,
   isConfigured,
   verifyConnection,
 };

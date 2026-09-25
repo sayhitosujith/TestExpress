@@ -96,7 +96,7 @@ router.post('/:id/reply', authenticate, requireRole(...PRIVILEGED_ROLES), async 
     return res.status(501).json({
       error: 'Email is not configured, so a reply cannot be sent',
       setup: [
-        'Set GMAIL_USER and GMAIL_APP_PASSWORD in src/Backend/.env.',
+        'Set RESEND_API_KEY and CONTACT_NOTIFY_EMAIL in src/Backend/.env.',
         'Restart the backend (npm run server).',
       ],
     });
@@ -136,7 +136,7 @@ router.post('/:id/reply', authenticate, requireRole(...PRIVILEGED_ROLES), async 
 // neither -- a partial failure here must never look like an admin answered
 // someone who in fact received nothing. Sent one at a time rather than with
 // Promise.all so a slow or throttled send cannot fan out into a burst of
-// concurrent Gmail deliveries.
+// concurrent requests against the email provider's API.
 router.post('/bulk-reply', authenticate, requireRole(...PRIVILEGED_ROLES), async (req, res) => {
   const { ids, message } = req.body || {};
 
@@ -153,7 +153,7 @@ router.post('/bulk-reply', authenticate, requireRole(...PRIVILEGED_ROLES), async
     return res.status(501).json({
       error: 'Email is not configured, so a reply cannot be sent',
       setup: [
-        'Set GMAIL_USER and GMAIL_APP_PASSWORD in src/Backend/.env.',
+        'Set RESEND_API_KEY and CONTACT_NOTIFY_EMAIL in src/Backend/.env.',
         'Restart the backend (npm run server).',
       ],
     });

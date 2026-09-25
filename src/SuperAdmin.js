@@ -1233,6 +1233,98 @@ function SignInSwitch({ account, isSelf, busy, onToggle }) {
 }
 
 /**
+ * "in 12 minutes", "in 3 hours", "in 2 days" — the coarsest unit that still
+ * reads as at least one, so a key with three minutes left does not round
+ * away to "in 0 hours". Only ever called on a still-valid expiry (the
+ * component below checks that first), so this is never handed a negative.
+ */
+function relativeExpiry(expiresAt) {
+  const minutes = Math.floor((new Date(expiresAt).getTime() - Date.now()) / 60000);
+  if (minutes < 1) return "in under a minute";
+  if (minutes < 60) return `in ${minutes} minute${minutes === 1 ? "" : "s"}`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 48) return `in ${hours} hour${hours === 1 ? "" : "s"}`;
+  const days = Math.floor(hours / 24);
+  return `in ${days} day${days === 1 ? "" : "s"}`;
+}
+
+/**
+ * When an emailed access key stops working, or "—" for an account that
+ * never had one (a normal password) or has already used it — see
+ * accessKeyExpiresAt in routes/admin.js, which is absent in both cases and
+ * carries no way to tell them apart. That distinction does not matter here:
+ * either way there is nothing pending for this row to report.
+ *
+ * The relative form ("in 3 hours") is what an administrator scanning the
+ * column actually wants to know — how much runway is left, not the wall-clock
+ * moment it runs out. The exact instant is still there, in the title, for
+ * whoever needs it precisely.
+ */
+function AccessKeyExpiry({ expiresAt }) {
+  if (!expiresAt) return <span className="text-gray-400 dark:text-gray-500">—</span>;
+  const expired = new Date(expiresAt).getTime() < Date.now();
+  return (
+    <span
+      className={
+        "whitespace-nowrap text-xs font-semibold " +
+        (expired ? "text-red-600 dark:text-red-400" : "text-amber-700 dark:text-amber-400")
+      }
+      title={
+        (expired
+          ? "This access key expired — sign-in is blocked until an administrator sets a new password. It expired at "
+          : "This account is still on its emailed access key. It expires at ") +
+        new Date(expiresAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })
+      }
+    >
+      {expired ? "Expired" : relativeExpiry(expiresAt)}
+    </span>
+  );
+}
+
+/**
+ * When a paid plan's billing cycle next needs renewing, or has already
+ * lapsed — see planCycleExpiresAt/planCycleLapsed in routes/admin.js. Same
+ * relative-time shape as AccessKeyExpiry, blue rather than amber while still
+ * current so the two are not read as the same kind of countdown.
+ */
+function PlanCycleExpiry({ expiresAt, lapsed }) {
+  return (
+    <span
+      className={
+        "whitespace-nowrap text-xs font-semibold " +
+        (lapsed ? "text-red-600 dark:text-red-400" : "text-blue-700 dark:text-blue-400")
+      }
+      title={
+        (lapsed
+          ? "This plan's billing cycle has lapsed — sign-in is blocked until it is renewed. It lapsed at "
+          : "This account's plan renews at ") +
+        new Date(expiresAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })
+      }
+    >
+      {lapsed ? "Lapsed" : relativeExpiry(expiresAt)}
+    </span>
+  );
+}
+
+/**
+ * The "Expires" column: an access key and a plan cycle are two independent
+ * countdowns, but in practice almost never both set on one row — an account
+ * still on its emailed key has not yet paid for a plan the checkout flow
+ * would have recorded a change for. Access-key wins on the rare row where
+ * both apply, since it is the more urgent of the two: it blocks sign-in
+ * outright rather than behind a renewal link.
+ */
+function ExpiresCell({ account }) {
+  if (account.accessKeyExpiresAt) {
+    return <AccessKeyExpiry expiresAt={account.accessKeyExpiresAt} />;
+  }
+  if (account.planCycleExpiresAt) {
+    return <PlanCycleExpiry expiresAt={account.planCycleExpiresAt} lapsed={account.planCycleLapsed} />;
+  }
+  return <span className="text-gray-400 dark:text-gray-500">—</span>;
+}
+
+/**
  * One header cell: the ground it sits on, its rule, and the fact it stays put.
  *
  * All three are on the cells rather than on the <thead> around them, which is
@@ -1375,6 +1467,9 @@ function AccountRow({
             </option>
           ))}
         </select>
+      </td>
+      <td className="px-4 py-3">
+        <ExpiresCell account={account} />
       </td>
       <td className="px-4 py-3">
         <SignInSwitch account={account} isSelf={isSelf} busy={busy} onToggle={onToggleSignIn} />
@@ -2473,7 +2568,7 @@ function AccountsAdmin() {
         )}
 
         <div className="overflow-auto rounded-xl border border-gray-200 dark:border-green-700 bg-white dark:bg-gray-800 shadow-sm md:min-h-0 md:flex-1">
-          <table className="w-full min-w-[820px] text-left text-sm">
+          <table className="w-full min-w-[960px] text-left text-sm">
             {/* No ground, no rule and no sticky here -- they are on the cells;
                 see TH. What is left is the inherited text, which a row group
                 does carry. */}
@@ -2512,6 +2607,7 @@ function AccountsAdmin() {
                 <th className={TH + " font-semibold"}>Phone</th>
                 <th className={TH + " font-semibold"}>Payment</th>
                 <th className={TH + " font-semibold"}>Role</th>
+                <th className={TH + " font-semibold"}>Expires</th>
                 <th className={TH + " font-semibold"}>Can sign in</th>
                 <th className={TH} />
               </tr>
@@ -2519,14 +2615,14 @@ function AccountsAdmin() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <td colSpan={9} className="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
                     Loading accounts…
                   </td>
                 </tr>
               )}
               {!loading && !shown.length && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <td colSpan={9} className="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
                     {!accounts.length
                       ? "No accounts in the database."
                       : query

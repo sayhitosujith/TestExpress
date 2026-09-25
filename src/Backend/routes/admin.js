@@ -59,10 +59,14 @@ const ROLES = ['Super Admin', 'User'];
 // the database now (see ../plansDb), so a plan added there has to be accepted
 // without restarting the server. plansDb falls back to paymentOptions.json when
 // there is no database, which is the same list this used to be.
-const { planValues } = require('../plansDb');
+const { planValues, catalogue } = require('../plansDb');
 // Who moved which account between plans. Recorded here rather than in the
 // client, because this is the one place a plan actually changes.
 const planChanges = require('../planChangesDb');
+// A paid plan's billing cycle, computed from that same history -- see
+// planCycles.js for why an account with none is exempt rather than assumed
+// current.
+const planCycles = require('../planCycles');
 // Team seats, read here rather than through the corporate router: that one is
 // scoped to the caller's own team by design, which is precisely what an
 // administrator looking at somebody else's is not.
@@ -95,8 +99,14 @@ const EDITABLE = [
  * address the record by, and whether the account has a usable bcrypt hash. That
  * second one is the column that matters -- an account with no hash exists, can
  * be edited, and cannot sign in, and nothing else on the screen would show it.
+ *
+ * @param {object} user the stored registration.
+ * @param {{expiresAt: string, lapsed: boolean}|null} [planCycle] this
+ *   account's current billing cycle, precomputed by the caller from a
+ *   batch-loaded plan_changes history -- null for an account that has none
+ *   (see planCycles.js).
  */
-const adminView = (user) => ({
+const adminView = (user, planCycle = null) => ({
   ...publicUser(user),
   key: registrationKey(user),
   // The two independent reasons an account cannot sign in, kept apart because
@@ -108,18 +118,63 @@ const adminView = (user) => ({
   signInDisabled: !!user.signInDisabled,
   // How this account gets in, when not by password.
   authProvider: user.authProvider || null,
+  // When the access key emailed on creation (or last reset) stops working.
+  // null for an account that never had one, or that already used it -- the
+  // table needs to tell "no key issued" apart from "key spent", and this one
+  // field carries both by being absent in either case.
+  accessKeyExpiresAt: user.accessKeyExpiresAt || null,
+  // When this account's paid plan next needs renewing, and whether that has
+  // already happened. null for an account with no billing cycle to anchor to.
+  planCycleExpiresAt: planCycle ? planCycle.expiresAt : null,
+  planCycleLapsed: Boolean(planCycle && planCycle.lapsed),
   // A password OR a federated identity. Without the second half, an account
   // created through Google — which has no hash by design — would show in this
   // table as unable to sign in, next to a switch that is already on.
   //
   // A third reason, alongside the other two: a temporary access key that
-  // expired unused. Left out, this column would say "Yes" right up to the
-  // moment /login started refusing it.
+  // expired unused. A fourth: a paid plan's cycle lapsing, checked here
+  // directly rather than through signInDisabled -- /login only sets that flag
+  // on the next sign-in attempt after the cycle runs out, so between the two
+  // this column would say "Yes" a little longer than it is true.
   canSignIn:
     (isHashed(user.passwordHash) || Boolean(user.authProvider)) &&
     !user.signInDisabled &&
-    !isAccessKeyExpired(user.accessKeyExpiresAt),
+    !isAccessKeyExpired(user.accessKeyExpiresAt) &&
+    !(planCycle && planCycle.lapsed),
 });
+
+/**
+ * The billing cycle a plan change anchors, or null if that plan is free --
+ * a free plan has nothing to lapse. Shared by GET /accounts' batch pass and
+ * planCycleFor's single-account one, so the rule lives in one place.
+ *
+ * @param {object|undefined} change the account's latest plan_changes row.
+ * @param {object[]} plans the catalogue, for the price `change.toPlan` is on.
+ * @returns {{expiresAt: string, lapsed: boolean}|null}
+ */
+function planCycleOf(change, plans) {
+  if (!change) return null;
+  const price = (plans.find((p) => p.value === change.toPlan) || {}).price || 0;
+  if (!price) return null;
+  const expiresAt = planCycles.cycleExpiry(change.at);
+  return { expiresAt, lapsed: planCycles.isCycleLapsed(expiresAt) };
+}
+
+/**
+ * One account's current billing cycle, for the single-account endpoints
+ * below. GET /accounts computes the same thing in bulk for the same reason
+ * `seats` is batched there -- this version exists so a PATCH, password reset,
+ * or restore response is not left showing a cycle that reads as absent
+ * (`planCycleExpiresAt: null`) until the next full list reload replaces it.
+ *
+ * @param {object} user the stored registration.
+ * @returns {Promise<{expiresAt: string, lapsed: boolean}|null>}
+ */
+async function planCycleFor(user) {
+  const [change] = await planChanges.history({ limit: 1, accountKey: registrationKey(user) });
+  const { plans } = await catalogue();
+  return planCycleOf(change, plans);
+}
 
 /**
  * Why one set of changes must be refused, or null if it may proceed.
@@ -170,9 +225,23 @@ router.get('/accounts', requireConfig, async (req, res) => {
       (out[owner] = out[owner] || []).push(m.memberEmail);
       return out;
     }, {});
+
+    // Each account's latest plan change, batch-loaded once for the same
+    // reason as `seats` above: one read here answers what would otherwise be
+    // a per-row question. history() already sorts newest-first, so the first
+    // row seen for a key is its latest.
+    const { plans } = await catalogue();
+    const latestChangeByAccount = {};
+    for (const change of await planChanges.history({ limit: 2000 })) {
+      if (!(change.accountKey in latestChangeByAccount)) {
+        latestChangeByAccount[change.accountKey] = change;
+      }
+    }
+
     res.json({
       accounts: users.map((u) => {
-        const view = adminView(u);
+        const planCycle = planCycleOf(latestChangeByAccount[registrationKey(u)], plans);
+        const view = adminView(u, planCycle);
         const held = byOwner[String(view.email || '').toLowerCase()];
         return held ? { ...view, seats: held } : view;
       }),
@@ -221,7 +290,7 @@ router.patch('/accounts/:key', requireConfig, async (req, res) => {
         changedBy: (req.account && req.account.email) || '',
       });
     }
-    res.json({ account: adminView(saved) });
+    res.json({ account: adminView(saved, await planCycleFor(saved)) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -255,7 +324,7 @@ router.post('/accounts/:key/password', requireConfig, async (req, res) => {
     // expired before it was ever used.
     await store.upsert({ ...stored, password, accessKeyExpiresAt: null });
     const saved = await findByKey(req.params.key);
-    res.json({ account: adminView(saved) });
+    res.json({ account: adminView(saved, await planCycleFor(saved)) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -335,7 +404,7 @@ router.post('/accounts/:key/restore', requireConfig, async (req, res) => {
     // Re-read rather than trusting the record just written: the store sanitises
     // on the way in, and the screen should show what the database now holds.
     const saved = await findByKey(key);
-    res.json({ account: adminView(saved || record) });
+    res.json({ account: adminView(saved || record, await planCycleFor(saved || record)) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
