@@ -431,15 +431,17 @@ async function sendAccountAccessKey({
 }
 
 /**
- * Emails an account whose paid-plan billing cycle just lapsed: sign-in is
- * now blocked, and this is the fresh checkout link that lifts it. Sent at
- * the moment of lapse rather than as advance warning -- see planCycles.js
- * for why. Never throws, same contract as the other sends here.
+ * The renewal email both sendPlanRenewal and sendPlanRenewalReminder send --
+ * factored out because the two differ only in urgency (blocked vs. a
+ * heads-up), never in mechanics. Never throws, same contract as the other
+ * sends here.
  *
- * @param {{name: string, email: string, plan: string, checkoutToken: string}} fields
+ * @param {{name: string, email: string, plan: string, checkoutToken: string,
+ *   subject: string, lede: string}} fields `lede` is the one sentence that
+ *   states what happened -- everything else in the email is shared copy.
  * @returns {Promise<{sent: boolean, reason?: string}>}
  */
-async function sendPlanRenewal({ name, email, plan, checkoutToken }) {
+async function sendPlanRenewalEmail({ name, email, plan, checkoutToken, subject, lede }) {
   if (!isConfigured()) {
     return { sent: false, reason: 'not configured' };
   }
@@ -449,19 +451,17 @@ async function sendPlanRenewal({ name, email, plan, checkoutToken }) {
       from: `${BRAND_NAME} <${RESEND_FROM_EMAIL}>`,
       to: email,
       replyTo: contactNotifyEmail,
-      subject: `Your ${BRAND_NAME} ${plan} plan needs renewing`,
+      subject,
       text:
         `Hi ${name},\n\n` +
-        `Your ${plan} billing cycle has ended, so sign-in is switched off until it is renewed. ` +
-        `This does not happen automatically -- pay again here to switch it back on:\n\n` +
+        `${lede} This does not happen automatically -- pay here to renew it:\n\n` +
         `${checkoutUrl}\n\n` +
         `Nothing about your account or its data has changed; this is only about payment.` +
         TEXT_SIGN_OFF,
       html: renderEmail({
-        heading: `Hi ${escapeHtml(name)}, your ${escapeHtml(plan)} plan needs renewing`,
+        heading: `Hi ${escapeHtml(name)}, your ${escapeHtml(plan)} plan`,
         bodyHtml:
-          `<p style="margin:0 0 16px;">Your <strong>${escapeHtml(plan)}</strong> billing cycle has ended, ` +
-          `so sign-in is switched off until it is renewed. This does not happen automatically.</p>` +
+          `<p style="margin:0 0 16px;">${escapeHtml(lede)} This does not happen automatically.</p>` +
           `<div style="text-align:center;margin:0 0 16px;">` +
           `<a href="${checkoutUrl}" style="display:inline-block;padding:10px 24px;background-color:${BRAND_COLOR};color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;border-radius:8px;">Renew ${escapeHtml(plan)}</a>` +
           `</div>` +
@@ -476,12 +476,53 @@ async function sendPlanRenewal({ name, email, plan, checkoutToken }) {
   }
 }
 
+/**
+ * Emails an account whose paid-plan billing cycle just lapsed: sign-in is
+ * now blocked, and this is the fresh checkout link that lifts it.
+ *
+ * @param {{name: string, email: string, plan: string, checkoutToken: string}} fields
+ * @returns {Promise<{sent: boolean, reason?: string}>}
+ */
+async function sendPlanRenewal({ name, email, plan, checkoutToken }) {
+  return sendPlanRenewalEmail({
+    name,
+    email,
+    plan,
+    checkoutToken,
+    subject: `Your ${BRAND_NAME} ${plan} plan needs renewing`,
+    lede: `Your ${plan} billing cycle has ended, so sign-in is switched off until it is renewed.`,
+  });
+}
+
+/**
+ * Emails an account whose paid-plan billing cycle is about to lapse --
+ * sign-in still works, this is only a heads-up. Sent at most once per cycle
+ * (the caller is what enforces that; see routes/auth.js), so this is never
+ * fired more than once for the same renewal deadline.
+ *
+ * @param {{name: string, email: string, plan: string, checkoutToken: string,
+ *   daysLeft: number}} fields
+ * @returns {Promise<{sent: boolean, reason?: string}>}
+ */
+async function sendPlanRenewalReminder({ name, email, plan, checkoutToken, daysLeft }) {
+  const days = `${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
+  return sendPlanRenewalEmail({
+    name,
+    email,
+    plan,
+    checkoutToken,
+    subject: `Your ${BRAND_NAME} ${plan} plan renews in ${days}`,
+    lede: `Your ${plan} billing cycle ends in ${days}.`,
+  });
+}
+
 module.exports = {
   sendContactNotification,
   sendContactAutoReply,
   sendContactReply,
   sendAccountAccessKey,
   sendPlanRenewal,
+  sendPlanRenewalReminder,
   isConfigured,
   verifyConnection,
 };

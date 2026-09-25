@@ -27,7 +27,7 @@ const { store, registrationKey } = require('../registrationsDb');
 const { verifyPassword } = require('../passwords');
 const { issue } = require('../sessions');
 const { generateAccessKey, accessKeyExpiry, isAccessKeyExpired } = require('../accessKeys');
-const { sendAccountAccessKey, sendPlanRenewal } = require('../emailNotify');
+const { sendAccountAccessKey, sendPlanRenewal, sendPlanRenewalReminder } = require('../emailNotify');
 const planChanges = require('../planChangesDb');
 const planCycles = require('../planCycles');
 const { catalogue } = require('../plansDb');
@@ -137,6 +137,39 @@ router.post('/login', requireConfig, async (req, res) => {
           error: `Your ${plan.value} plan has lapsed. A renewal link has been emailed to you.`,
         });
         return;
+      }
+      // Not lapsed yet, but close -- a heads-up rather than a block. Sent at
+      // most once per cycle: `planRenewalReminderSentFor` records which
+      // cycle's `at` it was sent for, so a second login inside the same
+      // window is silent, and a NEW cycle (a different `at`, after the
+      // account renews or changes plan again) is free to remind again.
+      if (
+        plan &&
+        plan.price &&
+        planCycles.isCycleNearExpiry(planCycles.cycleExpiry(lastChange.at)) &&
+        user.planRenewalReminderSentFor !== lastChange.at
+      ) {
+        let checkoutToken = null;
+        try {
+          checkoutToken = (await checkouts.open({ email: user.email, plan })).token;
+        } catch (err) {
+          console.error('[auth] reminder checkout not opened:', err.message);
+        }
+        if (checkoutToken) {
+          const daysLeft = Math.ceil(
+            (new Date(planCycles.cycleExpiry(lastChange.at)).getTime() - Date.now()) / (24 * 3600 * 1000),
+          );
+          const { sent, reason } = await sendPlanRenewalReminder({
+            name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+            email: user.email,
+            plan: plan.value,
+            checkoutToken,
+            daysLeft,
+          });
+          if (!sent) console.error('[auth] renewal reminder not sent:', reason);
+        }
+        await store.upsert({ ...user, planRenewalReminderSentFor: lastChange.at });
+        user = { ...user, planRenewalReminderSentFor: lastChange.at };
       }
     }
 

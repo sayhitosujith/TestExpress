@@ -63,15 +63,25 @@ async function record(change) {
  * order the changes happened in — a backfilled row would sort as if it were the
  * most recent event.
  *
+ * `limit` bounds the RESULT, applied after the accountKey filter rather than
+ * before it. Capping the raw fetch first -- `store.list({ limit })` -- would
+ * silently return nothing for `history({ limit: 1, accountKey })` on any
+ * table where that account's newest row is not among the table's newest row
+ * overall, which is true for every account except whichever one happens to
+ * hold the single most-recently-changed row in the entire table.
+ *
  * @param {{limit?: number, accountKey?: string}} [opts]
  * @returns {Promise<object[]>}
  */
 async function history({ limit = 500, accountKey } = {}) {
   if (!store.isConfigured()) return [];
-  const rows = await store.list({ limit: Math.min(Number(limit) || 500, 2000) });
-  return rows
+  // The fetch itself is always capped at 2000 rather than at the caller's
+  // (possibly much smaller) `limit` -- see above.
+  const rows = await store.list({ limit: 2000 });
+  const filtered = rows
     .filter((r) => !accountKey || r.accountKey === accountKey)
     .sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')));
+  return filtered.slice(0, Math.min(Number(limit) || 500, 2000));
 }
 
 module.exports = { record, history, store };
