@@ -27,7 +27,7 @@ const { store, registrationKey } = require('../registrationsDb');
 const { verifyPassword } = require('../passwords');
 const { issue } = require('../sessions');
 const { generateAccessKey, accessKeyExpiry, isAccessKeyExpired } = require('../accessKeys');
-const { sendAccountAccessKey, sendPlanRenewal, sendPlanRenewalReminder } = require('../emailNotify');
+const { sendAccountAccessKey, sendPlanRenewalReminder } = require('../emailNotify');
 const planChanges = require('../planChangesDb');
 const planCycles = require('../planCycles');
 const { catalogue } = require('../plansDb');
@@ -71,51 +71,18 @@ async function paidCycle(user) {
 const DISABLED_MESSAGE = 'This account has been disabled. Ask an administrator to switch it back on.';
 
 /**
- * Blocks an account whose paid cycle has lapsed and makes sure it has been
- * sent a way to renew.
+ * Blocks an account whose paid cycle has lapsed.
  *
- * The renewal email is retried on every refused sign-in until one is actually
- * delivered, then never again for that cycle. `planRenewalSentFor` records the
- * cycle's `at` only on a confirmed send, the same once-per-cycle pattern as
- * `planRenewalReminderSentFor`. Sending only on the first lapsed sign-in left
- * an account that hit a mail outage (or an unconfigured install) disabled
- * with no link, ever, since every later sign-in took the disabled path.
+ * No renewal email: renewal goes through an administrator, so the refusal
+ * says so instead of pointing at a self-serve link.
  *
  * @param {object} user a stored registration, password already verified.
- * @param {{plan: object, lastChange: object}} cycle from paidCycle, lapsed.
- * @returns {Promise<string>} the refusal to show, which only claims an email
- *   was sent when one was.
+ * @param {{plan: object}} cycle from paidCycle, lapsed.
+ * @returns {Promise<string>} the refusal to show.
  */
-async function refuseLapsed(user, { plan, lastChange }) {
-  let emailed = user.planRenewalSentFor === lastChange.at;
-  if (!emailed) {
-    let checkoutToken = null;
-    try {
-      checkoutToken = (await checkouts.open({ email: user.email, plan })).token;
-    } catch (err) {
-      console.error('[auth] renewal checkout not opened:', err.message);
-    }
-    if (checkoutToken) {
-      const { sent, reason } = await sendPlanRenewal({
-        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
-        email: user.email,
-        plan: plan.value,
-        checkoutToken,
-      });
-      if (!sent) console.error('[auth] renewal email not sent:', reason);
-      emailed = sent;
-    }
-    if (emailed || !user.signInDisabled) {
-      await store.upsert({
-        ...user,
-        signInDisabled: true,
-        ...(emailed ? { planRenewalSentFor: lastChange.at } : {}),
-      });
-    }
-  }
-  return emailed
-    ? `Your ${plan.value} plan has expired. Renew it using the link we emailed you to sign in again.`
-    : `Your ${plan.value} plan has expired. We could not email your renewal link just now. Try signing in again later, or contact support.`;
+async function refuseLapsed(user, { plan }) {
+  if (!user.signInDisabled) await store.upsert({ ...user, signInDisabled: true });
+  return `Your ${plan.value} plan has expired. Contact admin for renewal.`;
 }
 
 router.post('/login', requireConfig, async (req, res) => {
