@@ -51,6 +51,73 @@ const {
 
 const router = express.Router();
 
+/**
+ * The account's current paid billing cycle, or null when there is none to
+ * enforce -- no plan_changes history to anchor it, or a free plan.
+ *
+ * @param {object} user a stored registration.
+ * @returns {Promise<{plan: object, lastChange: object, expiresAt: string, lapsed: boolean}|null>}
+ */
+async function paidCycle(user) {
+  const [lastChange] = await planChanges.history({ limit: 1, accountKey: registrationKey(user) });
+  if (!lastChange) return null;
+  const { plans } = await catalogue();
+  const plan = plans.find((p) => p.value === lastChange.toPlan);
+  if (!plan || !plan.price) return null;
+  const expiresAt = planCycles.cycleExpiry(lastChange.at);
+  return { plan, lastChange, expiresAt, lapsed: planCycles.isCycleLapsed(expiresAt) };
+}
+
+const DISABLED_MESSAGE = 'This account has been disabled. Ask an administrator to switch it back on.';
+
+/**
+ * Blocks an account whose paid cycle has lapsed and makes sure it has been
+ * sent a way to renew.
+ *
+ * The renewal email is retried on every refused sign-in until one is actually
+ * delivered, then never again for that cycle. `planRenewalSentFor` records the
+ * cycle's `at` only on a confirmed send, the same once-per-cycle pattern as
+ * `planRenewalReminderSentFor`. Sending only on the first lapsed sign-in left
+ * an account that hit a mail outage (or an unconfigured install) disabled
+ * with no link, ever, since every later sign-in took the disabled path.
+ *
+ * @param {object} user a stored registration, password already verified.
+ * @param {{plan: object, lastChange: object}} cycle from paidCycle, lapsed.
+ * @returns {Promise<string>} the refusal to show, which only claims an email
+ *   was sent when one was.
+ */
+async function refuseLapsed(user, { plan, lastChange }) {
+  let emailed = user.planRenewalSentFor === lastChange.at;
+  if (!emailed) {
+    let checkoutToken = null;
+    try {
+      checkoutToken = (await checkouts.open({ email: user.email, plan })).token;
+    } catch (err) {
+      console.error('[auth] renewal checkout not opened:', err.message);
+    }
+    if (checkoutToken) {
+      const { sent, reason } = await sendPlanRenewal({
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+        email: user.email,
+        plan: plan.value,
+        checkoutToken,
+      });
+      if (!sent) console.error('[auth] renewal email not sent:', reason);
+      emailed = sent;
+    }
+    if (emailed || !user.signInDisabled) {
+      await store.upsert({
+        ...user,
+        signInDisabled: true,
+        ...(emailed ? { planRenewalSentFor: lastChange.at } : {}),
+      });
+    }
+  }
+  return emailed
+    ? `Your ${plan.value} plan has expired. Renew it using the link we emailed you to sign in again.`
+    : `Your ${plan.value} plan has expired. We could not email your renewal link just now. Try signing in again later, or contact support.`;
+}
+
 router.post('/login', requireConfig, async (req, res) => {
   const { email, password } = req.body || {};
   try {
@@ -81,10 +148,14 @@ router.post('/login', requireConfig, async (req, res) => {
     // Named plainly rather than folded into "invalid credentials": someone
     // whose password is right and who is told it is wrong raises a support
     // ticket, and the honest answer is the one that resolves it.
+    //
+    // The cycle is resolved before the disabled check because a lapse is
+    // itself one of the things that sets signInDisabled (below). Without this,
+    // only the first sign-in after a lapse was told the truth; every later one
+    // was sent to an administrator who has nothing to switch back on.
+    const cycle = await paidCycle(user);
     if (user.signInDisabled) {
-      res.status(403).json({
-        error: 'This account has been disabled. Ask an administrator to switch it back on.',
-      });
+      res.status(403).json({ error: cycle && cycle.lapsed ? await refuseLapsed(user, cycle) : DISABLED_MESSAGE });
       return;
     }
     // A temporary access key that was never used in time. Checked after the
@@ -106,36 +177,16 @@ router.post('/login', requireConfig, async (req, res) => {
       user = { ...user, accessKeyExpiresAt: null };
     }
 
-    // A paid plan's billing cycle running out. Checked last and only for an
+    // A paid plan's billing cycle running out, enforced last and only for an
     // account that has plan_changes history to anchor a cycle to -- one with
     // none (payment set directly at registration, or by an admin edit made
     // before this feature existed) is exempt until its plan next genuinely
     // changes. See planCycles.js for why renewal is manual rather than an
     // auto-charge.
-    const [lastChange] = await planChanges.history({ limit: 1, accountKey: registrationKey(user) });
-    if (lastChange) {
-      const { plans } = await catalogue();
-      const plan = plans.find((p) => p.value === lastChange.toPlan);
-      if (plan && plan.price && planCycles.isCycleLapsed(planCycles.cycleExpiry(lastChange.at))) {
-        await store.upsert({ ...user, signInDisabled: true });
-        let checkoutToken = null;
-        try {
-          checkoutToken = (await checkouts.open({ email: user.email, plan })).token;
-        } catch (err) {
-          console.error('[auth] renewal checkout not opened:', err.message);
-        }
-        if (checkoutToken) {
-          const { sent, reason } = await sendPlanRenewal({
-            name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
-            email: user.email,
-            plan: plan.value,
-            checkoutToken,
-          });
-          if (!sent) console.error('[auth] renewal email not sent:', reason);
-        }
-        res.status(403).json({
-          error: `Your ${plan.value} plan has lapsed. A renewal link has been emailed to you.`,
-        });
+    if (cycle) {
+      const { plan, lastChange } = cycle;
+      if (cycle.lapsed) {
+        res.status(403).json({ error: await refuseLapsed(user, cycle) });
         return;
       }
       // Not lapsed yet, but close -- a heads-up rather than a block. Sent at
@@ -144,9 +195,7 @@ router.post('/login', requireConfig, async (req, res) => {
       // window is silent, and a NEW cycle (a different `at`, after the
       // account renews or changes plan again) is free to remind again.
       if (
-        plan &&
-        plan.price &&
-        planCycles.isCycleNearExpiry(planCycles.cycleExpiry(lastChange.at)) &&
+        planCycles.isCycleNearExpiry(cycle.expiresAt) &&
         user.planRenewalReminderSentFor !== lastChange.at
       ) {
         let checkoutToken = null;
@@ -157,7 +206,7 @@ router.post('/login', requireConfig, async (req, res) => {
         }
         if (checkoutToken) {
           const daysLeft = Math.ceil(
-            (new Date(planCycles.cycleExpiry(lastChange.at)).getTime() - Date.now()) / (24 * 3600 * 1000),
+            (new Date(cycle.expiresAt).getTime() - Date.now()) / (24 * 3600 * 1000),
           );
           const { sent, reason } = await sendPlanRenewalReminder({
             name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
@@ -470,9 +519,8 @@ router.post('/google', requireConfig, async (req, res) => {
     if (existing && existing.signInDisabled) {
       // Said plainly, as the password path does: someone whose Google account
       // is fine and who is told nothing raises a support ticket instead.
-      res.status(403).json({
-        error: 'This account has been disabled. Ask an administrator to switch it back on.',
-      });
+      const cycle = await paidCycle(existing);
+      res.status(403).json({ error: cycle && cycle.lapsed ? await refuseLapsed(existing, cycle) : DISABLED_MESSAGE });
       return;
     }
 
